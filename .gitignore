@@ -51,10 +51,6 @@ Thumbs.db
 .env
 .env.*
 
-# Local planning documents
-PLAN.md
-Raylib_Cpp23_设计文档.md
-
 # Codex/local agent state
 .agents/
 .codex/
