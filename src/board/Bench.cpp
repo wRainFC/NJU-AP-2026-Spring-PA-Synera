@@ -2,6 +2,8 @@
 
 #include "core/Contract.hpp"
 
+#include <ranges>
+
 namespace synera {
 
 Bench::Bench(int size) : slots_(size) {
@@ -24,10 +26,10 @@ bool Bench::empty(int slot) const {
 }
 
 std::optional<int> Bench::firstEmptySlot() const {
-    for (int slot = 0; slot < size(); ++slot) {
-        if (empty(slot)) {
-            return slot;
-        }
+    auto slots = std::views::iota(0, size());
+    if (const auto iter = std::ranges::find_if(slots, [this](int slot) { return empty(slot); });
+        iter != slots.end()) {
+        return *iter;
     }
     return std::nullopt;
 }

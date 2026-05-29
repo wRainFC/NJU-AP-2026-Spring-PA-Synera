@@ -27,7 +27,7 @@ void InputController::update(GameState& state, const Layout& layout, RoundSystem
         return;
     }
 
-    if (state.phase != Phase::Prep) {
+    if (state.phase() != Phase::Prep) {
         return;
     }
 
@@ -42,7 +42,7 @@ void InputController::update(GameState& state, const Layout& layout, RoundSystem
 void InputController::beginDrag(GameState& state, const Layout& layout) {
     const Vector2 mouse = GetMousePosition();
     if (const auto slot = layout.benchSlotAt(mouse)) {
-        if (const auto unitId = state.bench.occupant(*slot)) {
+        if (const auto unitId = state.benchOccupant(*slot)) {
             drag_ = DragState{
                 .kind = DragKind::UnitFromBench,
                 .unitId = *unitId,

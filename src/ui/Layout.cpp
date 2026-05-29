@@ -2,6 +2,8 @@
 
 #include "app/GameConfig.hpp"
 
+#include <ranges>
+
 namespace synera {
 
 namespace {
@@ -42,8 +44,8 @@ Rectangle Layout::startButtonRect() const noexcept {
 }
 
 std::optional<GridPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
-    for (int y = 0; y < config::BoardHeight; ++y) {
-        for (int x = 0; x < config::BoardWidth; ++x) {
+    for (int y : std::views::iota(0, config::BoardHeight)) {
+        for (int x : std::views::iota(0, config::BoardWidth)) {
             GridPos pos{x, y};
             if (contains(boardTileRect(pos), mouse)) {
                 return pos;
@@ -54,7 +56,7 @@ std::optional<GridPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
 }
 
 std::optional<int> Layout::benchSlotAt(Vector2 mouse) const noexcept {
-    for (int slot = 0; slot < config::BenchSize; ++slot) {
+    for (int slot : std::views::iota(0, config::BenchSize)) {
         if (contains(benchSlotRect(slot), mouse)) {
             return slot;
         }

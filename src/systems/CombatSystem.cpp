@@ -7,11 +7,10 @@
 namespace synera {
 
 void CombatSystem::update(GameState& state, float dt) {
-    if (state.phase != Phase::Combat) {
+    if (state.phase() != Phase::Combat) {
         return;
     }
-    for (auto& [id, unit] : state.units) {
-        (void)id;
+    for (Unit* unit : state.allUnits()) {
         updateUnit(state, *unit, dt);
     }
 }
@@ -23,13 +22,13 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
 
     Unit* target = acquireTarget(state, unit);
     if (target == nullptr) {
-        unit.state = UnitState::Idle;
+        unit.runtime.state = UnitState::Idle;
         return;
     }
 
-    unit.attackTimer += dt;
-    if (unit.attackTimer >= unit.currentStats.attackInterval) {
-        unit.attackTimer = 0.0F;
+    unit.runtime.attackTimer += dt;
+    if (unit.runtime.attackTimer >= unit.derivedStats.attackInterval) {
+        unit.runtime.attackTimer = 0.0F;
         performAttack(unit, *target);
     }
 }
@@ -38,8 +37,7 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
     Unit* best = nullptr;
     int bestDist = std::numeric_limits<int>::max();
 
-    for (auto& [id, candidate] : state.units) {
-        (void)id;
+    for (Unit* candidate : state.allUnits()) {
         if (!candidate->alive() || !candidate->onBoard() || candidate->owner == unit.owner) {
             continue;
         }
@@ -48,7 +46,7 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
         const int dy = unit.boardPos->y - candidate->boardPos->y;
         const int dist = dx * dx + dy * dy;
         if (dist < bestDist) {
-            best = candidate.get();
+            best = candidate;
             bestDist = dist;
         }
     }
@@ -57,8 +55,8 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
 }
 
 void CombatSystem::performAttack(Unit& attacker, Unit& target) {
-    attacker.state = UnitState::Attacking;
-    target.receiveDamage(attacker.currentStats.atk);
+    attacker.runtime.state = UnitState::Attacking;
+    target.receiveDamage(attacker.derivedStats.atk);
     attacker.gainMana(10);
 }
 

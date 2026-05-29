@@ -1,109 +1,129 @@
 #include "core/GameState.hpp"
 
-#include "core/Ability.hpp"
 #include "core/Contract.hpp"
+#include "core/UnitCatalog.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <ranges>
 
 namespace synera {
 
-namespace {
+GameState::GameState()
+    : board_(config::BoardWidth, config::BoardHeight), bench_(config::BenchSize) {}
 
-std::string displayNameFor(std::string_view templateId) {
-    if (templateId == "ember_mage") {
-        return "Ember Mage";
-    }
-    if (templateId == "iron_guard") {
-        return "Iron Guard";
-    }
-    if (templateId == "training_dummy") {
-        return "Training Dummy";
-    }
-    return "Unknown";
+Phase GameState::phase() const noexcept {
+    return phase_;
 }
 
-UnitStats statsFor(std::string_view templateId) {
-    if (templateId == "ember_mage") {
-        return UnitStats{220, 220, 42, 3, 60, 0, 1.2F, 0.25F};
-    }
-    if (templateId == "training_dummy") {
-        return UnitStats{180, 180, 18, 1, 80, 0, 1.4F, 0.3F};
-    }
-    return UnitStats{360, 360, 32, 1, 70, 0, 1.0F, 0.25F};
+void GameState::setPhase(Phase phase) noexcept {
+    phase_ = phase;
 }
 
-std::unique_ptr<Ability> abilityFor(std::string_view templateId) {
-    if (templateId == "ember_mage") {
-        return std::make_unique<FireLineAbility>();
-    }
-    return std::make_unique<NoopAbility>();
+Player& GameState::player() noexcept {
+    return player_;
 }
 
-} // namespace
+const Player& GameState::player() const noexcept {
+    return player_;
+}
 
-GameState::GameState() : board(config::BoardWidth, config::BoardHeight), bench(config::BenchSize) {}
+const Board& GameState::board() const noexcept {
+    return board_;
+}
+
+const Bench& GameState::bench() const noexcept {
+    return bench_;
+}
+
+GameState::ShopOffers& GameState::shopOffers() noexcept {
+    return shopOffers_;
+}
+
+const GameState::ShopOffers& GameState::shopOffers() const noexcept {
+    return shopOffers_;
+}
+
+std::vector<EquipmentType>& GameState::equipmentPool() noexcept {
+    return equipmentPool_;
+}
+
+const std::vector<EquipmentType>& GameState::equipmentPool() const noexcept {
+    return equipmentPool_;
+}
 
 Unit* GameState::findUnit(UnitId id) {
-    const auto iter = units.find(id);
-    return iter == units.end() ? nullptr : iter->second.get();
+    const auto iter = units_.find(id);
+    return iter == units_.end() ? nullptr : iter->second.get();
 }
 
 const Unit* GameState::findUnit(UnitId id) const {
-    const auto iter = units.find(id);
-    return iter == units.end() ? nullptr : iter->second.get();
+    const auto iter = units_.find(id);
+    return iter == units_.end() ? nullptr : iter->second.get();
+}
+
+std::vector<Unit*> GameState::allUnits() {
+    std::vector<Unit*> result;
+    result.reserve(units_.size());
+    auto unitPointers =
+        units_ | std::views::values | std::views::transform([](auto& unit) { return unit.get(); });
+    std::ranges::copy(unitPointers, std::back_inserter(result));
+    return result;
+}
+
+std::vector<const Unit*> GameState::allUnits() const {
+    std::vector<const Unit*> result;
+    result.reserve(units_.size());
+    auto unitPointers = units_ | std::views::values |
+                        std::views::transform([](const auto& unit) { return unit.get(); });
+    std::ranges::copy(unitPointers, std::back_inserter(result));
+    return result;
 }
 
 std::vector<Unit*> GameState::aliveUnitsByOwner(Owner owner) {
     std::vector<Unit*> result;
-    for (auto& [id, unit] : units) {
-        (void)id;
-        if (unit->owner == owner && unit->alive()) {
-            result.push_back(unit.get());
-        }
-    }
+    auto units = allUnits() | std::views::filter([owner](const Unit* unit) {
+                     return unit->owner == owner && unit->alive();
+                 });
+    std::ranges::copy(units, std::back_inserter(result));
     return result;
 }
 
 std::vector<Unit*> GameState::playerBoardUnits() {
     std::vector<Unit*> result;
-    for (auto& [id, unit] : units) {
-        (void)id;
-        if (unit->owner == Owner::PlayerCtrl && unit->onBoard()) {
-            result.push_back(unit.get());
-        }
-    }
+    auto units = allUnits() | std::views::filter([](const Unit* unit) {
+                     return unit->owner == Owner::PlayerCtrl && unit->onBoard();
+                 });
+    std::ranges::copy(units, std::back_inserter(result));
     return result;
 }
 
 std::vector<Unit*> GameState::enemyBoardUnits() {
     std::vector<Unit*> result;
-    for (auto& [id, unit] : units) {
-        (void)id;
-        if (unit->owner == Owner::EnemyCtrl && unit->onBoard()) {
-            result.push_back(unit.get());
-        }
-    }
+    auto units = allUnits() | std::views::filter([](const Unit* unit) {
+                     return unit->owner == Owner::EnemyCtrl && unit->onBoard();
+                 });
+    std::ranges::copy(units, std::back_inserter(result));
     return result;
 }
 
 int GameState::playerBoardUnitCount() const {
-    return static_cast<int>(std::ranges::count_if(units, [](const auto& entry) {
+    return static_cast<int>(std::ranges::count_if(units_, [](const auto& entry) {
         const auto& unit = entry.second;
         return unit->owner == Owner::PlayerCtrl && unit->onBoard() && unit->alive();
     }));
 }
 
 bool GameState::isCombatFinished() const {
-    if (phase != Phase::Combat) {
+    if (phase_ != Phase::Combat) {
         return false;
     }
 
-    const bool hasPlayers = std::ranges::any_of(units, [](const auto& entry) {
+    const bool hasPlayers = std::ranges::any_of(units_, [](const auto& entry) {
         const auto& unit = entry.second;
         return unit->owner == Owner::PlayerCtrl && unit->onBoard() && unit->alive();
     });
-    const bool hasEnemies = std::ranges::any_of(units, [](const auto& entry) {
+    const bool hasEnemies = std::ranges::any_of(units_, [](const auto& entry) {
         const auto& unit = entry.second;
         return unit->owner == Owner::EnemyCtrl && unit->onBoard() && unit->alive();
     });
@@ -111,42 +131,41 @@ bool GameState::isCombatFinished() const {
 }
 
 bool GameState::playerWonCombat() const {
-    const bool hasEnemies = std::ranges::any_of(units, [](const auto& entry) {
+    const bool hasEnemies = std::ranges::any_of(units_, [](const auto& entry) {
         const auto& unit = entry.second;
         return unit->owner == Owner::EnemyCtrl && unit->onBoard() && unit->alive();
     });
     return !hasEnemies;
 }
 
+std::optional<UnitId> GameState::benchOccupant(int slot) const {
+    return bench_.occupant(slot);
+}
+
+std::optional<int> GameState::firstEmptyBenchSlot() const {
+    return bench_.firstEmptySlot();
+}
+
 UnitId GameState::createUnit(std::string_view templateId, Owner owner) {
     const UnitId id = nextUnitId_++;
-    auto unit = std::make_unique<Unit>();
-    unit->id = id;
-    unit->templateId = std::string(templateId);
-    unit->name = displayNameFor(templateId);
-    unit->owner = owner;
-    unit->baseStats = statsFor(templateId);
-    unit->currentStats = unit->baseStats;
-    unit->ability = abilityFor(templateId);
-    unit->traits = owner == Owner::PlayerCtrl ? std::vector<Trait>{Trait::Warrior}
-                                              : std::vector<Trait>{Trait::Guardian};
-    units.emplace(id, std::move(unit));
+    auto unit = std::make_unique<Unit>(UnitCatalog::createUnit(id, templateId, owner));
+    units_.emplace(id, std::move(unit));
     return id;
 }
 
 bool GameState::placeUnitOnBench(UnitId id, int slot) {
     Unit* unit = findUnit(id);
-    if (unit == nullptr || unit->owner != Owner::PlayerCtrl || !bench.empty(slot)) {
+    if (unit == nullptr || unit->owner != Owner::PlayerCtrl || !bench_.empty(slot)) {
         return false;
     }
     if (unit->boardPos) {
-        board.remove(*unit->boardPos);
+        board_.remove(*unit->boardPos);
         unit->boardPos.reset();
     }
     if (unit->benchSlot) {
-        bench.remove(*unit->benchSlot);
+        bench_.remove(*unit->benchSlot);
     }
-    if (!bench.place(id, slot)) {
+    if (!bench_.place(id, slot)) {
         return false;
     }
     unit->benchSlot = slot;
@@ -156,28 +175,28 @@ bool GameState::placeUnitOnBench(UnitId id, int slot) {
 
 bool GameState::placeUnitOnBoard(UnitId id, GridPos pos) {
     Unit* unit = findUnit(id);
-    if (unit == nullptr || !board.empty(pos)) {
+    if (unit == nullptr || !board_.empty(pos)) {
         return false;
     }
-    if (unit->owner == Owner::PlayerCtrl && !board.isPlayerHalf(pos)) {
+    if (unit->owner == Owner::PlayerCtrl && !board_.isPlayerHalf(pos)) {
         return false;
     }
-    if (unit->owner == Owner::EnemyCtrl && !board.isEnemyHalf(pos)) {
+    if (unit->owner == Owner::EnemyCtrl && !board_.isEnemyHalf(pos)) {
         return false;
     }
     if (unit->owner == Owner::PlayerCtrl && !unit->onBoard() &&
-        playerBoardUnitCount() >= player.populationCap) {
+        playerBoardUnitCount() >= player_.populationCap) {
         return false;
     }
 
     if (unit->benchSlot) {
-        bench.remove(*unit->benchSlot);
+        bench_.remove(*unit->benchSlot);
         unit->benchSlot.reset();
     }
     if (unit->boardPos) {
-        board.remove(*unit->boardPos);
+        board_.remove(*unit->boardPos);
     }
-    if (!board.place(id, pos)) {
+    if (!board_.place(id, pos)) {
         return false;
     }
     unit->boardPos = pos;
@@ -187,24 +206,23 @@ bool GameState::placeUnitOnBoard(UnitId id, GridPos pos) {
 
 void GameState::removeUnitFromBoard(Unit& unit) {
     if (unit.boardPos) {
-        board.remove(*unit.boardPos);
+        board_.remove(*unit.boardPos);
         unit.boardPos.reset();
     }
 }
 
 void GameState::removeEnemyUnits() {
-    std::vector<UnitId> toErase;
-    for (auto& [id, unit] : units) {
+    std::erase_if(units_, [this](auto& entry) {
+        auto& [id, unit] = entry;
+        (void)id;
         if (unit->owner == Owner::EnemyCtrl) {
             if (unit->boardPos) {
-                board.remove(*unit->boardPos);
+                board_.remove(*unit->boardPos);
             }
-            toErase.push_back(id);
+            return true;
         }
-    }
-    for (UnitId id : toErase) {
-        units.erase(id);
-    }
+        return false;
+    });
 }
 
 } // namespace synera

@@ -8,7 +8,8 @@ class RoundSystem {
 public:
     void startCombat(GameState& state);
     void spawnEnemies(GameState& state);
-    void resolveRound(GameState& state, bool playerWon);
+    void enterResolve(GameState& state, bool playerWon);
+    void finishResolve(GameState& state);
 };
 
 } // namespace synera

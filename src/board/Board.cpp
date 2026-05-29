@@ -2,6 +2,8 @@
 
 #include "core/Contract.hpp"
 
+#include <algorithm>
+
 namespace synera {
 
 Board::Board(int width, int height) : width_(width), height_(height), cells_(width * height) {
@@ -69,9 +71,7 @@ bool Board::move(GridPos from, GridPos to) {
 }
 
 void Board::clear() {
-    for (auto& cell : cells_) {
-        cell.reset();
-    }
+    std::ranges::fill(cells_, std::nullopt);
 }
 
 int Board::index(GridPos pos) const {

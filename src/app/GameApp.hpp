@@ -34,6 +34,7 @@ private:
     SynergySystem synergySystem_;
     UpgradeSystem upgradeSystem_;
     EquipmentSystem equipmentSystem_;
+    float resolveTimer_ = 0.0F;
 };
 
 } // namespace synera

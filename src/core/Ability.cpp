@@ -12,8 +12,8 @@ std::string_view NoopAbility::description() const noexcept {
     return "Placeholder ability.";
 }
 
-void NoopAbility::cast(Unit& caster, GameState&) {
-    caster.currentStats.mana = 0;
+void NoopAbility::cast(Unit& caster, AbilityContext&) {
+    caster.runtime.mana = 0;
 }
 
 std::string_view FireLineAbility::name() const noexcept {
@@ -24,8 +24,8 @@ std::string_view FireLineAbility::description() const noexcept {
     return "Deals line damage. Stub implementation for the interface stage.";
 }
 
-void FireLineAbility::cast(Unit& caster, GameState&) {
-    caster.currentStats.mana = 0;
+void FireLineAbility::cast(Unit& caster, AbilityContext&) {
+    caster.runtime.mana = 0;
 }
 
 std::string_view HealingAuraAbility::name() const noexcept {
@@ -36,8 +36,8 @@ std::string_view HealingAuraAbility::description() const noexcept {
     return "Heals nearby allies. Stub implementation for the interface stage.";
 }
 
-void HealingAuraAbility::cast(Unit& caster, GameState&) {
-    caster.currentStats.mana = 0;
+void HealingAuraAbility::cast(Unit& caster, AbilityContext&) {
+    caster.runtime.mana = 0;
 }
 
 } // namespace synera

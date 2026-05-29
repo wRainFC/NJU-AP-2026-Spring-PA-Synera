@@ -22,8 +22,10 @@ add_executable(synera
     src/main.cpp
     src/app/GameApp.cpp
     src/core/Ability.cpp
+    src/core/AbilityContext.cpp
     src/core/GameState.cpp
     src/core/Player.cpp
+    src/core/UnitCatalog.cpp
     src/core/Unit.cpp
     src/board/Bench.cpp
     src/board/Board.cpp

@@ -29,10 +29,16 @@ void GameApp::init() {
 void GameApp::update(float dt) {
     input_.update(state_, layout_, roundSystem_, shopSystem_);
 
-    if (state_.phase == Phase::Combat) {
+    if (state_.phase() == Phase::Combat) {
         combatSystem_.update(state_, dt);
         if (state_.isCombatFinished()) {
-            roundSystem_.resolveRound(state_, state_.playerWonCombat());
+            roundSystem_.enterResolve(state_, state_.playerWonCombat());
+            resolveTimer_ = 0.0F;
+        }
+    } else if (state_.phase() == Phase::Resolve) {
+        resolveTimer_ += dt;
+        if (resolveTimer_ >= 1.0F) {
+            roundSystem_.finishResolve(state_);
         }
     }
 }

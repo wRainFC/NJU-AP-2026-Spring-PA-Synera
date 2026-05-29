@@ -5,17 +5,16 @@
 namespace synera {
 
 void RoundSystem::startCombat(GameState& state) {
-    if (state.phase != Phase::Prep) {
+    if (state.phase() != Phase::Prep) {
         return;
     }
     spawnEnemies(state);
-    for (auto& [id, unit] : state.units) {
-        (void)id;
+    for (Unit* unit : state.allUnits()) {
         if (unit->onBoard()) {
             unit->resetForCombat();
         }
     }
-    state.phase = Phase::Combat;
+    state.setPhase(Phase::Combat);
 }
 
 void RoundSystem::spawnEnemies(GameState& state) {
@@ -24,17 +23,26 @@ void RoundSystem::spawnEnemies(GameState& state) {
     state.placeUnitOnBoard(enemy, GridPos{3, 1});
 }
 
-void RoundSystem::resolveRound(GameState& state, bool playerWon) {
-    state.phase = Phase::Resolve;
+void RoundSystem::enterResolve(GameState& state, bool playerWon) {
+    if (state.phase() != Phase::Combat) {
+        return;
+    }
+    state.setPhase(Phase::Resolve);
     if (playerWon) {
-        state.player.addGold(config::WinGoldReward);
-        ++state.player.currentRound;
+        state.player().addGold(config::WinGoldReward);
+        ++state.player().currentRound;
     } else {
-        state.player.hp -= config::LossHpPenalty;
-        state.player.addGold(config::LossGoldReward);
+        state.player().hp -= config::LossHpPenalty;
+        state.player().addGold(config::LossGoldReward);
     }
     state.removeEnemyUnits();
-    state.phase = Phase::Prep;
+}
+
+void RoundSystem::finishResolve(GameState& state) {
+    if (state.phase() != Phase::Resolve) {
+        return;
+    }
+    state.setPhase(Phase::Prep);
 }
 
 } // namespace synera
