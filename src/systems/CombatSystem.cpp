@@ -21,6 +21,13 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
     Unit* target = acquireTarget(state, unit);
     if (target == nullptr) {
         unit.runtime.state = UnitState::Idle;
+        unit.runtime.targetId = InvalidUnitId;
+        return;
+    }
+    unit.runtime.targetId = target->id;
+
+    if (!unit.canAttackTarget(*target)) {
+        moveTowardTarget(state, unit, *target, dt);
         return;
     }
 
@@ -51,6 +58,25 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
     });
 
     return best;
+}
+
+void CombatSystem::moveTowardTarget(GameState& state, Unit& unit, const Unit& target, float dt) {
+    unit.runtime.state = UnitState::Moving;
+    unit.runtime.moveTimer += dt;
+    if (unit.runtime.moveTimer < unit.derivedStats.moveInterval) {
+        return;
+    }
+    unit.runtime.moveTimer = 0.0F;
+
+    const auto path = pathfinder_.findPathToAttackRange(state.board(), *unit.boardPos, *target.boardPos,
+                                                        unit.derivedStats.range);
+    if (path.empty()) {
+        unit.runtime.state = UnitState::Idle;
+        return;
+    }
+    if (!state.moveBoardUnit(unit.id, path.front())) {
+        unit.runtime.state = UnitState::Idle;
+    }
 }
 
 void CombatSystem::performAttack(Unit& attacker, Unit& target) {

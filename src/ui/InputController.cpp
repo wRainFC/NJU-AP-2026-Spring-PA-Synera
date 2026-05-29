@@ -50,6 +50,21 @@ void InputController::beginDrag(GameState& state, const Layout& layout) {
                 .sourceBoardPos = std::nullopt,
             };
         }
+        return;
+    }
+
+    if (const auto pos = layout.boardPosAt(mouse)) {
+        if (const auto unitId = state.boardOccupant(*pos)) {
+            const Unit* unit = state.findUnit(*unitId);
+            if (unit != nullptr && unit->owner == Owner::PlayerCtrl) {
+                drag_ = DragState{
+                    .kind = DragKind::UnitFromBoard,
+                    .unitId = *unitId,
+                    .sourceBenchSlot = std::nullopt,
+                    .sourceBoardPos = pos,
+                };
+            }
+        }
     }
 }
 
@@ -60,9 +75,9 @@ void InputController::endDrag(GameState& state, const Layout& layout) {
 
     const Vector2 mouse = GetMousePosition();
     if (const auto pos = layout.boardPosAt(mouse)) {
-        state.placeUnitOnBoard(drag_.unitId, *pos);
+        state.placeUnitOnBoardResult(drag_.unitId, *pos);
     } else if (const auto slot = layout.benchSlotAt(mouse)) {
-        state.placeUnitOnBench(drag_.unitId, *slot);
+        state.placeUnitOnBenchResult(drag_.unitId, *slot);
     }
 
     drag_ = DragState{};

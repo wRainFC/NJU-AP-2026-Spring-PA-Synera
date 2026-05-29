@@ -21,6 +21,17 @@
 
 namespace synera {
 
+enum class PlacementResult {
+    Ok,
+    InvalidPhase,
+    InvalidUnit,
+    InvalidOwner,
+    InvalidPosition,
+    InvalidHalf,
+    PopulationFull,
+    Occupied,
+};
+
 // Central mutable model for rules and persistence; UI state such as dragging stays outside.
 class GameState {
 public:
@@ -116,13 +127,17 @@ public:
     [[nodiscard]] int playerBoardUnitCount() const;
     [[nodiscard]] bool isCombatFinished() const;
     [[nodiscard]] bool playerWonCombat() const;
+    [[nodiscard]] std::optional<UnitId> boardOccupant(AxialPos pos) const;
     [[nodiscard]] std::optional<UnitId> benchOccupant(int slot) const;
     [[nodiscard]] std::optional<int> firstEmptyBenchSlot() const;
 
     UnitId createUnit(std::string_view templateId, Owner owner);
     // Placement methods are the only supported way to keep board/bench occupancy and Unit location in sync.
+    PlacementResult placeUnitOnBenchResult(UnitId id, int slot);
+    PlacementResult placeUnitOnBoardResult(UnitId id, AxialPos pos);
     bool placeUnitOnBench(UnitId id, int slot);
     bool placeUnitOnBoard(UnitId id, AxialPos pos);
+    bool moveBoardUnit(UnitId id, AxialPos pos);
     void removeUnitFromBoard(Unit& unit);
     void removeEnemyUnits();
 
@@ -135,6 +150,9 @@ private:
     ShopOffers shopOffers_{};
     std::vector<EquipmentType> equipmentPool_;
     UnitId nextUnitId_ = 1;
+
+    [[nodiscard]] PlacementResult validateBoardPlacement(const Unit& unit, AxialPos pos,
+                                                         bool enteringEmptyBoard) const;
 };
 
 }  // namespace synera

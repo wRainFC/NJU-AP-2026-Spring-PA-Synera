@@ -6,7 +6,7 @@
 namespace synera {
 
 void RoundSystem::startCombat(GameState& state) {
-    if (state.phase() != Phase::Prep) {
+    if (state.phase() != Phase::Prep || state.playerBoardUnitCount() == 0) {
         return;
     }
     spawnEnemies(state);

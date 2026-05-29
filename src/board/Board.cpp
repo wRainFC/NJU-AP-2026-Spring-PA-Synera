@@ -73,6 +73,14 @@ bool Board::move(AxialPos from, AxialPos to) {
     return true;
 }
 
+bool Board::swapCells(AxialPos left, AxialPos right) {
+    if (!inBounds(left) || !inBounds(right)) {
+        return false;
+    }
+    std::swap(cells_[index(left)], cells_[index(right)]);
+    return true;
+}
+
 void Board::clear() {
     std::ranges::fill(cells_, std::nullopt);
 }

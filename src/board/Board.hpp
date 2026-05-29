@@ -28,6 +28,7 @@ public:
     bool place(UnitId unitId, AxialPos pos);
     void remove(AxialPos pos);
     bool move(AxialPos from, AxialPos to);
+    bool swapCells(AxialPos left, AxialPos right);
     void clear();
 
     // Visits only in-bounds axial neighbors; callers decide passability and ownership rules.

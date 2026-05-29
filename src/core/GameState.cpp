@@ -75,7 +75,7 @@ const Unit* GameState::findUnit(UnitId id) const {
 int GameState::playerBoardUnitCount() const {
     int count = 0;
     forEachUnit([&](const Unit& unit) {
-        if (unit.owner == Owner::PlayerCtrl && unit.onBoard() && unit.alive()) {
+        if (unit.owner == Owner::PlayerCtrl && unit.onBoard()) {
             ++count;
         }
     });
@@ -104,6 +104,10 @@ bool GameState::playerWonCombat() const {
     return !hasEnemies;
 }
 
+std::optional<UnitId> GameState::boardOccupant(AxialPos pos) const {
+    return board_.occupant(pos);
+}
+
 std::optional<UnitId> GameState::benchOccupant(int slot) const {
     return bench_.occupant(slot);
 }
@@ -119,11 +123,59 @@ UnitId GameState::createUnit(std::string_view templateId, Owner owner) {
     return id;
 }
 
-bool GameState::placeUnitOnBench(UnitId id, int slot) {
+PlacementResult GameState::placeUnitOnBenchResult(UnitId id, int slot) {
     Unit* unit = findUnit(id);
-    if (unit == nullptr || unit->owner != Owner::PlayerCtrl || !bench_.empty(slot)) {
-        return false;
+    if (unit == nullptr) {
+        return PlacementResult::InvalidUnit;
     }
+    if (unit->owner != Owner::PlayerCtrl) {
+        return PlacementResult::InvalidOwner;
+    }
+    if (phase_ != Phase::Prep) {
+        return PlacementResult::InvalidPhase;
+    }
+    if (slot < 0 || slot >= bench_.size()) {
+        return PlacementResult::InvalidPosition;
+    }
+    if (unit->benchSlot == slot) {
+        return PlacementResult::Ok;
+    }
+
+    const auto occupiedBy = bench_.occupant(slot);
+    if (occupiedBy) {
+        Unit* other = findUnit(*occupiedBy);
+        if (other == nullptr || other->owner != Owner::PlayerCtrl) {
+            return PlacementResult::Occupied;
+        }
+        if (unit->benchSlot) {
+            const int sourceSlot = *unit->benchSlot;
+            if (!bench_.swapSlots(sourceSlot, slot)) {
+                return PlacementResult::InvalidPosition;
+            }
+            unit->benchSlot = slot;
+            other->benchSlot = sourceSlot;
+            unit->checkInvariants();
+            other->checkInvariants();
+            return PlacementResult::Ok;
+        }
+        if (unit->boardPos) {
+            const AxialPos sourcePos = *unit->boardPos;
+            board_.remove(sourcePos);
+            bench_.remove(slot);
+            if (!board_.place(other->id, sourcePos) || !bench_.place(unit->id, slot)) {
+                return PlacementResult::Occupied;
+            }
+            unit->boardPos.reset();
+            unit->benchSlot = slot;
+            other->benchSlot.reset();
+            other->boardPos = sourcePos;
+            unit->checkInvariants();
+            other->checkInvariants();
+            return PlacementResult::Ok;
+        }
+        return PlacementResult::InvalidPosition;
+    }
+
     if (unit->boardPos) {
         board_.remove(*unit->boardPos);
         unit->boardPos.reset();
@@ -132,27 +184,62 @@ bool GameState::placeUnitOnBench(UnitId id, int slot) {
         bench_.remove(*unit->benchSlot);
     }
     if (!bench_.place(id, slot)) {
-        return false;
+        return PlacementResult::InvalidPosition;
     }
     unit->benchSlot = slot;
     unit->checkInvariants();
-    return true;
+    return PlacementResult::Ok;
 }
 
-bool GameState::placeUnitOnBoard(UnitId id, AxialPos pos) {
+PlacementResult GameState::placeUnitOnBoardResult(UnitId id, AxialPos pos) {
     Unit* unit = findUnit(id);
-    if (unit == nullptr || !board_.empty(pos)) {
-        return false;
+    if (unit == nullptr) {
+        return PlacementResult::InvalidUnit;
     }
-    if (unit->owner == Owner::PlayerCtrl && !board_.isPlayerHalf(pos)) {
-        return false;
+    if (unit->owner == Owner::PlayerCtrl && phase_ != Phase::Prep) {
+        return PlacementResult::InvalidPhase;
     }
-    if (unit->owner == Owner::EnemyCtrl && !board_.isEnemyHalf(pos)) {
-        return false;
+    const auto occupiedBy = board_.occupant(pos);
+    const PlacementResult validation = validateBoardPlacement(*unit, pos, !unit->onBoard() && !occupiedBy);
+    if (validation != PlacementResult::Ok) {
+        return validation;
     }
-    if (unit->owner == Owner::PlayerCtrl && !unit->onBoard() &&
-        playerBoardUnitCount() >= player_.populationCap) {
-        return false;
+    if (unit->boardPos == pos) {
+        return PlacementResult::Ok;
+    }
+
+    if (occupiedBy) {
+        Unit* other = findUnit(*occupiedBy);
+        if (other == nullptr || unit->owner != Owner::PlayerCtrl || other->owner != Owner::PlayerCtrl) {
+            return PlacementResult::Occupied;
+        }
+        if (unit->boardPos) {
+            const AxialPos sourcePos = *unit->boardPos;
+            if (!board_.swapCells(sourcePos, pos)) {
+                return PlacementResult::InvalidPosition;
+            }
+            unit->boardPos = pos;
+            other->boardPos = sourcePos;
+            unit->checkInvariants();
+            other->checkInvariants();
+            return PlacementResult::Ok;
+        }
+        if (unit->benchSlot) {
+            const int sourceSlot = *unit->benchSlot;
+            bench_.remove(sourceSlot);
+            board_.remove(pos);
+            if (!board_.place(unit->id, pos) || !bench_.place(other->id, sourceSlot)) {
+                return PlacementResult::Occupied;
+            }
+            unit->benchSlot.reset();
+            unit->boardPos = pos;
+            other->boardPos.reset();
+            other->benchSlot = sourceSlot;
+            unit->checkInvariants();
+            other->checkInvariants();
+            return PlacementResult::Ok;
+        }
+        return PlacementResult::Occupied;
     }
 
     if (unit->benchSlot) {
@@ -163,9 +250,32 @@ bool GameState::placeUnitOnBoard(UnitId id, AxialPos pos) {
         board_.remove(*unit->boardPos);
     }
     if (!board_.place(id, pos)) {
+        return PlacementResult::InvalidPosition;
+    }
+    unit->boardPos = pos;
+    unit->checkInvariants();
+    return PlacementResult::Ok;
+}
+
+bool GameState::placeUnitOnBench(UnitId id, int slot) {
+    return placeUnitOnBenchResult(id, slot) == PlacementResult::Ok;
+}
+
+bool GameState::placeUnitOnBoard(UnitId id, AxialPos pos) {
+    return placeUnitOnBoardResult(id, pos) == PlacementResult::Ok;
+}
+
+bool GameState::moveBoardUnit(UnitId id, AxialPos pos) {
+    Unit* unit = findUnit(id);
+    if (unit == nullptr || !unit->boardPos || !board_.empty(pos)) {
+        return false;
+    }
+    const AxialPos source = *unit->boardPos;
+    if (!board_.move(source, pos)) {
         return false;
     }
     unit->boardPos = pos;
+    unit->runtime.state = UnitState::Moving;
     unit->checkInvariants();
     return true;
 }
@@ -189,6 +299,24 @@ void GameState::removeEnemyUnits() {
         }
         return false;
     });
+}
+
+PlacementResult GameState::validateBoardPlacement(const Unit& unit, AxialPos pos,
+                                                  bool enteringEmptyBoard) const {
+    if (!board_.inBounds(pos)) {
+        return PlacementResult::InvalidPosition;
+    }
+    if (unit.owner == Owner::PlayerCtrl && !board_.isPlayerHalf(pos)) {
+        return PlacementResult::InvalidHalf;
+    }
+    if (unit.owner == Owner::EnemyCtrl && !board_.isEnemyHalf(pos)) {
+        return PlacementResult::InvalidHalf;
+    }
+    if (unit.owner == Owner::PlayerCtrl && enteringEmptyBoard &&
+        playerBoardUnitCount() >= player_.populationCap) {
+        return PlacementResult::PopulationFull;
+    }
+    return PlacementResult::Ok;
 }
 
 }  // namespace synera
