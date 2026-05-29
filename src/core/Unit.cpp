@@ -20,11 +20,17 @@ bool Unit::onBench() const noexcept {
 }
 
 bool Unit::canAttackTarget(const Unit& target) const {
-    if (!alive() || !target.alive() || !boardPos || !target.boardPos) {
+    if (!alive() || !target.alive()) {
         return false;
     }
 
-    return hex::hexDistance(*boardPos, *target.boardPos) <= derivedStats.range;
+    return boardPos
+        .and_then([&](AxialPos source) {
+            return target.boardPos.transform([&](AxialPos targetPos) {
+                return hex::hexDistance(source, targetPos) <= derivedStats.range;
+            });
+        })
+        .value_or(false);
 }
 
 void Unit::receiveDamage(int amount) noexcept {

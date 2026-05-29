@@ -6,6 +6,7 @@
 #include "ui/Layout.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <ranges>
 #include <string>
 
@@ -23,6 +24,13 @@ namespace {
             return "Resolve";
     }
     return "Unknown";
+}
+
+[[nodiscard]] std::optional<Rectangle> unitRect(const Unit& unit, const Layout& layout) {
+    return unit.boardPos.transform([&](AxialPos pos) { return layout.boardHexBounds(pos); })
+        .or_else([&]() -> std::optional<Rectangle> {
+            return unit.benchSlot.transform([&](int slot) { return layout.benchSlotRect(slot); });
+        });
 }
 
 }  // namespace
@@ -74,10 +82,8 @@ void Renderer::drawBench(const GameState& state, const Layout& layout) {
 
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {
     state.forEachUnit([&](const Unit& unit) {
-        if (unit.boardPos) {
-            drawUnit(unit, layout.boardHexBounds(*unit.boardPos));
-        } else if (unit.benchSlot) {
-            drawUnit(unit, layout.benchSlotRect(*unit.benchSlot));
+        if (const auto rect = unitRect(unit, layout)) {
+            drawUnit(unit, *rect);
         }
     });
 }
