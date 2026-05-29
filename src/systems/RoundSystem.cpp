@@ -9,11 +9,11 @@ void RoundSystem::startCombat(GameState& state) {
         return;
     }
     spawnEnemies(state);
-    for (Unit* unit : state.allUnits()) {
-        if (unit->onBoard()) {
-            unit->resetForCombat();
+    state.forEachUnit([](Unit& unit) {
+        if (unit.onBoard()) {
+            unit.resetForCombat();
         }
-    }
+    });
     state.setPhase(Phase::Combat);
 }
 

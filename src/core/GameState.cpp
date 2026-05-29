@@ -4,8 +4,7 @@
 #include "core/UnitCatalog.hpp"
 
 #include <algorithm>
-#include <iterator>
-#include <ranges>
+#include <cstddef>
 
 namespace synera {
 
@@ -36,20 +35,32 @@ const Bench& GameState::bench() const noexcept {
     return bench_;
 }
 
-GameState::ShopOffers& GameState::shopOffers() noexcept {
+std::span<ShopOffer, config::ShopOfferCount> GameState::shopOffers() noexcept {
     return shopOffers_;
 }
 
-const GameState::ShopOffers& GameState::shopOffers() const noexcept {
+std::span<const ShopOffer, config::ShopOfferCount> GameState::shopOffers() const noexcept {
     return shopOffers_;
 }
 
-std::vector<EquipmentType>& GameState::equipmentPool() noexcept {
+std::span<EquipmentType> GameState::equipmentPool() noexcept {
     return equipmentPool_;
 }
 
-const std::vector<EquipmentType>& GameState::equipmentPool() const noexcept {
+std::span<const EquipmentType> GameState::equipmentPool() const noexcept {
     return equipmentPool_;
+}
+
+void GameState::addEquipment(EquipmentType equipment) {
+    equipmentPool_.push_back(equipment);
+}
+
+bool GameState::removeEquipmentAt(std::size_t index) {
+    if (index >= equipmentPool_.size()) {
+        return false;
+    }
+    equipmentPool_.erase(equipmentPool_.begin() + static_cast<std::ptrdiff_t>(index));
+    return true;
 }
 
 Unit* GameState::findUnit(UnitId id) {
@@ -62,56 +73,14 @@ const Unit* GameState::findUnit(UnitId id) const {
     return iter == units_.end() ? nullptr : iter->second.get();
 }
 
-std::vector<Unit*> GameState::allUnits() {
-    std::vector<Unit*> result;
-    result.reserve(units_.size());
-    auto unitPointers =
-        units_ | std::views::values | std::views::transform([](auto& unit) { return unit.get(); });
-    std::ranges::copy(unitPointers, std::back_inserter(result));
-    return result;
-}
-
-std::vector<const Unit*> GameState::allUnits() const {
-    std::vector<const Unit*> result;
-    result.reserve(units_.size());
-    auto unitPointers = units_ | std::views::values |
-                        std::views::transform([](const auto& unit) { return unit.get(); });
-    std::ranges::copy(unitPointers, std::back_inserter(result));
-    return result;
-}
-
-std::vector<Unit*> GameState::aliveUnitsByOwner(Owner owner) {
-    std::vector<Unit*> result;
-    auto units = allUnits() | std::views::filter([owner](const Unit* unit) {
-                     return unit->owner == owner && unit->alive();
-                 });
-    std::ranges::copy(units, std::back_inserter(result));
-    return result;
-}
-
-std::vector<Unit*> GameState::playerBoardUnits() {
-    std::vector<Unit*> result;
-    auto units = allUnits() | std::views::filter([](const Unit* unit) {
-                     return unit->owner == Owner::PlayerCtrl && unit->onBoard();
-                 });
-    std::ranges::copy(units, std::back_inserter(result));
-    return result;
-}
-
-std::vector<Unit*> GameState::enemyBoardUnits() {
-    std::vector<Unit*> result;
-    auto units = allUnits() | std::views::filter([](const Unit* unit) {
-                     return unit->owner == Owner::EnemyCtrl && unit->onBoard();
-                 });
-    std::ranges::copy(units, std::back_inserter(result));
-    return result;
-}
-
 int GameState::playerBoardUnitCount() const {
-    return static_cast<int>(std::ranges::count_if(units_, [](const auto& entry) {
-        const auto& unit = entry.second;
-        return unit->owner == Owner::PlayerCtrl && unit->onBoard() && unit->alive();
-    }));
+    int count = 0;
+    forEachUnit([&](const Unit& unit) {
+        if (unit.owner == Owner::PlayerCtrl && unit.onBoard() && unit.alive()) {
+            ++count;
+        }
+    });
+    return count;
 }
 
 bool GameState::isCombatFinished() const {
@@ -119,21 +88,22 @@ bool GameState::isCombatFinished() const {
         return false;
     }
 
-    const bool hasPlayers = std::ranges::any_of(units_, [](const auto& entry) {
-        const auto& unit = entry.second;
-        return unit->owner == Owner::PlayerCtrl && unit->onBoard() && unit->alive();
-    });
-    const bool hasEnemies = std::ranges::any_of(units_, [](const auto& entry) {
-        const auto& unit = entry.second;
-        return unit->owner == Owner::EnemyCtrl && unit->onBoard() && unit->alive();
+    bool hasPlayers = false;
+    bool hasEnemies = false;
+    forEachUnit([&](const Unit& unit) {
+        hasPlayers =
+            hasPlayers || (unit.owner == Owner::PlayerCtrl && unit.onBoard() && unit.alive());
+        hasEnemies =
+            hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
     });
     return !hasPlayers || !hasEnemies;
 }
 
 bool GameState::playerWonCombat() const {
-    const bool hasEnemies = std::ranges::any_of(units_, [](const auto& entry) {
-        const auto& unit = entry.second;
-        return unit->owner == Owner::EnemyCtrl && unit->onBoard() && unit->alive();
+    bool hasEnemies = false;
+    forEachUnit([&](const Unit& unit) {
+        hasEnemies =
+            hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
     });
     return !hasEnemies;
 }

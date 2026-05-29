@@ -68,13 +68,13 @@ void Renderer::drawBench(const GameState& state, const Layout& layout) {
 }
 
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {
-    for (const Unit* unit : state.allUnits()) {
-        if (unit->boardPos) {
-            drawUnit(*unit, layout.boardTileRect(*unit->boardPos));
-        } else if (unit->benchSlot) {
-            drawUnit(*unit, layout.benchSlotRect(*unit->benchSlot));
+    state.forEachUnit([&](const Unit& unit) {
+        if (unit.boardPos) {
+            drawUnit(unit, layout.boardTileRect(*unit.boardPos));
+        } else if (unit.benchSlot) {
+            drawUnit(unit, layout.benchSlotRect(*unit.benchSlot));
         }
-    }
+    });
 }
 
 void Renderer::drawUnit(const Unit& unit, Rectangle rect) {

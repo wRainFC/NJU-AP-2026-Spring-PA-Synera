@@ -10,9 +10,7 @@ void CombatSystem::update(GameState& state, float dt) {
     if (state.phase() != Phase::Combat) {
         return;
     }
-    for (Unit* unit : state.allUnits()) {
-        updateUnit(state, *unit, dt);
-    }
+    state.forEachUnit([&](Unit& unit) { updateUnit(state, unit, dt); });
 }
 
 void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
@@ -37,19 +35,19 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
     Unit* best = nullptr;
     int bestDist = std::numeric_limits<int>::max();
 
-    for (Unit* candidate : state.allUnits()) {
-        if (!candidate->alive() || !candidate->onBoard() || candidate->owner == unit.owner) {
-            continue;
+    state.forEachUnit([&](Unit& candidate) {
+        if (!candidate.alive() || !candidate.onBoard() || candidate.owner == unit.owner) {
+            return;
         }
 
-        const int dx = unit.boardPos->x - candidate->boardPos->x;
-        const int dy = unit.boardPos->y - candidate->boardPos->y;
+        const int dx = unit.boardPos->x - candidate.boardPos->x;
+        const int dy = unit.boardPos->y - candidate.boardPos->y;
         const int dist = dx * dx + dy * dy;
         if (dist < bestDist) {
-            best = candidate;
+            best = &candidate;
             bestDist = dist;
         }
-    }
+    });
 
     return best;
 }
