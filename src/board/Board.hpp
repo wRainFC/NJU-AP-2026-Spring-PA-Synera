@@ -11,6 +11,7 @@
 
 namespace synera {
 
+// Owns board occupancy only. Unit position fields are synchronized by GameState.
 class Board {
 public:
     Board(int width, int height);
@@ -23,11 +24,13 @@ public:
     [[nodiscard]] std::optional<UnitId> occupant(AxialPos pos) const;
     [[nodiscard]] bool empty(AxialPos pos) const;
 
+    // Return false for invalid writes, occupied destinations, or missing sources.
     bool place(UnitId unitId, AxialPos pos);
     void remove(AxialPos pos);
     bool move(AxialPos from, AxialPos to);
     void clear();
 
+    // Visits only in-bounds axial neighbors; callers decide passability and ownership rules.
     template <std::invocable<AxialPos> Visitor>
     void forEachNeighbor(AxialPos pos, Visitor&& visitor) const {
         for (const AxialPos direction : hex::Directions) {

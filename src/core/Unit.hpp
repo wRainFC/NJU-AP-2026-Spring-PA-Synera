@@ -29,6 +29,7 @@ struct UnitRuntime {
     float stunTimer = 0.0F;
 };
 
+// A unit stores persistent identity/stats plus combat runtime; systems own behavior decisions.
 class Unit {
 public:
     UnitId id = InvalidUnitId;
@@ -51,6 +52,7 @@ public:
     [[nodiscard]] bool alive() const noexcept;
     [[nodiscard]] bool onBoard() const noexcept;
     [[nodiscard]] bool onBench() const noexcept;
+    // Attack range is measured by hex distance, not screen distance.
     [[nodiscard]] bool canAttackTarget(const Unit& target) const;
 
     void receiveDamage(int amount) noexcept;

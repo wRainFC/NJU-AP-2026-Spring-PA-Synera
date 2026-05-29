@@ -21,6 +21,7 @@
 
 namespace synera {
 
+// Central mutable model for rules and persistence; UI state such as dragging stays outside.
 class GameState {
 public:
     using UnitMap = std::unordered_map<UnitId, std::unique_ptr<Unit>>;
@@ -119,6 +120,7 @@ public:
     [[nodiscard]] std::optional<int> firstEmptyBenchSlot() const;
 
     UnitId createUnit(std::string_view templateId, Owner owner);
+    // Placement methods are the only supported way to keep board/bench occupancy and Unit location in sync.
     bool placeUnitOnBench(UnitId id, int slot);
     bool placeUnitOnBoard(UnitId id, AxialPos pos);
     void removeUnitFromBoard(Unit& unit);

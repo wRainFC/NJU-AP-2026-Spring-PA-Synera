@@ -27,6 +27,7 @@ constexpr float Pi = 3.14159265359F;
 
 [[nodiscard]] bool containsPolygon(const std::array<Vector2, 6>& points, Vector2 point) noexcept {
     bool inside = false;
+    // Ray casting keeps hit testing accurate in the empty gaps between staggered hex rows.
     for (std::size_t i = 0, j = points.size() - 1; i < points.size(); j = i++) {
         const Vector2 a = points[i];
         const Vector2 b = points[j];
@@ -43,6 +44,7 @@ constexpr float Pi = 3.14159265359F;
 
 Vector2 Layout::boardHexCenter(AxialPos pos) const noexcept {
     const OffsetPos offset = hex::axialToOddR(pos);
+    // Pointy-top odd-r layout: odd rows are shifted by half a hex width.
     return Vector2{
         BoardLeft + HexWidth * (static_cast<float>(offset.col) + 0.5F * static_cast<float>(offset.row & 1)),
         BoardTop + HexRadius * 1.5F * static_cast<float>(offset.row),

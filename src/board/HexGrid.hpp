@@ -18,6 +18,7 @@ inline constexpr std::array<AxialPos, 6> Directions{{
     AxialPos{0, 1},
 }};
 
+// Backend logic uses axial coordinates; odd-r is only an adapter for storage and screen layout.
 [[nodiscard]] constexpr OffsetPos axialToOddR(AxialPos pos) noexcept {
     return OffsetPos{
         .col = pos.q + (pos.r - (pos.r & 1)) / 2,
@@ -36,6 +37,7 @@ inline constexpr std::array<AxialPos, 6> Directions{{
     return value < 0 ? -value : value;
 }
 
+// Cube distance expressed through axial q/r, where s is derived from -q-r.
 [[nodiscard]] constexpr int hexDistance(AxialPos lhs, AxialPos rhs) noexcept {
     const int dq = lhs.q - rhs.q;
     const int dr = lhs.r - rhs.r;

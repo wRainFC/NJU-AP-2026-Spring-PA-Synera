@@ -82,6 +82,7 @@ std::vector<AxialPos> Pathfinder::findPathToAttackRange(const Board& board, Axia
         }
 
         board.forEachNeighbor(current.pos, [&](AxialPos next) {
+            // Units stand on cells, so the target cell and occupied blockers are not traversable.
             if (next == target || !board.empty(next)) {
                 return;
             }

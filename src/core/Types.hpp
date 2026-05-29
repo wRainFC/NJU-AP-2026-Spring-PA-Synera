@@ -9,6 +9,7 @@ using UnitId = std::uint32_t;
 
 inline constexpr UnitId InvalidUnitId = 0;
 
+// Primary board coordinate for rules, combat distance, and pathfinding.
 struct AxialPos {
     int q = 0;
     int r = 0;
@@ -16,6 +17,7 @@ struct AxialPos {
     friend bool operator==(const AxialPos&, const AxialPos&) = default;
 };
 
+// Odd-r offset coordinate used only when adapting axial positions to storage or screen layout.
 struct OffsetPos {
     int col = 0;
     int row = 0;
