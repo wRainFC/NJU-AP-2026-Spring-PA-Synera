@@ -1,7 +1,7 @@
 #include "systems/CombatSystem.hpp"
 
-#include <algorithm>
-#include <cmath>
+#include "board/HexGrid.hpp"
+
 #include <limits>
 
 namespace synera {
@@ -40,10 +40,11 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
             return;
         }
 
-        const int dx = unit.boardPos->x - candidate.boardPos->x;
-        const int dy = unit.boardPos->y - candidate.boardPos->y;
-        const int dist = dx * dx + dy * dy;
-        if (dist < bestDist) {
+        const int dist = hex::hexDistance(*unit.boardPos, *candidate.boardPos);
+        const bool betterTie =
+            best != nullptr && (candidate.runtime.hp < best->runtime.hp ||
+                                (candidate.runtime.hp == best->runtime.hp && candidate.id < best->id));
+        if (dist < bestDist || (dist == bestDist && betterTie)) {
             best = &candidate;
             bestDist = dist;
         }

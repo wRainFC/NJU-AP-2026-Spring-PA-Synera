@@ -1,9 +1,11 @@
 #include "ui/Renderer.hpp"
 
 #include "app/GameConfig.hpp"
+#include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 #include "ui/Layout.hpp"
 
+#include <cstddef>
 #include <ranges>
 #include <string>
 
@@ -46,11 +48,16 @@ void Renderer::drawBoard(const GameState& state, const Layout& layout) {
     (void)state;
     for (int y : std::views::iota(0, config::BoardHeight)) {
         for (int x : std::views::iota(0, config::BoardWidth)) {
-            const GridPos pos{x, y};
-            const Rectangle rect = layout.boardTileRect(pos);
+            const AxialPos pos = hex::oddRToAxial(OffsetPos{x, y});
+            const Vector2 center = layout.boardHexCenter(pos);
+            const auto corners = layout.boardHexCorners(pos);
             const Color color = y < config::BoardHeight / 2 ? Color{58, 64, 72, 255} : Color{48, 78, 62, 255};
-            DrawRectangleRec(rect, color);
-            DrawRectangleLinesEx(rect, 1.0F, Color{95, 103, 112, 255});
+            for (int index : std::views::iota(0, 6)) {
+                const Vector2 start = corners[static_cast<std::size_t>(index)];
+                const Vector2 end = corners[static_cast<std::size_t>((index + 1) % 6)];
+                DrawTriangle(center, end, start, color);
+                DrawLineV(start, end, Color{95, 103, 112, 255});
+            }
         }
     }
 }
@@ -68,7 +75,7 @@ void Renderer::drawBench(const GameState& state, const Layout& layout) {
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {
     state.forEachUnit([&](const Unit& unit) {
         if (unit.boardPos) {
-            drawUnit(unit, layout.boardTileRect(*unit.boardPos));
+            drawUnit(unit, layout.boardHexBounds(*unit.boardPos));
         } else if (unit.benchSlot) {
             drawUnit(unit, layout.benchSlotRect(*unit.benchSlot));
         }

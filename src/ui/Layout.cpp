@@ -1,41 +1,83 @@
 #include "ui/Layout.hpp"
 
 #include "app/GameConfig.hpp"
+#include "board/HexGrid.hpp"
 
+#include <cstddef>
+#include <cmath>
 #include <ranges>
 
 namespace synera {
 
 namespace {
 
-constexpr float TileSize = 58.0F;
+constexpr float HexRadius = 34.0F;
+constexpr float HexWidth = HexRadius * 1.73205080757F;
+constexpr float BenchSlotSize = 58.0F;
 constexpr float BoardLeft = 80.0F;
-constexpr float BoardTop = 80.0F;
+constexpr float BoardTop = 92.0F;
 constexpr float BenchTop = 580.0F;
 constexpr float SlotGap = 8.0F;
+constexpr float Pi = 3.14159265359F;
 
 [[nodiscard]] bool contains(Rectangle rect, Vector2 point) noexcept {
     return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y &&
            point.y <= rect.y + rect.height;
 }
 
+[[nodiscard]] bool containsPolygon(const std::array<Vector2, 6>& points, Vector2 point) noexcept {
+    bool inside = false;
+    for (std::size_t i = 0, j = points.size() - 1; i < points.size(); j = i++) {
+        const Vector2 a = points[i];
+        const Vector2 b = points[j];
+        const bool crosses = (a.y > point.y) != (b.y > point.y);
+        if (crosses) {
+            const float xAtY = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x;
+            inside = inside != (point.x < xAtY);
+        }
+    }
+    return inside;
+}
+
 }  // namespace
 
-Rectangle Layout::boardTileRect(GridPos pos) const noexcept {
+Vector2 Layout::boardHexCenter(AxialPos pos) const noexcept {
+    const OffsetPos offset = hex::axialToOddR(pos);
+    return Vector2{
+        BoardLeft + HexWidth * (static_cast<float>(offset.col) + 0.5F * static_cast<float>(offset.row & 1)),
+        BoardTop + HexRadius * 1.5F * static_cast<float>(offset.row),
+    };
+}
+
+std::array<Vector2, 6> Layout::boardHexCorners(AxialPos pos) const noexcept {
+    const Vector2 center = boardHexCenter(pos);
+    std::array<Vector2, 6> corners{};
+    for (int index : std::views::iota(0, 6)) {
+        const float angle = (-90.0F + 60.0F * static_cast<float>(index)) * Pi / 180.0F;
+        corners[static_cast<std::size_t>(index)] = Vector2{
+            center.x + HexRadius * std::cos(angle),
+            center.y + HexRadius * std::sin(angle),
+        };
+    }
+    return corners;
+}
+
+Rectangle Layout::boardHexBounds(AxialPos pos) const noexcept {
+    const Vector2 center = boardHexCenter(pos);
     return Rectangle{
-        BoardLeft + static_cast<float>(pos.x) * TileSize,
-        BoardTop + static_cast<float>(pos.y) * TileSize,
-        TileSize - 1.0F,
-        TileSize - 1.0F,
+        center.x - HexWidth / 2.0F,
+        center.y - HexRadius,
+        HexWidth,
+        HexRadius * 2.0F,
     };
 }
 
 Rectangle Layout::benchSlotRect(int slot) const noexcept {
     return Rectangle{
-        BoardLeft + static_cast<float>(slot) * (TileSize + SlotGap),
+        BoardLeft + static_cast<float>(slot) * (BenchSlotSize + SlotGap),
         BenchTop,
-        TileSize,
-        TileSize,
+        BenchSlotSize,
+        BenchSlotSize,
     };
 }
 
@@ -43,11 +85,11 @@ Rectangle Layout::startButtonRect() const noexcept {
     return Rectangle{820.0F, 96.0F, 180.0F, 44.0F};
 }
 
-std::optional<GridPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
+std::optional<AxialPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
     for (int y : std::views::iota(0, config::BoardHeight)) {
         for (int x : std::views::iota(0, config::BoardWidth)) {
-            GridPos pos{x, y};
-            if (contains(boardTileRect(pos), mouse)) {
+            const AxialPos pos = hex::oddRToAxial(OffsetPos{x, y});
+            if (contains(boardHexBounds(pos), mouse) && containsPolygon(boardHexCorners(pos), mouse)) {
                 return pos;
             }
         }

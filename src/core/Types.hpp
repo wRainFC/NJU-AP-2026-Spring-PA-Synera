@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 #include <string>
-#include <vector>
 
 namespace synera {
 
@@ -11,11 +9,18 @@ using UnitId = std::uint32_t;
 
 inline constexpr UnitId InvalidUnitId = 0;
 
-struct GridPos {
-    int x = 0;
-    int y = 0;
+struct AxialPos {
+    int q = 0;
+    int r = 0;
 
-    friend bool operator==(const GridPos&, const GridPos&) = default;
+    friend bool operator==(const AxialPos&, const AxialPos&) = default;
+};
+
+struct OffsetPos {
+    int col = 0;
+    int row = 0;
+
+    friend bool operator==(const OffsetPos&, const OffsetPos&) = default;
 };
 
 enum class Owner { PlayerCtrl, EnemyCtrl };

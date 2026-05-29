@@ -139,7 +139,7 @@ bool GameState::placeUnitOnBench(UnitId id, int slot) {
     return true;
 }
 
-bool GameState::placeUnitOnBoard(UnitId id, GridPos pos) {
+bool GameState::placeUnitOnBoard(UnitId id, AxialPos pos) {
     Unit* unit = findUnit(id);
     if (unit == nullptr || !board_.empty(pos)) {
         return false;

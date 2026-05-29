@@ -8,8 +8,8 @@ namespace synera {
 
 class Pathfinder {
 public:
-    [[nodiscard]] std::vector<GridPos> findPathToAttackRange(const Board& board, GridPos start,
-                                                             GridPos target, int attackRange) const;
+    [[nodiscard]] std::vector<AxialPos> findPathToAttackRange(const Board& board, AxialPos start,
+                                                              AxialPos target, int attackRange) const;
 };
 
 }  // namespace synera

@@ -1,5 +1,6 @@
 #include "core/Unit.hpp"
 
+#include "board/HexGrid.hpp"
 #include "core/Contract.hpp"
 
 #include <algorithm>
@@ -23,9 +24,7 @@ bool Unit::canAttackTarget(const Unit& target) const {
         return false;
     }
 
-    const int dx = boardPos->x - target.boardPos->x;
-    const int dy = boardPos->y - target.boardPos->y;
-    return dx * dx + dy * dy <= derivedStats.range * derivedStats.range;
+    return hex::hexDistance(*boardPos, *target.boardPos) <= derivedStats.range;
 }
 
 void Unit::receiveDamage(int amount) noexcept {

@@ -120,7 +120,7 @@ public:
 
     UnitId createUnit(std::string_view templateId, Owner owner);
     bool placeUnitOnBench(UnitId id, int slot);
-    bool placeUnitOnBoard(UnitId id, GridPos pos);
+    bool placeUnitOnBoard(UnitId id, AxialPos pos);
     void removeUnitFromBoard(Unit& unit);
     void removeEnemyUnits();
 

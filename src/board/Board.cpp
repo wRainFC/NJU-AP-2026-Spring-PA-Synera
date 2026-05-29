@@ -19,30 +19,33 @@ int Board::height() const noexcept {
     return height_;
 }
 
-bool Board::inBounds(GridPos pos) const noexcept {
-    return pos.x >= 0 && pos.y >= 0 && pos.x < width_ && pos.y < height_;
+bool Board::inBounds(AxialPos pos) const noexcept {
+    const OffsetPos offset = hex::axialToOddR(pos);
+    return offset.col >= 0 && offset.row >= 0 && offset.col < width_ && offset.row < height_;
 }
 
-bool Board::isPlayerHalf(GridPos pos) const noexcept {
-    return inBounds(pos) && pos.y >= height_ / 2;
+bool Board::isPlayerHalf(AxialPos pos) const noexcept {
+    const OffsetPos offset = hex::axialToOddR(pos);
+    return inBounds(pos) && offset.row >= height_ / 2;
 }
 
-bool Board::isEnemyHalf(GridPos pos) const noexcept {
-    return inBounds(pos) && pos.y < height_ / 2;
+bool Board::isEnemyHalf(AxialPos pos) const noexcept {
+    const OffsetPos offset = hex::axialToOddR(pos);
+    return inBounds(pos) && offset.row < height_ / 2;
 }
 
-std::optional<UnitId> Board::occupant(GridPos pos) const {
+std::optional<UnitId> Board::occupant(AxialPos pos) const {
     if (!inBounds(pos)) {
         return std::nullopt;
     }
     return cells_[index(pos)];
 }
 
-bool Board::empty(GridPos pos) const {
+bool Board::empty(AxialPos pos) const {
     return inBounds(pos) && !cells_[index(pos)].has_value();
 }
 
-bool Board::place(UnitId unitId, GridPos pos) {
+bool Board::place(UnitId unitId, AxialPos pos) {
     SYNERA_EXPECTS(unitId != InvalidUnitId);
     if (!empty(pos)) {
         return false;
@@ -53,14 +56,14 @@ bool Board::place(UnitId unitId, GridPos pos) {
     return true;
 }
 
-void Board::remove(GridPos pos) {
+void Board::remove(AxialPos pos) {
     if (!inBounds(pos)) {
         return;
     }
     cells_[index(pos)].reset();
 }
 
-bool Board::move(GridPos from, GridPos to) {
+bool Board::move(AxialPos from, AxialPos to) {
     if (!inBounds(from) || !empty(to) || !cells_[index(from)].has_value()) {
         return false;
     }
@@ -74,9 +77,10 @@ void Board::clear() {
     std::ranges::fill(cells_, std::nullopt);
 }
 
-int Board::index(GridPos pos) const {
+int Board::index(AxialPos pos) const {
     SYNERA_EXPECTS(inBounds(pos));
-    return pos.y * width_ + pos.x;
+    const OffsetPos offset = hex::axialToOddR(pos);
+    return offset.row * width_ + offset.col;
 }
 
 }  // namespace synera

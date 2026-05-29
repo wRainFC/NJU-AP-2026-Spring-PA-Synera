@@ -17,7 +17,7 @@ struct DragState {
     DragKind kind = DragKind::None;
     UnitId unitId = InvalidUnitId;
     std::optional<int> sourceBenchSlot;
-    std::optional<GridPos> sourceBoardPos;
+    std::optional<AxialPos> sourceBoardPos;
 };
 
 class InputController {

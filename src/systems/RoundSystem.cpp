@@ -1,6 +1,7 @@
 #include "systems/RoundSystem.hpp"
 
 #include "app/GameConfig.hpp"
+#include "board/HexGrid.hpp"
 
 namespace synera {
 
@@ -20,7 +21,7 @@ void RoundSystem::startCombat(GameState& state) {
 void RoundSystem::spawnEnemies(GameState& state) {
     state.removeEnemyUnits();
     const UnitId enemy = state.createUnit("training_dummy", Owner::EnemyCtrl);
-    state.placeUnitOnBoard(enemy, GridPos{3, 1});
+    state.placeUnitOnBoard(enemy, hex::oddRToAxial(OffsetPos{3, 1}));
 }
 
 void RoundSystem::enterResolve(GameState& state, bool playerWon) {

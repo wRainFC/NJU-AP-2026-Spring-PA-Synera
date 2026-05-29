@@ -42,7 +42,7 @@ public:
     std::vector<Trait> traits;
     int star = 1;
 
-    std::optional<GridPos> boardPos;
+    std::optional<AxialPos> boardPos;
     std::optional<int> benchSlot;
     std::optional<EquipmentType> equipment;
 
