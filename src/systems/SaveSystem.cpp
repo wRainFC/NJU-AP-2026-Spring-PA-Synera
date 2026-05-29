@@ -1,5 +1,7 @@
 #include "systems/SaveSystem.hpp"
 
+#include "core/GameState.hpp"
+
 namespace synera {
 
 std::expected<void, std::string> SaveSystem::save(const GameState&, const std::string&) const {

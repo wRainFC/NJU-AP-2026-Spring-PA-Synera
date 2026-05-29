@@ -1,6 +1,7 @@
 #include "systems/ShopSystem.hpp"
 
 #include "app/GameConfig.hpp"
+#include "core/GameState.hpp"
 
 #include <algorithm>
 

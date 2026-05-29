@@ -3,6 +3,7 @@
 #include "app/GameConfig.hpp"
 #include "board/Bench.hpp"
 #include "board/Board.hpp"
+#include "core/Placement.hpp"
 #include "core/Player.hpp"
 #include "core/Unit.hpp"
 
@@ -20,17 +21,6 @@
 #include <vector>
 
 namespace synera {
-
-enum class PlacementResult {
-    Ok,
-    InvalidPhase,
-    InvalidUnit,
-    InvalidOwner,
-    InvalidPosition,
-    InvalidHalf,
-    PopulationFull,
-    Occupied,
-};
 
 // Central mutable model for rules and persistence; UI state such as dragging stays outside.
 class GameState {

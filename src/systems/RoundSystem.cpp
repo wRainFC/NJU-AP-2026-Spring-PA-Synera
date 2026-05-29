@@ -2,6 +2,7 @@
 
 #include "app/GameConfig.hpp"
 #include "board/HexGrid.hpp"
+#include "core/GameState.hpp"
 
 namespace synera {
 

@@ -1,6 +1,6 @@
 #include "core/UnitCatalog.hpp"
 
-#include "core/Ability.hpp"
+#include "core/abilities/BasicAbilities.hpp"
 
 #include <memory>
 

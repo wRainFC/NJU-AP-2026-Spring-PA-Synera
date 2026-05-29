@@ -1,8 +1,10 @@
 #pragma once
 
-#include "core/GameState.hpp"
+#include "core/Types.hpp"
 
 namespace synera {
+
+class GameState;
 
 class EquipmentSystem {
 public:

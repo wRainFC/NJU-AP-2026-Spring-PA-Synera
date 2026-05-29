@@ -1,6 +1,7 @@
 #include "systems/CombatSystem.hpp"
 
 #include "board/HexGrid.hpp"
+#include "core/GameState.hpp"
 
 #include <limits>
 

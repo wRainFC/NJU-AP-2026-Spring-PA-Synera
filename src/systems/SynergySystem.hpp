@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/GameState.hpp"
-
 namespace synera {
+
+class GameState;
 
 class SynergySystem {
 public:

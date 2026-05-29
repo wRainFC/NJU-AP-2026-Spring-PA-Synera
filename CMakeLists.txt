@@ -21,8 +21,8 @@ endif()
 add_executable(synera
     src/main.cpp
     src/app/GameApp.cpp
-    src/core/Ability.cpp
     src/core/AbilityContext.cpp
+    src/core/abilities/BasicAbilities.cpp
     src/core/GameState.cpp
     src/core/Player.cpp
     src/core/UnitCatalog.cpp

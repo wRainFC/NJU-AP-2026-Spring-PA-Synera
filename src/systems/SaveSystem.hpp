@@ -1,11 +1,11 @@
 #pragma once
 
-#include "core/GameState.hpp"
-
 #include <expected>
 #include <string>
 
 namespace synera {
+
+class GameState;
 
 class SaveSystem {
 public:

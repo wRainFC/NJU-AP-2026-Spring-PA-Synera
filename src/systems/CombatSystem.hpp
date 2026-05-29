@@ -1,9 +1,12 @@
 #pragma once
 
 #include "board/Pathfinder.hpp"
-#include "core/GameState.hpp"
+#include "core/Types.hpp"
 
 namespace synera {
+
+class GameState;
+class Unit;
 
 class CombatSystem {
 public:

@@ -1,5 +1,7 @@
 #include "systems/EquipmentSystem.hpp"
 
+#include "core/GameState.hpp"
+
 namespace synera {
 
 void EquipmentSystem::recomputeStats(GameState&) {}
