@@ -13,4 +13,4 @@ bool EquipmentSystem::equip(GameState& state, UnitId unitId, EquipmentType equip
     return true;
 }
 
-} // namespace synera
+}  // namespace synera

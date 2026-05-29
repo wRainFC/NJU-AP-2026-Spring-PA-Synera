@@ -58,4 +58,4 @@ void CombatSystem::performAttack(Unit& attacker, Unit& target) {
     attacker.gainMana(10);
 }
 
-} // namespace synera
+}  // namespace synera

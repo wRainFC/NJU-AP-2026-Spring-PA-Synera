@@ -20,4 +20,4 @@ inline constexpr int LossGoldReward = 3;
 inline constexpr int LossHpPenalty = 10;
 inline constexpr int ShopRefreshCost = 2;
 
-} // namespace synera::config
+}  // namespace synera::config

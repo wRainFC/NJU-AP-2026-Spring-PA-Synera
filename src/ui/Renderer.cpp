@@ -13,17 +13,17 @@ namespace {
 
 [[nodiscard]] const char* phaseName(Phase phase) noexcept {
     switch (phase) {
-    case Phase::Prep:
-        return "Prep";
-    case Phase::Combat:
-        return "Combat";
-    case Phase::Resolve:
-        return "Resolve";
+        case Phase::Prep:
+            return "Prep";
+        case Phase::Combat:
+            return "Combat";
+        case Phase::Resolve:
+            return "Resolve";
     }
     return "Unknown";
 }
 
-} // namespace
+}  // namespace
 
 void Renderer::draw(const GameState& state, const Layout& layout) {
     drawTopBar(state);
@@ -34,12 +34,11 @@ void Renderer::draw(const GameState& state, const Layout& layout) {
 }
 
 void Renderer::drawTopBar(const GameState& state) {
-    const std::string text = "HP: " + std::to_string(state.player().hp) +
-                             "  Gold: " + std::to_string(state.player().gold) +
-                             "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
-                             std::to_string(state.player().populationCap) +
-                             "  Round: " + std::to_string(state.player().currentRound) +
-                             "  Phase: " + phaseName(state.phase());
+    const std::string text =
+        "HP: " + std::to_string(state.player().hp) + "  Gold: " + std::to_string(state.player().gold) +
+        "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
+        std::to_string(state.player().populationCap) +
+        "  Round: " + std::to_string(state.player().currentRound) + "  Phase: " + phaseName(state.phase());
     DrawText(text.c_str(), 32, 24, 20, RAYWHITE);
 }
 
@@ -49,8 +48,7 @@ void Renderer::drawBoard(const GameState& state, const Layout& layout) {
         for (int x : std::views::iota(0, config::BoardWidth)) {
             const GridPos pos{x, y};
             const Rectangle rect = layout.boardTileRect(pos);
-            const Color color =
-                y < config::BoardHeight / 2 ? Color{58, 64, 72, 255} : Color{48, 78, 62, 255};
+            const Color color = y < config::BoardHeight / 2 ? Color{58, 64, 72, 255} : Color{48, 78, 62, 255};
             DrawRectangleRec(rect, color);
             DrawRectangleLinesEx(rect, 1.0F, Color{95, 103, 112, 255});
         }
@@ -78,17 +76,15 @@ void Renderer::drawUnits(const GameState& state, const Layout& layout) {
 }
 
 void Renderer::drawUnit(const Unit& unit, Rectangle rect) {
-    const Color body =
-        unit.owner == Owner::PlayerCtrl ? Color{74, 144, 226, 255} : Color{212, 91, 91, 255};
-    DrawCircle(static_cast<int>(rect.x + rect.width / 2.0F),
-               static_cast<int>(rect.y + rect.height / 2.0F), rect.width * 0.32F, body);
+    const Color body = unit.owner == Owner::PlayerCtrl ? Color{74, 144, 226, 255} : Color{212, 91, 91, 255};
+    DrawCircle(static_cast<int>(rect.x + rect.width / 2.0F), static_cast<int>(rect.y + rect.height / 2.0F),
+               rect.width * 0.32F, body);
 
-    const float hpRatio =
-        static_cast<float>(unit.runtime.hp) / static_cast<float>(unit.derivedStats.maxHp);
+    const float hpRatio = static_cast<float>(unit.runtime.hp) / static_cast<float>(unit.derivedStats.maxHp);
     DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 4.0F),
                   static_cast<int>((rect.width - 12.0F) * hpRatio), 5, GREEN);
-    DrawText(unit.name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 40.0F),
-             9, RAYWHITE);
+    DrawText(unit.name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 40.0F), 9,
+             RAYWHITE);
 }
 
 void Renderer::drawStartButton(const GameState& state, const Layout& layout) {
@@ -100,4 +96,4 @@ void Renderer::drawStartButton(const GameState& state, const Layout& layout) {
              RAYWHITE);
 }
 
-} // namespace synera
+}  // namespace synera

@@ -10,4 +10,4 @@ public:
     bool equip(GameState& state, UnitId unitId, EquipmentType equipment);
 };
 
-} // namespace synera
+}  // namespace synera

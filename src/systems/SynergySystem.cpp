@@ -4,4 +4,4 @@ namespace synera {
 
 void SynergySystem::recompute(GameState&) {}
 
-} // namespace synera
+}  // namespace synera

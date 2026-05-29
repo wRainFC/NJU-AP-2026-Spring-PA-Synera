@@ -22,8 +22,7 @@ struct DragState {
 
 class InputController {
 public:
-    void update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
-                ShopSystem& shopSystem);
+    void update(GameState& state, const Layout& layout, RoundSystem& roundSystem, ShopSystem& shopSystem);
 
 private:
     DragState drag_;
@@ -32,4 +31,4 @@ private:
     void endDrag(GameState& state, const Layout& layout);
 };
 
-} // namespace synera
+}  // namespace synera

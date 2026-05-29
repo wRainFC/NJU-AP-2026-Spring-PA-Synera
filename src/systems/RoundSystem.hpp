@@ -12,4 +12,4 @@ public:
     void finishResolve(GameState& state);
 };
 
-} // namespace synera
+}  // namespace synera

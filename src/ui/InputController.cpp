@@ -15,7 +15,7 @@ namespace {
            point.y <= rect.y + rect.height;
 }
 
-} // namespace
+}  // namespace
 
 void InputController::update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
                              ShopSystem& shopSystem) {
@@ -68,4 +68,4 @@ void InputController::endDrag(GameState& state, const Layout& layout) {
     drag_ = DragState{};
 }
 
-} // namespace synera
+}  // namespace synera

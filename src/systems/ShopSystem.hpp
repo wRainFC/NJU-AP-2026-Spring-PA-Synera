@@ -10,4 +10,4 @@ public:
     bool buy(GameState& state, int offerIndex);
 };
 
-} // namespace synera
+}  // namespace synera

@@ -8,8 +8,7 @@
 
 namespace synera {
 
-GameState::GameState()
-    : board_(config::BoardWidth, config::BoardHeight), bench_(config::BenchSize) {}
+GameState::GameState() : board_(config::BoardWidth, config::BoardHeight), bench_(config::BenchSize) {}
 
 Phase GameState::phase() const noexcept {
     return phase_;
@@ -91,10 +90,8 @@ bool GameState::isCombatFinished() const {
     bool hasPlayers = false;
     bool hasEnemies = false;
     forEachUnit([&](const Unit& unit) {
-        hasPlayers =
-            hasPlayers || (unit.owner == Owner::PlayerCtrl && unit.onBoard() && unit.alive());
-        hasEnemies =
-            hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
+        hasPlayers = hasPlayers || (unit.owner == Owner::PlayerCtrl && unit.onBoard() && unit.alive());
+        hasEnemies = hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
     });
     return !hasPlayers || !hasEnemies;
 }
@@ -102,8 +99,7 @@ bool GameState::isCombatFinished() const {
 bool GameState::playerWonCombat() const {
     bool hasEnemies = false;
     forEachUnit([&](const Unit& unit) {
-        hasEnemies =
-            hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
+        hasEnemies = hasEnemies || (unit.owner == Owner::EnemyCtrl && unit.onBoard() && unit.alive());
     });
     return !hasEnemies;
 }
@@ -195,4 +191,4 @@ void GameState::removeEnemyUnits() {
     });
 }
 
-} // namespace synera
+}  // namespace synera

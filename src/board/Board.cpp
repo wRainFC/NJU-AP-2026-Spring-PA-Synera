@@ -79,4 +79,4 @@ int Board::index(GridPos pos) const {
     return pos.y * width_ + pos.x;
 }
 
-} // namespace synera
+}  // namespace synera

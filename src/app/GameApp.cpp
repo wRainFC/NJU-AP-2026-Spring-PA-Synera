@@ -54,4 +54,4 @@ void GameApp::shutdown() {
     CloseWindow();
 }
 
-} // namespace synera
+}  // namespace synera

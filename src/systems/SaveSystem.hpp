@@ -14,4 +14,4 @@ public:
     [[nodiscard]] std::expected<GameState, std::string> load(const std::string& path) const;
 };
 
-} // namespace synera
+}  // namespace synera

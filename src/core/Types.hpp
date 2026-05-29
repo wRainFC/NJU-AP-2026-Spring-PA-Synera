@@ -33,4 +33,4 @@ struct ShopOffer {
     int cost = 1;
 };
 
-} // namespace synera
+}  // namespace synera

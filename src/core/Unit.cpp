@@ -70,4 +70,4 @@ void Unit::checkInvariants() const {
     SYNERA_INVARIANT(runtime.hp <= derivedStats.maxHp);
 }
 
-} // namespace synera
+}  // namespace synera

@@ -12,4 +12,4 @@ public:
                                                              GridPos target, int attackRange) const;
 };
 
-} // namespace synera
+}  // namespace synera

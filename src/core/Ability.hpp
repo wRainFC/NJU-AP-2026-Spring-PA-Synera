@@ -36,4 +36,4 @@ public:
     void cast(Unit& caster, AbilityContext& context) override;
 };
 
-} // namespace synera
+}  // namespace synera

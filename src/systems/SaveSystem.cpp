@@ -10,4 +10,4 @@ std::expected<GameState, std::string> SaveSystem::load(const std::string&) const
     return GameState{};
 }
 
-} // namespace synera
+}  // namespace synera

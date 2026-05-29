@@ -9,4 +9,4 @@ public:
     void recompute(GameState& state);
 };
 
-} // namespace synera
+}  // namespace synera

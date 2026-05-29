@@ -60,4 +60,4 @@ public:
     void checkInvariants() const;
 };
 
-} // namespace synera
+}  // namespace synera

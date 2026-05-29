@@ -15,4 +15,4 @@ void AbilityContext::heal(Unit& target, int amount) const noexcept {
     target.heal(amount);
 }
 
-} // namespace synera
+}  // namespace synera

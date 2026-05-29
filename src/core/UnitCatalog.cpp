@@ -43,7 +43,7 @@ std::vector<Trait> traitsFor(Owner owner) {
                                       : std::vector<Trait>{Trait::Guardian};
 }
 
-} // namespace
+}  // namespace
 
 Unit UnitCatalog::createUnit(UnitId id, std::string_view templateId, Owner owner) {
     Unit unit;
@@ -60,4 +60,4 @@ Unit UnitCatalog::createUnit(UnitId id, std::string_view templateId, Owner owner
     return unit;
 }
 
-} // namespace synera
+}  // namespace synera

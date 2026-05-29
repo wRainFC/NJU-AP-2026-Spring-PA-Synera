@@ -9,4 +9,4 @@ public:
     bool tryMergeAfterGain(GameState& state, UnitId gainedUnitId);
 };
 
-} // namespace synera
+}  // namespace synera

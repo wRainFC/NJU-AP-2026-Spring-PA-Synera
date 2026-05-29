@@ -14,4 +14,4 @@ private:
     void performAttack(Unit& attacker, Unit& target);
 };
 
-} // namespace synera
+}  // namespace synera

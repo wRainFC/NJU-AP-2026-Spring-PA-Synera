@@ -32,4 +32,4 @@ private:
     [[nodiscard]] int index(GridPos pos) const;
 };
 
-} // namespace synera
+}  // namespace synera

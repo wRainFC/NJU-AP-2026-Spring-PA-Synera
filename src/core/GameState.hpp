@@ -44,13 +44,15 @@ public:
 
     [[nodiscard]] Unit* findUnit(UnitId id);
     [[nodiscard]] const Unit* findUnit(UnitId id) const;
-    template <std::invocable<Unit&> Visitor> void forEachUnit(Visitor&& visitor) {
+    template <std::invocable<Unit&> Visitor>
+    void forEachUnit(Visitor&& visitor) {
         for (auto& unit : units_ | std::views::values) {
             std::invoke(std::forward<Visitor>(visitor), *unit);
         }
     }
 
-    template <std::invocable<const Unit&> Visitor> void forEachUnit(Visitor&& visitor) const {
+    template <std::invocable<const Unit&> Visitor>
+    void forEachUnit(Visitor&& visitor) const {
         for (const auto& unit : units_ | std::views::values) {
             std::invoke(std::forward<Visitor>(visitor), *unit);
         }
@@ -74,7 +76,8 @@ public:
         });
     }
 
-    template <std::invocable<Unit&> Visitor> void forEachPlayerBoardUnit(Visitor&& visitor) {
+    template <std::invocable<Unit&> Visitor>
+    void forEachPlayerBoardUnit(Visitor&& visitor) {
         forEachUnit([&](Unit& unit) {
             if (unit.owner == Owner::PlayerCtrl && unit.onBoard()) {
                 std::invoke(visitor, unit);
@@ -91,7 +94,8 @@ public:
         });
     }
 
-    template <std::invocable<Unit&> Visitor> void forEachEnemyBoardUnit(Visitor&& visitor) {
+    template <std::invocable<Unit&> Visitor>
+    void forEachEnemyBoardUnit(Visitor&& visitor) {
         forEachUnit([&](Unit& unit) {
             if (unit.owner == Owner::EnemyCtrl && unit.onBoard()) {
                 std::invoke(visitor, unit);
@@ -131,4 +135,4 @@ private:
     UnitId nextUnitId_ = 1;
 };
 
-} // namespace synera
+}  // namespace synera

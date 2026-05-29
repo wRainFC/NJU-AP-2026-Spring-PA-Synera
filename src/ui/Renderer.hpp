@@ -21,4 +21,4 @@ private:
     void drawStartButton(const GameState& state, const Layout& layout);
 };
 
-} // namespace synera
+}  // namespace synera

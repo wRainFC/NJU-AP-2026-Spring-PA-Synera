@@ -28,4 +28,4 @@ bool ShopSystem::buy(GameState& state, int offerIndex) {
     return state.placeUnitOnBench(unit, *slot);
 }
 
-} // namespace synera
+}  // namespace synera

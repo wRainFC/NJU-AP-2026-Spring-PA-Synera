@@ -62,4 +62,4 @@ bool Bench::inBounds(int slot) const noexcept {
     return slot >= 0 && slot < size();
 }
 
-} // namespace synera
+}  // namespace synera

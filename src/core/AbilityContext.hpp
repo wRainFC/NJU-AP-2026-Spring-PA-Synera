@@ -43,4 +43,4 @@ private:
     GameState& state_;
 };
 
-} // namespace synera
+}  // namespace synera

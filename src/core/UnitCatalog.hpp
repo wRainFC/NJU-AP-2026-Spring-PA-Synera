@@ -11,4 +11,4 @@ public:
     [[nodiscard]] static Unit createUnit(UnitId id, std::string_view templateId, Owner owner);
 };
 
-} // namespace synera
+}  // namespace synera

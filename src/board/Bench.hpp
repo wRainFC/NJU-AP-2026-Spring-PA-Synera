@@ -26,4 +26,4 @@ private:
     [[nodiscard]] bool inBounds(int slot) const noexcept;
 };
 
-} // namespace synera
+}  // namespace synera

@@ -6,4 +6,4 @@ std::vector<GridPos> Pathfinder::findPathToAttackRange(const Board&, GridPos, Gr
     return {};
 }
 
-} // namespace synera
+}  // namespace synera

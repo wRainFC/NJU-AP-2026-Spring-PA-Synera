@@ -37,4 +37,4 @@ private:
     float resolveTimer_ = 0.0F;
 };
 
-} // namespace synera
+}  // namespace synera

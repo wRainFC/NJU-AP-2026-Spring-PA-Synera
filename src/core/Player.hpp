@@ -19,4 +19,4 @@ public:
     bool upgradePopulation() noexcept;
 };
 
-} // namespace synera
+}  // namespace synera

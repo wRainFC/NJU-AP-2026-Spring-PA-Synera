@@ -45,4 +45,4 @@ void RoundSystem::finishResolve(GameState& state) {
     state.setPhase(Phase::Prep);
 }
 
-} // namespace synera
+}  // namespace synera

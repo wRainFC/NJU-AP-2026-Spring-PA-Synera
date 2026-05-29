@@ -19,7 +19,7 @@ constexpr float SlotGap = 8.0F;
            point.y <= rect.y + rect.height;
 }
 
-} // namespace
+}  // namespace
 
 Rectangle Layout::boardTileRect(GridPos pos) const noexcept {
     return Rectangle{
@@ -64,4 +64,4 @@ std::optional<int> Layout::benchSlotAt(Vector2 mouse) const noexcept {
     return std::nullopt;
 }
 
-} // namespace synera
+}  // namespace synera

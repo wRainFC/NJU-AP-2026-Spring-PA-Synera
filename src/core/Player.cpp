@@ -34,4 +34,4 @@ bool Player::upgradePopulation() noexcept {
     return true;
 }
 
-} // namespace synera
+}  // namespace synera

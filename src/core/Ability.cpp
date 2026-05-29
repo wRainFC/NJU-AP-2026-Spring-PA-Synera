@@ -40,4 +40,4 @@ void HealingAuraAbility::cast(Unit& caster, AbilityContext&) {
     caster.runtime.mana = 0;
 }
 
-} // namespace synera
+}  // namespace synera

@@ -16,4 +16,4 @@ public:
     [[nodiscard]] std::optional<int> benchSlotAt(Vector2 mouse) const noexcept;
 };
 
-} // namespace synera
+}  // namespace synera
