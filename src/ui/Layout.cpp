@@ -18,6 +18,11 @@ constexpr float BoardLeft = 80.0F;
 constexpr float BoardTop = 92.0F;
 constexpr float BenchTop = 580.0F;
 constexpr float SlotGap = 8.0F;
+constexpr float ShopLeft = 820.0F;
+constexpr float ShopTop = 160.0F;
+constexpr float ShopOfferWidth = 220.0F;
+constexpr float ShopOfferHeight = 52.0F;
+constexpr float ShopGap = 8.0F;
 constexpr float Pi = 3.14159265359F;
 
 [[nodiscard]] bool contains(Rectangle rect, Vector2 point) noexcept {
@@ -87,6 +92,19 @@ Rectangle Layout::startButtonRect() const noexcept {
     return Rectangle{820.0F, 96.0F, 180.0F, 44.0F};
 }
 
+Rectangle Layout::shopOfferRect(int index) const noexcept {
+    return Rectangle{
+        ShopLeft,
+        ShopTop + static_cast<float>(index) * (ShopOfferHeight + ShopGap),
+        ShopOfferWidth,
+        ShopOfferHeight,
+    };
+}
+
+Rectangle Layout::shopRefreshButtonRect() const noexcept {
+    return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 8.0F, 110.0F, 40.0F};
+}
+
 std::optional<AxialPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
     for (int y : std::views::iota(0, config::BoardHeight)) {
         for (int x : std::views::iota(0, config::BoardWidth)) {
@@ -103,6 +121,15 @@ std::optional<int> Layout::benchSlotAt(Vector2 mouse) const noexcept {
     for (int slot : std::views::iota(0, config::BenchSize)) {
         if (contains(benchSlotRect(slot), mouse)) {
             return slot;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<int> Layout::shopOfferAt(Vector2 mouse) const noexcept {
+    for (int index : std::views::iota(0, config::ShopOfferCount)) {
+        if (contains(shopOfferRect(index), mouse)) {
+            return index;
         }
     }
     return std::nullopt;

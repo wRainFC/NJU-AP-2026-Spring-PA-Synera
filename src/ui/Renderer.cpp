@@ -39,6 +39,7 @@ void Renderer::draw(const GameState& state, const Layout& layout) {
     drawTopBar(state);
     drawBoard(state, layout);
     drawBench(state, layout);
+    drawShop(state, layout);
     drawUnits(state, layout);
     drawStartButton(state, layout);
 }
@@ -78,6 +79,29 @@ void Renderer::drawBench(const GameState& state, const Layout& layout) {
         DrawRectangleRec(rect, Color{50, 50, 55, 255});
         DrawRectangleLinesEx(rect, 1.0F, Color{120, 120, 128, 255});
     }
+}
+
+void Renderer::drawShop(const GameState& state, const Layout& layout) {
+    DrawText("Shop", 820, 132, 18, RAYWHITE);
+    for (int index : std::views::iota(0, config::ShopOfferCount)) {
+        const Rectangle rect = layout.shopOfferRect(index);
+        const ShopOffer& offer = state.shopOffers()[static_cast<std::size_t>(index)];
+        DrawRectangleRec(rect, Color{45, 48, 54, 255});
+        DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
+
+        const std::string name = offer.unitTemplateId.empty() ? "-" : offer.unitTemplateId;
+        const std::string cost = std::to_string(offer.cost) + "g";
+        DrawText(name.c_str(), static_cast<int>(rect.x + 10.0F), static_cast<int>(rect.y + 8.0F), 16,
+                 RAYWHITE);
+        DrawText(cost.c_str(), static_cast<int>(rect.x + rect.width - 42.0F),
+                 static_cast<int>(rect.y + 28.0F), 14, GOLD);
+    }
+
+    const Rectangle refresh = layout.shopRefreshButtonRect();
+    DrawRectangleRec(refresh, Color{76, 82, 92, 255});
+    DrawRectangleLinesEx(refresh, 1.0F, RAYWHITE);
+    DrawText("Refresh", static_cast<int>(refresh.x + 14.0F), static_cast<int>(refresh.y + 12.0F), 16,
+             RAYWHITE);
 }
 
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {

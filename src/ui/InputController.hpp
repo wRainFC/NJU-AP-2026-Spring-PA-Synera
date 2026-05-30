@@ -29,6 +29,7 @@ private:
 
     void beginDrag(GameState& state, const Layout& layout);
     void endDrag(GameState& state, const Layout& layout);
+    [[nodiscard]] bool handleShopClick(GameState& state, const Layout& layout, ShopSystem& shopSystem);
 };
 
 }  // namespace synera

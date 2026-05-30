@@ -51,7 +51,6 @@ namespace {
 
 void InputController::update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
                              ShopSystem& shopSystem) {
-    (void)shopSystem;
     const Vector2 mouse = GetMousePosition();
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.startButtonRect(), mouse)) {
@@ -64,6 +63,9 @@ void InputController::update(GameState& state, const Layout& layout, RoundSystem
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (handleShopClick(state, layout, shopSystem)) {
+            return;
+        }
         beginDrag(state, layout);
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -91,6 +93,19 @@ void InputController::endDrag(GameState& state, const Layout& layout) {
     }
 
     drag_ = DragState{};
+}
+
+bool InputController::handleShopClick(GameState& state, const Layout& layout, ShopSystem& shopSystem) {
+    const Vector2 mouse = GetMousePosition();
+    if (contains(layout.shopRefreshButtonRect(), mouse)) {
+        shopSystem.refresh(state, true);
+        return true;
+    }
+    if (const auto offer = layout.shopOfferAt(mouse)) {
+        shopSystem.buy(state, *offer);
+        return true;
+    }
+    return false;
 }
 
 }  // namespace synera

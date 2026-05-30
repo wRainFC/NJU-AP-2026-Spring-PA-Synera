@@ -16,6 +16,7 @@ private:
     void drawTopBar(const GameState& state);
     void drawBoard(const GameState& state, const Layout& layout);
     void drawBench(const GameState& state, const Layout& layout);
+    void drawShop(const GameState& state, const Layout& layout);
     void drawUnits(const GameState& state, const Layout& layout);
     void drawUnit(const Unit& unit, Rectangle rect);
     void drawStartButton(const GameState& state, const Layout& layout);
