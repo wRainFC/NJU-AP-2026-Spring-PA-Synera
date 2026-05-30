@@ -40,14 +40,16 @@ constexpr UnitStats DefaultStats{360, 32, 1, 70, 1.0F, 0.25F};
 constexpr std::array UnitTemplates{
     UnitTemplate{"iron_guard", "Iron Guard", DefaultStats, makeStunStrikeAbility},
     UnitTemplate{"ember_mage", "Ember Mage", UnitStats{220, 42, 3, 60, 1.2F, 0.25F}, makeFireLineAbility},
-    UnitTemplate{"field_medic", "Field Medic", UnitStats{260, 24, 2, 55, 1.1F, 0.25F}, makeHealingAuraAbility},
+    UnitTemplate{"field_medic", "Field Medic", UnitStats{260, 24, 2, 55, 1.1F, 0.25F},
+                 makeHealingAuraAbility},
+    UnitTemplate{"storm_archer", "Storm Archer", UnitStats{240, 48, 4, 70, 0.9F, 0.25F},
+                 makeStunStrikeAbility},
     UnitTemplate{"training_dummy", "Training Dummy", UnitStats{180, 18, 1, 80, 1.4F, 0.3F}, makeNoopAbility},
 };
 
 const UnitTemplate* findTemplate(std::string_view templateId) {
-    const auto iter = std::ranges::find_if(UnitTemplates, [&](const UnitTemplate& unitTemplate) {
-        return unitTemplate.id == templateId;
-    });
+    const auto iter = std::ranges::find_if(
+        UnitTemplates, [&](const UnitTemplate& unitTemplate) { return unitTemplate.id == templateId; });
     return iter == UnitTemplates.end() ? nullptr : &*iter;
 }
 

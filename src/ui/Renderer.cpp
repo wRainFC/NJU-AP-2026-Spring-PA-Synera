@@ -85,12 +85,13 @@ void Renderer::drawShop(const GameState& state, const Layout& layout) {
     DrawText("Shop", 820, 132, 18, RAYWHITE);
     for (int index : std::views::iota(0, config::ShopOfferCount)) {
         const Rectangle rect = layout.shopOfferRect(index);
-        const ShopOffer& offer = state.shopOffers()[static_cast<std::size_t>(index)];
+        const ShopOffer& offer = state.shop().offers()[static_cast<std::size_t>(index)];
         DrawRectangleRec(rect, Color{45, 48, 54, 255});
         DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
 
-        const std::string name = offer.unitTemplateId.empty() ? "-" : offer.unitTemplateId;
-        const std::string cost = std::to_string(offer.cost) + "g";
+        const std::string name = offer.empty() ? "-" : offer.unitTemplateId;
+        const std::string cost =
+            offer.empty() ? "" : ("T" + std::to_string(offer.tier) + "  " + std::to_string(offer.cost) + "g");
         DrawText(name.c_str(), static_cast<int>(rect.x + 10.0F), static_cast<int>(rect.y + 8.0F), 16,
                  RAYWHITE);
         DrawText(cost.c_str(), static_cast<int>(rect.x + rect.width - 42.0F),
@@ -102,6 +103,13 @@ void Renderer::drawShop(const GameState& state, const Layout& layout) {
     DrawRectangleLinesEx(refresh, 1.0F, RAYWHITE);
     DrawText("Refresh", static_cast<int>(refresh.x + 14.0F), static_cast<int>(refresh.y + 12.0F), 16,
              RAYWHITE);
+
+    const Rectangle lock = layout.shopLockButtonRect();
+    const bool locked = state.shop().locked();
+    DrawRectangleRec(lock, locked ? Color{114, 83, 44, 255} : Color{76, 82, 92, 255});
+    DrawRectangleLinesEx(lock, 1.0F, RAYWHITE);
+    DrawText(locked ? "Locked" : "Lock", static_cast<int>(lock.x + 18.0F), static_cast<int>(lock.y + 12.0F),
+             16, RAYWHITE);
 }
 
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {

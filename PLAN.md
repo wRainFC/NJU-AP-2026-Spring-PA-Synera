@@ -636,6 +636,29 @@ bool Board::place(UnitId unitId, AxialPos pos) {
 - 读档失败不能崩溃，应保留当前状态并在 UI 显示错误。
 - 内部不可恢复错误在 Debug 下用契约断言尽早暴露。
 
+### 6.7 提交规范
+
+每完成一个可验证的小步骤都提交一次。提交前必须至少运行对应构建或测试命令，并确认 `git diff --check` 没有格式空白问题。
+
+提交信息统一使用以下格式：
+
+```text
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+要求：
+
+- `type` 使用 `feat`、`fix`、`refactor`、`test`、`docs`、`style`、`chore` 之一。
+- `scope` 使用主要影响模块，例如 `shop`、`combat`、`board`、`ui`、`docs`。
+- `subject` 使用简短英文句子，说明本次提交做了什么，不超过一行。
+- `body` 写清楚主要改动、验证方式和关键设计取舍。
+- `footer` 没有关联 issue 或破坏性变更时写 `Refs: none`。
+- 不把无关格式化、生成文件或本地构建产物混入功能提交。
+
 ## 7. 验收清单
 
 ### 阶段一
@@ -685,12 +708,12 @@ bool Board::place(UnitId unitId, AxialPos pos) {
 11. 加存档读档，并让读档后重算派生状态。
 12. 补 README、AI 使用说明和验收演示说明。
 
-每完成一步都提交一次，提交信息写清楚完成的功能，例如：
+每完成一步都提交一次，提交信息遵循 `6.7 提交规范`。示例：
 
 ```text
-chore: scaffold raylib app shell
-feat: add core game state model
-feat: add playable combat loop slice
+chore(app): scaffold raylib app shell
+feat(core): add game state model
+feat(combat): add playable loop slice
 ```
 
 ## 9. 不做的事

@@ -105,6 +105,10 @@ Rectangle Layout::shopRefreshButtonRect() const noexcept {
     return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 8.0F, 110.0F, 40.0F};
 }
 
+Rectangle Layout::shopLockButtonRect() const noexcept {
+    return Rectangle{ShopLeft + 118.0F, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 8.0F, 102.0F, 40.0F};
+}
+
 std::optional<AxialPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
     for (int y : std::views::iota(0, config::BoardHeight)) {
         for (int x : std::views::iota(0, config::BoardWidth)) {

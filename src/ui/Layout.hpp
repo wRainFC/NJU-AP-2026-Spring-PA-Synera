@@ -17,6 +17,7 @@ public:
     [[nodiscard]] Rectangle benchSlotRect(int slot) const noexcept;
     [[nodiscard]] Rectangle shopOfferRect(int index) const noexcept;
     [[nodiscard]] Rectangle shopRefreshButtonRect() const noexcept;
+    [[nodiscard]] Rectangle shopLockButtonRect() const noexcept;
     [[nodiscard]] Rectangle startButtonRect() const noexcept;
     // Returns nullopt when the pointer is in the visual gap between hexes or outside the board.
     [[nodiscard]] std::optional<AxialPos> boardPosAt(Vector2 mouse) const noexcept;

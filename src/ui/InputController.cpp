@@ -98,11 +98,16 @@ void InputController::endDrag(GameState& state, const Layout& layout) {
 bool InputController::handleShopClick(GameState& state, const Layout& layout, ShopSystem& shopSystem) {
     const Vector2 mouse = GetMousePosition();
     if (contains(layout.shopRefreshButtonRect(), mouse)) {
-        shopSystem.refresh(state, true);
+        (void)shopSystem.refresh(state, ShopRefreshMode::Manual);
+        return true;
+    }
+    if (contains(layout.shopLockButtonRect(), mouse)) {
+        (void)shopSystem.toggleLocked(state);
         return true;
     }
     if (const auto offer = layout.shopOfferAt(mouse)) {
-        shopSystem.buy(state, *offer);
+        const ShopBuyResult result = shopSystem.buy(state, *offer);
+        (void)result;
         return true;
     }
     return false;

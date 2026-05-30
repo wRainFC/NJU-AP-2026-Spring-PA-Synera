@@ -5,9 +5,9 @@
 #include "board/Board.hpp"
 #include "core/Placement.hpp"
 #include "core/Player.hpp"
+#include "core/Shop.hpp"
 #include "core/Unit.hpp"
 
-#include <array>
 #include <concepts>
 #include <cstddef>
 #include <functional>
@@ -26,7 +26,6 @@ namespace synera {
 class GameState {
 public:
     using UnitMap = std::unordered_map<UnitId, std::unique_ptr<Unit>>;
-    using ShopOffers = std::array<ShopOffer, config::ShopOfferCount>;
 
     GameState();
 
@@ -37,8 +36,8 @@ public:
     [[nodiscard]] const Player& player() const noexcept;
     [[nodiscard]] const Board& board() const noexcept;
     [[nodiscard]] const Bench& bench() const noexcept;
-    [[nodiscard]] std::span<ShopOffer, config::ShopOfferCount> shopOffers() noexcept;
-    [[nodiscard]] std::span<const ShopOffer, config::ShopOfferCount> shopOffers() const noexcept;
+    [[nodiscard]] Shop& shop() noexcept;
+    [[nodiscard]] const Shop& shop() const noexcept;
     [[nodiscard]] std::span<EquipmentType> equipmentPool() noexcept;
     [[nodiscard]] std::span<const EquipmentType> equipmentPool() const noexcept;
     void addEquipment(EquipmentType equipment);
@@ -151,7 +150,7 @@ private:
     Board board_;
     Bench bench_;
     UnitMap units_;
-    ShopOffers shopOffers_{};
+    Shop shop_;
     std::vector<EquipmentType> equipmentPool_;
     UnitId nextUnitId_ = 1;
 

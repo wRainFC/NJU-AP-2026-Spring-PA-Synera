@@ -26,7 +26,7 @@ void GameApp::init() {
     state_.placeUnitOnBench(second, 1);
     const UnitId third = state_.createUnit("field_medic", Owner::PlayerCtrl);
     state_.placeUnitOnBench(third, 2);
-    shopSystem_.refresh(state_, false);
+    (void)shopSystem_.refresh(state_, ShopRefreshMode::Initial);
 }
 
 void GameApp::update(float dt) {
@@ -42,6 +42,7 @@ void GameApp::update(float dt) {
         resolveTimer_ += dt;
         if (resolveTimer_ >= 1.0F) {
             roundSystem_.finishResolve(state_);
+            (void)shopSystem_.refresh(state_, ShopRefreshMode::RoundStart);
         }
     }
 }

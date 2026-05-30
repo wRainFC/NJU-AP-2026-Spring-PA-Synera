@@ -1,68 +1,79 @@
 #include "systems/ShopSystem.hpp"
 
 #include "app/GameConfig.hpp"
+#include "core/Contract.hpp"
 #include "core/GameState.hpp"
-
-#include <array>
-#include <cstddef>
-#include <ranges>
-#include <string>
-#include <string_view>
 
 namespace synera {
 
 namespace {
 
-struct ShopTemplate {
-    std::string_view templateId;
-    int cost = 1;
-};
+[[nodiscard]] bool costsGold(ShopRefreshMode mode) noexcept {
+    return mode == ShopRefreshMode::Manual;
+}
 
-inline constexpr std::array<ShopTemplate, 3> UnitPool{{
-    ShopTemplate{.templateId = "iron_guard", .cost = 1},
-    ShopTemplate{.templateId = "ember_mage", .cost = 2},
-    ShopTemplate{.templateId = "field_medic", .cost = 2},
-}};
+[[nodiscard]] bool respectsLock(ShopRefreshMode mode) noexcept {
+    return mode == ShopRefreshMode::RoundStart;
+}
 
 }  // namespace
 
-void ShopSystem::refresh(GameState& state, bool payCost) {
+ShopSystem::ShopSystem() : ShopSystem(config::ShopRandomSeed) {}
+
+ShopSystem::ShopSystem(std::uint32_t seed) : rng_(seed) {}
+
+ShopRefreshResult ShopSystem::refresh(GameState& state, ShopRefreshMode mode) {
     if (state.phase() != Phase::Prep) {
-        return;
+        return ShopRefreshResult::InvalidPhase;
     }
-    if (payCost && !state.player().spendGold(config::ShopRefreshCost)) {
-        return;
+    if (respectsLock(mode) && state.shop().locked()) {
+        return ShopRefreshResult::Locked;
+    }
+    if (costsGold(mode) && !state.player().spendGold(config::ShopRefreshCost)) {
+        return ShopRefreshResult::NotEnoughGold;
     }
 
-    for (int index : std::views::iota(0, config::ShopOfferCount)) {
-        ShopOffer& offer = state.shopOffers()[static_cast<std::size_t>(index)];
-        const auto& unit =
-            UnitPool[static_cast<std::size_t>(index + state.player().currentRound) % UnitPool.size()];
-        offer = ShopOffer{
-            .unitTemplateId = std::string(unit.templateId),
-            .cost = unit.cost,
-        };
-    }
+    state.shop().replaceOffers(pool_.rollOffers(ShopRollContext{.playerLevel = state.player().level}, rng_));
+    return ShopRefreshResult::Ok;
 }
 
-bool ShopSystem::buy(GameState& state, int offerIndex) {
+ShopBuyResult ShopSystem::buy(GameState& state, int offerIndex) {
     if (state.phase() != Phase::Prep) {
-        return false;
+        return {.status = ShopBuyStatus::InvalidPhase};
     }
-    if (offerIndex < 0 || offerIndex >= static_cast<int>(state.shopOffers().size())) {
-        return false;
+    const auto offer = state.shop().offerAt(offerIndex);
+    if (!offer) {
+        return {.status = ShopBuyStatus::InvalidOffer};
     }
-    const ShopOffer& offer = state.shopOffers()[offerIndex];
-    if (offer.unitTemplateId.empty()) {
-        return false;
+    if (offer->get().empty()) {
+        return {.status = ShopBuyStatus::EmptyOffer};
     }
     const auto slot = state.firstEmptyBenchSlot();
-    if (!slot || !state.player().spendGold(offer.cost)) {
-        return false;
+    if (!slot) {
+        return {.status = ShopBuyStatus::BenchFull};
+    }
+    if (!state.player().spendGold(offer->get().cost)) {
+        return {.status = ShopBuyStatus::NotEnoughGold};
     }
 
-    const UnitId unit = state.createUnit(offer.unitTemplateId, Owner::PlayerCtrl);
-    return state.placeUnitOnBench(unit, *slot);
+    const UnitId unit = state.createUnit(offer->get().unitTemplateId, Owner::PlayerCtrl);
+    const bool placed = state.placeUnitOnBench(unit, *slot);
+    SYNERA_ENSURES(placed);
+    if (!placed) {
+        state.player().addGold(offer->get().cost);
+        return {.status = ShopBuyStatus::PlacementFailed};
+    }
+
+    state.shop().clearOffer(offerIndex);
+    return {.status = ShopBuyStatus::Ok, .gainedUnitId = unit};
+}
+
+void ShopSystem::setLocked(GameState& state, bool locked) const {
+    state.shop().setLocked(locked);
+}
+
+bool ShopSystem::toggleLocked(GameState& state) const {
+    return state.shop().toggleLocked();
 }
 
 }  // namespace synera

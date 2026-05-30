@@ -19,7 +19,12 @@ TEST_CASE("UnitCatalog creates configured hero templates", "[unit-catalog]") {
     CHECK(fieldMedic.derivedStats.maxMana == 55);
     REQUIRE(dynamic_cast<synera::HealingAuraAbility*>(fieldMedic.ability.get()) != nullptr);
 
-    const auto dummy = synera::UnitCatalog::createUnit(4, "training_dummy", synera::Owner::EnemyCtrl);
+    const auto stormArcher = synera::UnitCatalog::createUnit(4, "storm_archer", synera::Owner::PlayerCtrl);
+    CHECK(stormArcher.name == "Storm Archer");
+    CHECK(stormArcher.derivedStats.range == 4);
+    REQUIRE(dynamic_cast<synera::StunStrikeAbility*>(stormArcher.ability.get()) != nullptr);
+
+    const auto dummy = synera::UnitCatalog::createUnit(5, "training_dummy", synera::Owner::EnemyCtrl);
     CHECK(dummy.name == "Training Dummy");
     CHECK(dummy.derivedStats.atk == 18);
     REQUIRE(dynamic_cast<synera::NoopAbility*>(dummy.ability.get()) != nullptr);

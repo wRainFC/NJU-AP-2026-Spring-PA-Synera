@@ -24,6 +24,7 @@ add_library(synera_logic
     src/core/abilities/BasicAbilities.cpp
     src/core/GameState.cpp
     src/core/Player.cpp
+    src/core/Shop.cpp
     src/core/UnitCatalog.cpp
     src/core/Unit.cpp
     src/board/Bench.cpp
@@ -33,6 +34,7 @@ add_library(synera_logic
     src/systems/EquipmentSystem.cpp
     src/systems/RoundSystem.cpp
     src/systems/SaveSystem.cpp
+    src/systems/ShopPool.cpp
     src/systems/ShopSystem.cpp
     src/systems/SynergySystem.cpp
     src/systems/UpgradeSystem.cpp
@@ -79,6 +81,7 @@ if (BUILD_TESTING)
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
         tests/RoundSystemTests.cpp
+        tests/ShopTests.cpp
         tests/UnitCatalogTests.cpp
     )
 

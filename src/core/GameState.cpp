@@ -49,12 +49,12 @@ const Bench& GameState::bench() const noexcept {
     return bench_;
 }
 
-std::span<ShopOffer, config::ShopOfferCount> GameState::shopOffers() noexcept {
-    return shopOffers_;
+Shop& GameState::shop() noexcept {
+    return shop_;
 }
 
-std::span<const ShopOffer, config::ShopOfferCount> GameState::shopOffers() const noexcept {
-    return shopOffers_;
+const Shop& GameState::shop() const noexcept {
+    return shop_;
 }
 
 std::span<EquipmentType> GameState::equipmentPool() noexcept {
