@@ -19,6 +19,29 @@ if (NOT raylib_FOUND)
     FetchContent_MakeAvailable(raylib)
 endif()
 
+find_package(cereal QUIET)
+
+if (NOT cereal_FOUND)
+    FetchContent_Declare(
+        cereal
+        GIT_REPOSITORY https://github.com/USCiLab/cereal.git
+        GIT_TAG v1.3.2
+    )
+    set(BUILD_DOC OFF CACHE BOOL "" FORCE)
+    set(BUILD_SANDBOX OFF CACHE BOOL "" FORCE)
+    set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(SKIP_PERFORMANCE_COMPARISON ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(cereal)
+endif()
+
+if (TARGET cereal::cereal)
+    set(SYNERA_CEREAL_TARGET cereal::cereal)
+elseif (TARGET cereal)
+    set(SYNERA_CEREAL_TARGET cereal)
+else()
+    message(FATAL_ERROR "cereal target not found")
+endif()
+
 add_library(synera_logic
     src/core/AbilityContext.cpp
     src/core/abilities/BasicAbilities.cpp
@@ -42,6 +65,7 @@ add_library(synera_logic
 )
 
 target_include_directories(synera_logic PUBLIC src)
+target_link_libraries(synera_logic PUBLIC ${SYNERA_CEREAL_TARGET})
 
 add_executable(synera
     src/main.cpp
@@ -84,6 +108,7 @@ if (BUILD_TESTING)
         tests/EconomySystemsTests.cpp
         tests/MetadataTests.cpp
         tests/RoundSystemTests.cpp
+        tests/SaveSystemTests.cpp
         tests/ShopTests.cpp
         tests/UnitCatalogTests.cpp
     )

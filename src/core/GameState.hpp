@@ -122,6 +122,8 @@ public:
     [[nodiscard]] std::optional<int> firstEmptyBenchSlot() const;
 
     UnitId createUnit(std::string_view templateId, Owner owner);
+    // Used by persistence to reinsert catalog-built units with stable ids before placement is restored.
+    bool restoreUnit(Unit unit);
     bool removeUnit(UnitId id);
     // Placement methods are the only supported way to keep board/bench occupancy and Unit location in sync.
     PlacementResult placeUnitOnBenchResult(UnitId id, int slot);

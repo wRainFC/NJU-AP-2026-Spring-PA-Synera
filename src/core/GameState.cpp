@@ -138,6 +138,19 @@ UnitId GameState::createUnit(std::string_view templateId, Owner owner) {
     return id;
 }
 
+bool GameState::restoreUnit(Unit unit) {
+    if (unit.id == InvalidUnitId || units_.contains(unit.id)) {
+        return false;
+    }
+
+    unit.boardPos.reset();
+    unit.benchSlot.reset();
+    unit.checkInvariants();
+    nextUnitId_ = std::max(nextUnitId_, unit.id + 1);
+    units_.emplace(unit.id, std::make_unique<Unit>(std::move(unit)));
+    return true;
+}
+
 bool GameState::removeUnit(UnitId id) {
     Unit* unit = findUnit(id);
     if (unit == nullptr) {
