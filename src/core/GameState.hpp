@@ -18,6 +18,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace synera {
@@ -133,18 +134,19 @@ public:
     void removeEnemyUnits();
 
 private:
-    struct UnitLocation {
-        enum class Kind { None, Board, Bench };
+    struct BoardLocation {
+        AxialPos pos{};
 
-        Kind kind = Kind::None;
-        AxialPos boardPos{};
-        int benchSlot = -1;
-
-        [[nodiscard]] static UnitLocation board(AxialPos pos) noexcept;
-        [[nodiscard]] static UnitLocation bench(int slot) noexcept;
-
-        friend bool operator==(const UnitLocation&, const UnitLocation&) = default;
+        friend bool operator==(const BoardLocation&, const BoardLocation&) = default;
     };
+
+    struct BenchLocation {
+        int slot = -1;
+
+        friend bool operator==(const BenchLocation&, const BenchLocation&) = default;
+    };
+
+    using UnitLocation = std::variant<std::monostate, BoardLocation, BenchLocation>;
 
     Phase phase_ = Phase::Prep;
     Player player_;
@@ -158,8 +160,8 @@ private:
     [[nodiscard]] PlacementResult validateBoardPlacement(const Unit& unit, AxialPos pos,
                                                          bool enteringEmptyBoard) const;
     [[nodiscard]] UnitLocation locationOf(const Unit& unit) const noexcept;
-    [[nodiscard]] std::optional<UnitId> occupantAt(UnitLocation location) const;
-    [[nodiscard]] bool placeDetachedUnit(Unit& unit, UnitLocation location);
+    [[nodiscard]] std::optional<UnitId> occupantAt(const UnitLocation& location) const;
+    [[nodiscard]] bool placeDetachedUnit(Unit& unit, const UnitLocation& location);
     void clearUnitLocation(Unit& unit);
     [[nodiscard]] PlacementResult moveUnitToEmptyLocation(Unit& unit, UnitLocation destination);
     [[nodiscard]] PlacementResult swapPlayerUnits(Unit& left, Unit& right);

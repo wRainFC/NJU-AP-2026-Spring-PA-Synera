@@ -23,6 +23,7 @@ add_library(synera_logic
     src/core/AbilityContext.cpp
     src/core/abilities/BasicAbilities.cpp
     src/core/GameState.cpp
+    src/core/Metadata.cpp
     src/core/Player.cpp
     src/core/Shop.cpp
     src/core/UnitCatalog.cpp
@@ -81,6 +82,7 @@ if (BUILD_TESTING)
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
         tests/EconomySystemsTests.cpp
+        tests/MetadataTests.cpp
         tests/RoundSystemTests.cpp
         tests/ShopTests.cpp
         tests/UnitCatalogTests.cpp

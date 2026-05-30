@@ -3,6 +3,7 @@
 #include "app/GameConfig.hpp"
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
+#include "core/Metadata.hpp"
 #include "ui/Layout.hpp"
 
 #include <algorithm>
@@ -14,50 +15,6 @@
 namespace synera {
 
 namespace {
-
-[[nodiscard]] const char* phaseName(Phase phase) noexcept {
-    switch (phase) {
-        case Phase::Prep:
-            return "Prep";
-        case Phase::Combat:
-            return "Combat";
-        case Phase::Resolve:
-            return "Resolve";
-    }
-    return "Unknown";
-}
-
-[[nodiscard]] const char* traitName(Trait trait) noexcept {
-    switch (trait) {
-        case Trait::Warrior:
-            return "Warrior";
-        case Trait::Mage:
-            return "Mage";
-        case Trait::Ranger:
-            return "Ranger";
-        case Trait::Guardian:
-            return "Guardian";
-        case Trait::Mystic:
-            return "Mystic";
-        case Trait::Assassin:
-            return "Assassin";
-    }
-    return "Trait";
-}
-
-[[nodiscard]] const char* equipmentName(EquipmentType equipment) noexcept {
-    switch (equipment) {
-        case EquipmentType::IronSword:
-            return "Sword";
-        case EquipmentType::ChainVest:
-            return "Vest";
-        case EquipmentType::SwiftGlove:
-            return "Glove";
-        case EquipmentType::ManaCrystal:
-            return "Crystal";
-    }
-    return "Equip";
-}
 
 [[nodiscard]] std::optional<Rectangle> unitRect(const Unit& unit, const Layout& layout) {
     return unit.boardPos.transform([&](AxialPos pos) { return layout.boardHexBounds(pos); })
@@ -81,11 +38,12 @@ void Renderer::draw(const GameState& state, const Layout& layout) {
 }
 
 void Renderer::drawTopBar(const GameState& state) {
-    const std::string text =
-        "HP: " + std::to_string(state.player().hp) + "  Gold: " + std::to_string(state.player().gold) +
-        "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
-        std::to_string(state.player().populationCap) +
-        "  Round: " + std::to_string(state.player().currentRound) + "  Phase: " + phaseName(state.phase());
+    const std::string text = "HP: " + std::to_string(state.player().hp) +
+                             "  Gold: " + std::to_string(state.player().gold) +
+                             "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
+                             std::to_string(state.player().populationCap) +
+                             "  Round: " + std::to_string(state.player().currentRound) +
+                             "  Phase: " + std::string(phaseName(state.phase()));
     DrawText(text.c_str(), 32, 24, 20, RAYWHITE);
 }
 
@@ -163,16 +121,16 @@ void Renderer::drawEquipmentPool(const GameState& state, const Layout& layout) {
         const Rectangle rect = layout.equipmentSlotRect(index);
         DrawRectangleRec(rect, Color{45, 48, 54, 255});
         DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
-        DrawText(equipmentName(pool[index]), static_cast<int>(rect.x + 4.0F),
-                 static_cast<int>(rect.y + 16.0F), 10, RAYWHITE);
+        const std::string name{equipmentName(pool[index])};
+        DrawText(name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 16.0F), 10,
+                 RAYWHITE);
     }
 }
 
 void Renderer::drawSynergies(const GameState& state) {
     DrawText("Traits", 820, 650, 16, RAYWHITE);
     int row = 0;
-    for (Trait trait :
-         {Trait::Warrior, Trait::Mage, Trait::Ranger, Trait::Guardian, Trait::Mystic, Trait::Assassin}) {
+    for (Trait trait : allTraits()) {
         int count = 0;
         state.forEachPlayerBoardUnit([&](const Unit& unit) {
             if (std::ranges::find(unit.traits, trait) != unit.traits.end()) {
@@ -211,8 +169,8 @@ void Renderer::drawUnit(const Unit& unit, Rectangle rect) {
     const std::string label = unit.name + " *" + std::to_string(unit.star);
     DrawText(label.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 38.0F), 9, RAYWHITE);
     if (unit.equipment) {
-        DrawText(equipmentName(*unit.equipment), static_cast<int>(rect.x + 4.0F),
-                 static_cast<int>(rect.y + 49.0F), 8, GOLD);
+        const std::string name{equipmentName(*unit.equipment)};
+        DrawText(name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 49.0F), 8, GOLD);
     }
 }
 
