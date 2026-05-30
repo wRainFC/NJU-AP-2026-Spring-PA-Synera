@@ -7,6 +7,14 @@
 
 namespace synera {
 
+namespace {
+
+[[nodiscard]] int scaledInt(int value, float multiplier) noexcept {
+    return static_cast<int>(static_cast<float>(value) * multiplier);
+}
+
+}  // namespace
+
 bool Unit::alive() const noexcept {
     return runtime.state != UnitState::Dead && runtime.hp > 0;
 }
@@ -55,6 +63,34 @@ void Unit::gainMana(int amount) noexcept {
         return;
     }
     runtime.mana = std::min(derivedStats.maxMana, runtime.mana + amount);
+}
+
+void Unit::recomputeDerivedStats() noexcept {
+    derivedStats = baseStats;
+
+    const float starMultiplier = 1.0F + 0.7F * static_cast<float>(star - 1);
+    derivedStats.maxHp = scaledInt(derivedStats.maxHp, starMultiplier);
+    derivedStats.atk = scaledInt(derivedStats.atk, starMultiplier);
+
+    if (equipment) {
+        switch (*equipment) {
+            case EquipmentType::IronSword:
+                derivedStats.atk += 15;
+                break;
+            case EquipmentType::ChainVest:
+                derivedStats.maxHp += 150;
+                break;
+            case EquipmentType::SwiftGlove:
+                derivedStats.attackInterval *= 0.8F;
+                break;
+            case EquipmentType::ManaCrystal:
+                derivedStats.maxMana = std::max(20, derivedStats.maxMana - 30);
+                break;
+        }
+    }
+
+    runtime.hp = std::clamp(runtime.hp, 0, derivedStats.maxHp);
+    runtime.mana = std::clamp(runtime.mana, 0, derivedStats.maxMana);
 }
 
 void Unit::resetForCombat() noexcept {

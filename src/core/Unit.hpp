@@ -59,6 +59,7 @@ public:
     void receiveDamage(int amount) noexcept;
     void heal(int amount) noexcept;
     void gainMana(int amount) noexcept;
+    void recomputeDerivedStats() noexcept;
     void resetForCombat() noexcept;
     void checkInvariants() const;
 };

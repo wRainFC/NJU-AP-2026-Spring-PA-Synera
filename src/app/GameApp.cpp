@@ -30,12 +30,15 @@ void GameApp::init() {
 }
 
 void GameApp::update(float dt) {
-    input_.update(state_, layout_, roundSystem_, shopSystem_);
+    input_.update(state_, layout_, roundSystem_, shopSystem_, upgradeSystem_, synergySystem_,
+                  equipmentSystem_);
 
     if (state_.phase() == Phase::Combat) {
         combatSystem_.update(state_, dt);
         if (state_.isCombatFinished()) {
-            roundSystem_.enterResolve(state_, state_.playerWonCombat());
+            const bool playerWon = state_.playerWonCombat();
+            roundSystem_.enterResolve(state_, playerWon);
+            (void)equipmentSystem_.tryGrantRoundDrop(state_, playerWon);
             resolveTimer_ = 0.0F;
         }
     } else if (state_.phase() == Phase::Resolve) {

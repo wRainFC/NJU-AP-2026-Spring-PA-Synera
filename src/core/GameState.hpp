@@ -121,6 +121,7 @@ public:
     [[nodiscard]] std::optional<int> firstEmptyBenchSlot() const;
 
     UnitId createUnit(std::string_view templateId, Owner owner);
+    bool removeUnit(UnitId id);
     // Placement methods are the only supported way to keep board/bench occupancy and Unit location in sync.
     PlacementResult placeUnitOnBenchResult(UnitId id, int slot);
     PlacementResult placeUnitOnBoardResult(UnitId id, AxialPos pos);

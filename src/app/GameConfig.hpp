@@ -24,5 +24,7 @@ inline constexpr int LossGoldReward = 3;
 inline constexpr int LossHpPenalty = 10;
 inline constexpr int ShopRefreshCost = 2;
 inline constexpr std::uint32_t ShopRandomSeed = 0x53594E41U;
+inline constexpr int EquipmentDropChancePercent = 100;
+inline constexpr std::uint32_t EquipmentRandomSeed = 0x45515550U;
 
 }  // namespace synera::config

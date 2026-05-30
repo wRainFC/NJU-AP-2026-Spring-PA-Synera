@@ -80,6 +80,7 @@ if (BUILD_TESTING)
         tests/BoardTests.cpp
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
+        tests/EconomySystemsTests.cpp
         tests/RoundSystemTests.cpp
         tests/ShopTests.cpp
         tests/UnitCatalogTests.cpp

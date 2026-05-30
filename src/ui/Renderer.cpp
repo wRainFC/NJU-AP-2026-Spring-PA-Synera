@@ -5,6 +5,7 @@
 #include "core/GameState.hpp"
 #include "ui/Layout.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <optional>
 #include <ranges>
@@ -26,6 +27,38 @@ namespace {
     return "Unknown";
 }
 
+[[nodiscard]] const char* traitName(Trait trait) noexcept {
+    switch (trait) {
+        case Trait::Warrior:
+            return "Warrior";
+        case Trait::Mage:
+            return "Mage";
+        case Trait::Ranger:
+            return "Ranger";
+        case Trait::Guardian:
+            return "Guardian";
+        case Trait::Mystic:
+            return "Mystic";
+        case Trait::Assassin:
+            return "Assassin";
+    }
+    return "Trait";
+}
+
+[[nodiscard]] const char* equipmentName(EquipmentType equipment) noexcept {
+    switch (equipment) {
+        case EquipmentType::IronSword:
+            return "Sword";
+        case EquipmentType::ChainVest:
+            return "Vest";
+        case EquipmentType::SwiftGlove:
+            return "Glove";
+        case EquipmentType::ManaCrystal:
+            return "Crystal";
+    }
+    return "Equip";
+}
+
 [[nodiscard]] std::optional<Rectangle> unitRect(const Unit& unit, const Layout& layout) {
     return unit.boardPos.transform([&](AxialPos pos) { return layout.boardHexBounds(pos); })
         .or_else([&]() -> std::optional<Rectangle> {
@@ -40,6 +73,9 @@ void Renderer::draw(const GameState& state, const Layout& layout) {
     drawBoard(state, layout);
     drawBench(state, layout);
     drawShop(state, layout);
+    drawPopulationUpgrade(state, layout);
+    drawEquipmentPool(state, layout);
+    drawSynergies(state);
     drawUnits(state, layout);
     drawStartButton(state, layout);
 }
@@ -112,6 +148,46 @@ void Renderer::drawShop(const GameState& state, const Layout& layout) {
              16, RAYWHITE);
 }
 
+void Renderer::drawPopulationUpgrade(const GameState& state, const Layout& layout) {
+    const Rectangle rect = layout.populationUpgradeButtonRect();
+    DrawRectangleRec(rect, Color{76, 82, 92, 255});
+    DrawRectangleLinesEx(rect, 1.0F, RAYWHITE);
+    const std::string label = "Level Up  " + std::to_string(2 + state.player().level * 2) + "g";
+    DrawText(label.c_str(), static_cast<int>(rect.x + 18.0F), static_cast<int>(rect.y + 12.0F), 16, RAYWHITE);
+}
+
+void Renderer::drawEquipmentPool(const GameState& state, const Layout& layout) {
+    DrawText("Equipment", 820, 566, 16, RAYWHITE);
+    const auto pool = state.equipmentPool();
+    for (std::size_t index : std::views::iota(std::size_t{0}, pool.size())) {
+        const Rectangle rect = layout.equipmentSlotRect(index);
+        DrawRectangleRec(rect, Color{45, 48, 54, 255});
+        DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
+        DrawText(equipmentName(pool[index]), static_cast<int>(rect.x + 4.0F),
+                 static_cast<int>(rect.y + 16.0F), 10, RAYWHITE);
+    }
+}
+
+void Renderer::drawSynergies(const GameState& state) {
+    DrawText("Traits", 820, 650, 16, RAYWHITE);
+    int row = 0;
+    for (Trait trait :
+         {Trait::Warrior, Trait::Mage, Trait::Ranger, Trait::Guardian, Trait::Mystic, Trait::Assassin}) {
+        int count = 0;
+        state.forEachPlayerBoardUnit([&](const Unit& unit) {
+            if (std::ranges::find(unit.traits, trait) != unit.traits.end()) {
+                ++count;
+            }
+        });
+        if (count <= 0) {
+            continue;
+        }
+        const std::string label = std::string(traitName(trait)) + " " + std::to_string(count);
+        DrawText(label.c_str(), 820, 672 + row * 16, 12, count >= 2 ? GOLD : RAYWHITE);
+        ++row;
+    }
+}
+
 void Renderer::drawUnits(const GameState& state, const Layout& layout) {
     state.forEachUnit([&](const Unit& unit) {
         if (const auto rect = unitRect(unit, layout)) {
@@ -132,8 +208,12 @@ void Renderer::drawUnit(const Unit& unit, Rectangle rect) {
                   static_cast<int>((rect.width - 12.0F) * hpRatio), 5, GREEN);
     DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 10.0F),
                   static_cast<int>((rect.width - 12.0F) * manaRatio), 4, BLUE);
-    DrawText(unit.name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 40.0F), 9,
-             RAYWHITE);
+    const std::string label = unit.name + " *" + std::to_string(unit.star);
+    DrawText(label.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 38.0F), 9, RAYWHITE);
+    if (unit.equipment) {
+        DrawText(equipmentName(*unit.equipment), static_cast<int>(rect.x + 4.0F),
+                 static_cast<int>(rect.y + 49.0F), 8, GOLD);
+    }
 }
 
 void Renderer::drawStartButton(const GameState& state, const Layout& layout) {

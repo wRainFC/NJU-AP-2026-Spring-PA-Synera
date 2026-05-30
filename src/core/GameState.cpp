@@ -138,6 +138,16 @@ UnitId GameState::createUnit(std::string_view templateId, Owner owner) {
     return id;
 }
 
+bool GameState::removeUnit(UnitId id) {
+    Unit* unit = findUnit(id);
+    if (unit == nullptr) {
+        return false;
+    }
+    clearUnitLocation(*unit);
+    units_.erase(id);
+    return true;
+}
+
 PlacementResult GameState::placeUnitOnBenchResult(UnitId id, int slot) {
     Unit* unit = findUnit(id);
     if (unit == nullptr) {

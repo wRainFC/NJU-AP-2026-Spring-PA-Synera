@@ -17,6 +17,9 @@ private:
     void drawBoard(const GameState& state, const Layout& layout);
     void drawBench(const GameState& state, const Layout& layout);
     void drawShop(const GameState& state, const Layout& layout);
+    void drawPopulationUpgrade(const GameState& state, const Layout& layout);
+    void drawEquipmentPool(const GameState& state, const Layout& layout);
+    void drawSynergies(const GameState& state);
     void drawUnits(const GameState& state, const Layout& layout);
     void drawUnit(const Unit& unit, Rectangle rect);
     void drawStartButton(const GameState& state, const Layout& layout);

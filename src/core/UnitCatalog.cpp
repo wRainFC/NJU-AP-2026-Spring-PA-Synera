@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <span>
+#include <vector>
 
 namespace synera {
 
@@ -16,6 +18,7 @@ struct UnitTemplate {
     std::string_view id;
     std::string_view displayName;
     UnitStats stats;
+    std::span<const Trait> traits;
     AbilityFactory abilityFactory;
 };
 
@@ -37,14 +40,22 @@ std::unique_ptr<Ability> makeStunStrikeAbility() {
 
 constexpr UnitStats DefaultStats{360, 32, 1, 70, 1.0F, 0.25F};
 
+constexpr std::array IronGuardTraits{Trait::Warrior, Trait::Guardian};
+constexpr std::array EmberMageTraits{Trait::Mage, Trait::Mystic};
+constexpr std::array FieldMedicTraits{Trait::Mystic, Trait::Guardian};
+constexpr std::array StormArcherTraits{Trait::Ranger, Trait::Assassin};
+constexpr std::array TrainingDummyTraits{Trait::Guardian};
+
 constexpr std::array UnitTemplates{
-    UnitTemplate{"iron_guard", "Iron Guard", DefaultStats, makeStunStrikeAbility},
-    UnitTemplate{"ember_mage", "Ember Mage", UnitStats{220, 42, 3, 60, 1.2F, 0.25F}, makeFireLineAbility},
-    UnitTemplate{"field_medic", "Field Medic", UnitStats{260, 24, 2, 55, 1.1F, 0.25F},
+    UnitTemplate{"iron_guard", "Iron Guard", DefaultStats, IronGuardTraits, makeStunStrikeAbility},
+    UnitTemplate{"ember_mage", "Ember Mage", UnitStats{220, 42, 3, 60, 1.2F, 0.25F}, EmberMageTraits,
+                 makeFireLineAbility},
+    UnitTemplate{"field_medic", "Field Medic", UnitStats{260, 24, 2, 55, 1.1F, 0.25F}, FieldMedicTraits,
                  makeHealingAuraAbility},
-    UnitTemplate{"storm_archer", "Storm Archer", UnitStats{240, 48, 4, 70, 0.9F, 0.25F},
+    UnitTemplate{"storm_archer", "Storm Archer", UnitStats{240, 48, 4, 70, 0.9F, 0.25F}, StormArcherTraits,
                  makeStunStrikeAbility},
-    UnitTemplate{"training_dummy", "Training Dummy", UnitStats{180, 18, 1, 80, 1.4F, 0.3F}, makeNoopAbility},
+    UnitTemplate{"training_dummy", "Training Dummy", UnitStats{180, 18, 1, 80, 1.4F, 0.3F},
+                 TrainingDummyTraits, makeNoopAbility},
 };
 
 const UnitTemplate* findTemplate(std::string_view templateId) {
@@ -53,9 +64,11 @@ const UnitTemplate* findTemplate(std::string_view templateId) {
     return iter == UnitTemplates.end() ? nullptr : &*iter;
 }
 
-std::vector<Trait> traitsFor(Owner owner) {
-    return owner == Owner::PlayerCtrl ? std::vector<Trait>{Trait::Warrior}
-                                      : std::vector<Trait>{Trait::Guardian};
+std::vector<Trait> traitsFor(const UnitTemplate* unitTemplate) {
+    if (unitTemplate == nullptr) {
+        return {Trait::Warrior};
+    }
+    return {unitTemplate->traits.begin(), unitTemplate->traits.end()};
 }
 
 }  // namespace
@@ -73,7 +86,7 @@ Unit UnitCatalog::createUnit(UnitId id, std::string_view templateId, Owner owner
     unit.runtime.hp = unit.derivedStats.maxHp;
     unit.runtime.mana = 0;
     unit.ability = unitTemplate == nullptr ? makeNoopAbility() : unitTemplate->abilityFactory();
-    unit.traits = traitsFor(owner);
+    unit.traits = traitsFor(unitTemplate);
     return unit;
 }
 
