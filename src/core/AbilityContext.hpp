@@ -29,6 +29,7 @@ public:
 
     void dealDamage(Unit& target, int amount) const noexcept;
     void heal(Unit& target, int amount) const noexcept;
+    [[nodiscard]] Unit* findUnit(UnitId id) const;
 
 private:
     template <typename OwnerRelation, std::invocable<Unit&> Visitor>

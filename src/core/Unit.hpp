@@ -27,6 +27,7 @@ struct UnitRuntime {
     float attackTimer = 0.0F;
     float moveTimer = 0.0F;
     float stunTimer = 0.0F;
+    std::optional<AxialPos> combatStartPos;
 };
 
 // A unit stores persistent identity/stats plus combat runtime; systems own behavior decisions.

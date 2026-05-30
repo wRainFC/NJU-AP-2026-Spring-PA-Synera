@@ -65,6 +65,7 @@ void Unit::resetForCombat() noexcept {
     runtime.attackTimer = 0.0F;
     runtime.moveTimer = 0.0F;
     runtime.stunTimer = 0.0F;
+    runtime.combatStartPos.reset();
 }
 
 void Unit::checkInvariants() const {

@@ -1,6 +1,7 @@
 #include "systems/CombatSystem.hpp"
 
 #include "board/HexGrid.hpp"
+#include "core/AbilityContext.hpp"
 #include "core/GameState.hpp"
 
 #include <limits>
@@ -11,11 +12,18 @@ void CombatSystem::update(GameState& state, float dt) {
     if (state.phase() != Phase::Combat) {
         return;
     }
-    state.forEachUnit([&](Unit& unit) { updateUnit(state, unit, dt); });
+    state.forEachUnit([&](Unit& unit) {
+        updateUnit(state, unit, dt);
+        cleanupDeadBoardUnits(state);
+    });
 }
 
 void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
     if (!unit.alive() || !unit.onBoard()) {
+        return;
+    }
+    if (unit.runtime.state == UnitState::Stunned) {
+        updateStun(unit, dt);
         return;
     }
 
@@ -29,6 +37,10 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
 
     if (!unit.canAttackTarget(*target)) {
         moveTowardTarget(state, unit, *target, dt);
+        return;
+    }
+
+    if (tryCastAbility(state, unit)) {
         return;
     }
 
@@ -61,6 +73,26 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
     return best;
 }
 
+void CombatSystem::updateStun(Unit& unit, float dt) {
+    unit.runtime.stunTimer -= dt;
+    if (unit.runtime.stunTimer <= 0.0F) {
+        unit.runtime.stunTimer = 0.0F;
+        unit.runtime.state = UnitState::Idle;
+    }
+}
+
+bool CombatSystem::tryCastAbility(GameState& state, Unit& unit) {
+    if (!unit.ability || unit.runtime.mana < unit.derivedStats.maxMana) {
+        return false;
+    }
+
+    AbilityContext context{state};
+    unit.runtime.state = UnitState::Casting;
+    unit.ability->cast(unit, context);
+    unit.runtime.mana = 0;
+    return true;
+}
+
 void CombatSystem::moveTowardTarget(GameState& state, Unit& unit, const Unit& target, float dt) {
     unit.runtime.state = UnitState::Moving;
     unit.runtime.moveTimer += dt;
@@ -84,6 +116,14 @@ void CombatSystem::performAttack(Unit& attacker, Unit& target) {
     attacker.runtime.state = UnitState::Attacking;
     target.receiveDamage(attacker.derivedStats.atk);
     attacker.gainMana(10);
+}
+
+void CombatSystem::cleanupDeadBoardUnits(GameState& state) {
+    state.forEachUnit([&](Unit& unit) {
+        if (!unit.alive() && unit.onBoard()) {
+            state.removeUnitFromBoard(unit);
+        }
+    });
 }
 
 }  // namespace synera

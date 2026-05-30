@@ -24,6 +24,8 @@ void GameApp::init() {
     state_.placeUnitOnBench(first, 0);
     const UnitId second = state_.createUnit("ember_mage", Owner::PlayerCtrl);
     state_.placeUnitOnBench(second, 1);
+    const UnitId third = state_.createUnit("field_medic", Owner::PlayerCtrl);
+    state_.placeUnitOnBench(third, 2);
 }
 
 void GameApp::update(float dt) {

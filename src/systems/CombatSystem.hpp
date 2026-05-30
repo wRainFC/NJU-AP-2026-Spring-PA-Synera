@@ -15,8 +15,11 @@ public:
 private:
     void updateUnit(GameState& state, Unit& unit, float dt);
     Unit* acquireTarget(GameState& state, const Unit& unit);
+    void updateStun(Unit& unit, float dt);
+    bool tryCastAbility(GameState& state, Unit& unit);
     void moveTowardTarget(GameState& state, Unit& unit, const Unit& target, float dt);
     void performAttack(Unit& attacker, Unit& target);
+    void cleanupDeadBoardUnits(GameState& state);
 
     Pathfinder pathfinder_;
 };

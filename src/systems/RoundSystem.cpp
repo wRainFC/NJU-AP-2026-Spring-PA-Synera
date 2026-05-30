@@ -14,6 +14,9 @@ void RoundSystem::startCombat(GameState& state) {
     state.forEachUnit([](Unit& unit) {
         if (unit.onBoard()) {
             unit.resetForCombat();
+            if (unit.owner == Owner::PlayerCtrl) {
+                unit.runtime.combatStartPos = unit.boardPos;
+            }
         }
     });
     state.setPhase(Phase::Combat);
@@ -38,6 +41,7 @@ void RoundSystem::enterResolve(GameState& state, bool playerWon) {
         state.player().addGold(config::LossGoldReward);
     }
     state.removeEnemyUnits();
+    state.restorePlayerUnitsAfterCombat();
 }
 
 void RoundSystem::finishResolve(GameState& state) {

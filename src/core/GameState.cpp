@@ -5,10 +5,25 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <vector>
 
 namespace synera {
 
 GameState::GameState() : board_(config::BoardWidth, config::BoardHeight), bench_(config::BenchSize) {}
+
+GameState::UnitLocation GameState::UnitLocation::board(AxialPos pos) noexcept {
+    UnitLocation location;
+    location.kind = Kind::Board;
+    location.boardPos = pos;
+    return location;
+}
+
+GameState::UnitLocation GameState::UnitLocation::bench(int slot) noexcept {
+    UnitLocation location;
+    location.kind = Kind::Bench;
+    location.benchSlot = slot;
+    return location;
+}
 
 Phase GameState::phase() const noexcept {
     return phase_;
@@ -137,58 +152,22 @@ PlacementResult GameState::placeUnitOnBenchResult(UnitId id, int slot) {
     if (slot < 0 || slot >= bench_.size()) {
         return PlacementResult::InvalidPosition;
     }
-    if (unit->benchSlot == slot) {
+
+    const UnitLocation destination = UnitLocation::bench(slot);
+    if (locationOf(*unit) == destination) {
         return PlacementResult::Ok;
     }
 
-    const auto occupiedBy = bench_.occupant(slot);
+    const auto occupiedBy = occupantAt(destination);
     if (occupiedBy) {
         Unit* other = findUnit(*occupiedBy);
         if (other == nullptr || other->owner != Owner::PlayerCtrl) {
             return PlacementResult::Occupied;
         }
-        if (unit->benchSlot) {
-            const int sourceSlot = *unit->benchSlot;
-            if (!bench_.swapSlots(sourceSlot, slot)) {
-                return PlacementResult::InvalidPosition;
-            }
-            unit->benchSlot = slot;
-            other->benchSlot = sourceSlot;
-            unit->checkInvariants();
-            other->checkInvariants();
-            return PlacementResult::Ok;
-        }
-        if (unit->boardPos) {
-            const AxialPos sourcePos = *unit->boardPos;
-            board_.remove(sourcePos);
-            bench_.remove(slot);
-            if (!board_.place(other->id, sourcePos) || !bench_.place(unit->id, slot)) {
-                return PlacementResult::Occupied;
-            }
-            unit->boardPos.reset();
-            unit->benchSlot = slot;
-            other->benchSlot.reset();
-            other->boardPos = sourcePos;
-            unit->checkInvariants();
-            other->checkInvariants();
-            return PlacementResult::Ok;
-        }
-        return PlacementResult::InvalidPosition;
+        return swapPlayerUnits(*unit, *other);
     }
 
-    if (unit->boardPos) {
-        board_.remove(*unit->boardPos);
-        unit->boardPos.reset();
-    }
-    if (unit->benchSlot) {
-        bench_.remove(*unit->benchSlot);
-    }
-    if (!bench_.place(id, slot)) {
-        return PlacementResult::InvalidPosition;
-    }
-    unit->benchSlot = slot;
-    unit->checkInvariants();
-    return PlacementResult::Ok;
+    return moveUnitToEmptyLocation(*unit, destination);
 }
 
 PlacementResult GameState::placeUnitOnBoardResult(UnitId id, AxialPos pos) {
@@ -199,12 +178,13 @@ PlacementResult GameState::placeUnitOnBoardResult(UnitId id, AxialPos pos) {
     if (unit->owner == Owner::PlayerCtrl && phase_ != Phase::Prep) {
         return PlacementResult::InvalidPhase;
     }
-    const auto occupiedBy = board_.occupant(pos);
+    const UnitLocation destination = UnitLocation::board(pos);
+    const auto occupiedBy = occupantAt(destination);
     const PlacementResult validation = validateBoardPlacement(*unit, pos, !unit->onBoard() && !occupiedBy);
     if (validation != PlacementResult::Ok) {
         return validation;
     }
-    if (unit->boardPos == pos) {
+    if (locationOf(*unit) == destination) {
         return PlacementResult::Ok;
     }
 
@@ -213,48 +193,10 @@ PlacementResult GameState::placeUnitOnBoardResult(UnitId id, AxialPos pos) {
         if (other == nullptr || unit->owner != Owner::PlayerCtrl || other->owner != Owner::PlayerCtrl) {
             return PlacementResult::Occupied;
         }
-        if (unit->boardPos) {
-            const AxialPos sourcePos = *unit->boardPos;
-            if (!board_.swapCells(sourcePos, pos)) {
-                return PlacementResult::InvalidPosition;
-            }
-            unit->boardPos = pos;
-            other->boardPos = sourcePos;
-            unit->checkInvariants();
-            other->checkInvariants();
-            return PlacementResult::Ok;
-        }
-        if (unit->benchSlot) {
-            const int sourceSlot = *unit->benchSlot;
-            bench_.remove(sourceSlot);
-            board_.remove(pos);
-            if (!board_.place(unit->id, pos) || !bench_.place(other->id, sourceSlot)) {
-                return PlacementResult::Occupied;
-            }
-            unit->benchSlot.reset();
-            unit->boardPos = pos;
-            other->boardPos.reset();
-            other->benchSlot = sourceSlot;
-            unit->checkInvariants();
-            other->checkInvariants();
-            return PlacementResult::Ok;
-        }
-        return PlacementResult::Occupied;
+        return swapPlayerUnits(*unit, *other);
     }
 
-    if (unit->benchSlot) {
-        bench_.remove(*unit->benchSlot);
-        unit->benchSlot.reset();
-    }
-    if (unit->boardPos) {
-        board_.remove(*unit->boardPos);
-    }
-    if (!board_.place(id, pos)) {
-        return PlacementResult::InvalidPosition;
-    }
-    unit->boardPos = pos;
-    unit->checkInvariants();
-    return PlacementResult::Ok;
+    return moveUnitToEmptyLocation(*unit, destination);
 }
 
 bool GameState::placeUnitOnBench(UnitId id, int slot) {
@@ -263,6 +205,118 @@ bool GameState::placeUnitOnBench(UnitId id, int slot) {
 
 bool GameState::placeUnitOnBoard(UnitId id, AxialPos pos) {
     return placeUnitOnBoardResult(id, pos) == PlacementResult::Ok;
+}
+
+GameState::UnitLocation GameState::locationOf(const Unit& unit) const noexcept {
+    if (unit.boardPos) {
+        return UnitLocation::board(*unit.boardPos);
+    }
+    if (unit.benchSlot) {
+        return UnitLocation::bench(*unit.benchSlot);
+    }
+    return UnitLocation{};
+}
+
+std::optional<UnitId> GameState::occupantAt(UnitLocation location) const {
+    switch (location.kind) {
+        case UnitLocation::Kind::Board:
+            return board_.occupant(location.boardPos);
+        case UnitLocation::Kind::Bench:
+            return bench_.occupant(location.benchSlot);
+        case UnitLocation::Kind::None:
+            return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+bool GameState::placeDetachedUnit(Unit& unit, UnitLocation location) {
+    unit.boardPos.reset();
+    unit.benchSlot.reset();
+
+    switch (location.kind) {
+        case UnitLocation::Kind::Board:
+            if (!board_.place(unit.id, location.boardPos)) {
+                return false;
+            }
+            unit.boardPos = location.boardPos;
+            break;
+        case UnitLocation::Kind::Bench:
+            if (!bench_.place(unit.id, location.benchSlot)) {
+                return false;
+            }
+            unit.benchSlot = location.benchSlot;
+            break;
+        case UnitLocation::Kind::None:
+            break;
+    }
+
+    unit.checkInvariants();
+    return true;
+}
+
+void GameState::clearUnitLocation(Unit& unit) {
+    if (unit.boardPos) {
+        board_.remove(*unit.boardPos);
+    }
+    if (unit.benchSlot) {
+        bench_.remove(*unit.benchSlot);
+    }
+    unit.boardPos.reset();
+    unit.benchSlot.reset();
+    unit.checkInvariants();
+}
+
+PlacementResult GameState::moveUnitToEmptyLocation(Unit& unit, UnitLocation destination) {
+    if (locationOf(unit) == destination) {
+        return PlacementResult::Ok;
+    }
+
+    clearUnitLocation(unit);
+    if (!placeDetachedUnit(unit, destination)) {
+        return PlacementResult::InvalidPosition;
+    }
+    return PlacementResult::Ok;
+}
+
+PlacementResult GameState::swapPlayerUnits(Unit& left, Unit& right) {
+    const UnitLocation leftLocation = locationOf(left);
+    const UnitLocation rightLocation = locationOf(right);
+    if (leftLocation.kind == UnitLocation::Kind::None || rightLocation.kind == UnitLocation::Kind::None) {
+        return PlacementResult::InvalidPosition;
+    }
+
+    if (leftLocation.kind == UnitLocation::Kind::Board && rightLocation.kind == UnitLocation::Kind::Board) {
+        if (!board_.swapCells(leftLocation.boardPos, rightLocation.boardPos)) {
+            return PlacementResult::InvalidPosition;
+        }
+        left.boardPos = rightLocation.boardPos;
+        left.benchSlot.reset();
+        right.boardPos = leftLocation.boardPos;
+        right.benchSlot.reset();
+        left.checkInvariants();
+        right.checkInvariants();
+        return PlacementResult::Ok;
+    }
+
+    if (leftLocation.kind == UnitLocation::Kind::Bench && rightLocation.kind == UnitLocation::Kind::Bench) {
+        if (!bench_.swapSlots(leftLocation.benchSlot, rightLocation.benchSlot)) {
+            return PlacementResult::InvalidPosition;
+        }
+        left.benchSlot = rightLocation.benchSlot;
+        left.boardPos.reset();
+        right.benchSlot = leftLocation.benchSlot;
+        right.boardPos.reset();
+        left.checkInvariants();
+        right.checkInvariants();
+        return PlacementResult::Ok;
+    }
+
+    clearUnitLocation(left);
+    clearUnitLocation(right);
+    const bool placedLeft = placeDetachedUnit(left, rightLocation);
+    const bool placedRight = placeDetachedUnit(right, leftLocation);
+    SYNERA_ENSURES(placedLeft && placedRight);
+    return placedLeft && placedRight ? PlacementResult::Ok : PlacementResult::Occupied;
 }
 
 bool GameState::moveBoardUnit(UnitId id, AxialPos pos) {
@@ -284,6 +338,23 @@ void GameState::removeUnitFromBoard(Unit& unit) {
     if (unit.boardPos) {
         board_.remove(*unit.boardPos);
         unit.boardPos.reset();
+    }
+}
+
+void GameState::restorePlayerUnitsAfterCombat() {
+    std::vector<Unit*> returningUnits;
+    forEachUnit([&](Unit& unit) {
+        if (unit.owner == Owner::PlayerCtrl && unit.runtime.combatStartPos) {
+            clearUnitLocation(unit);
+            returningUnits.push_back(&unit);
+        }
+    });
+
+    for (Unit* unit : returningUnits) {
+        const AxialPos returnPos = *unit->runtime.combatStartPos;
+        unit->resetForCombat();
+        const bool placed = placeDetachedUnit(*unit, UnitLocation::board(returnPos));
+        SYNERA_ENSURES(placed);
     }
 }
 

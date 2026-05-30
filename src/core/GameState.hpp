@@ -129,9 +129,23 @@ public:
     bool placeUnitOnBoard(UnitId id, AxialPos pos);
     bool moveBoardUnit(UnitId id, AxialPos pos);
     void removeUnitFromBoard(Unit& unit);
+    void restorePlayerUnitsAfterCombat();
     void removeEnemyUnits();
 
 private:
+    struct UnitLocation {
+        enum class Kind { None, Board, Bench };
+
+        Kind kind = Kind::None;
+        AxialPos boardPos{};
+        int benchSlot = -1;
+
+        [[nodiscard]] static UnitLocation board(AxialPos pos) noexcept;
+        [[nodiscard]] static UnitLocation bench(int slot) noexcept;
+
+        friend bool operator==(const UnitLocation&, const UnitLocation&) = default;
+    };
+
     Phase phase_ = Phase::Prep;
     Player player_;
     Board board_;
@@ -143,6 +157,12 @@ private:
 
     [[nodiscard]] PlacementResult validateBoardPlacement(const Unit& unit, AxialPos pos,
                                                          bool enteringEmptyBoard) const;
+    [[nodiscard]] UnitLocation locationOf(const Unit& unit) const noexcept;
+    [[nodiscard]] std::optional<UnitId> occupantAt(UnitLocation location) const;
+    [[nodiscard]] bool placeDetachedUnit(Unit& unit, UnitLocation location);
+    void clearUnitLocation(Unit& unit);
+    [[nodiscard]] PlacementResult moveUnitToEmptyLocation(Unit& unit, UnitLocation destination);
+    [[nodiscard]] PlacementResult swapPlayerUnits(Unit& left, Unit& right);
 };
 
 }  // namespace synera

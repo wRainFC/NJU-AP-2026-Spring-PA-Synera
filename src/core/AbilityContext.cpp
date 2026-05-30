@@ -15,4 +15,8 @@ void AbilityContext::heal(Unit& target, int amount) const noexcept {
     target.heal(amount);
 }
 
+Unit* AbilityContext::findUnit(UnitId id) const {
+    return state_.findUnit(id);
+}
+
 }  // namespace synera

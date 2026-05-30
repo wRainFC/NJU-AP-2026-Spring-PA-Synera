@@ -94,8 +94,12 @@ void Renderer::drawUnit(const Unit& unit, Rectangle rect) {
                rect.width * 0.32F, body);
 
     const float hpRatio = static_cast<float>(unit.runtime.hp) / static_cast<float>(unit.derivedStats.maxHp);
+    const float manaRatio =
+        static_cast<float>(unit.runtime.mana) / static_cast<float>(unit.derivedStats.maxMana);
     DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 4.0F),
                   static_cast<int>((rect.width - 12.0F) * hpRatio), 5, GREEN);
+    DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 10.0F),
+                  static_cast<int>((rect.width - 12.0F) * manaRatio), 4, BLUE);
     DrawText(unit.name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 40.0F), 9,
              RAYWHITE);
 }

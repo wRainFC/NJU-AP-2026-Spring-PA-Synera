@@ -25,4 +25,11 @@ public:
     void cast(Unit& caster, AbilityContext& context) override;
 };
 
+class StunStrikeAbility final : public Ability {
+public:
+    [[nodiscard]] std::string_view name() const noexcept override;
+    [[nodiscard]] std::string_view description() const noexcept override;
+    void cast(Unit& caster, AbilityContext& context) override;
+};
+
 }  // namespace synera
