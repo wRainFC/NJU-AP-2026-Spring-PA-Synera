@@ -7,7 +7,7 @@
 #include <ranges>
 #include <string_view>
 
-TEST_CASE("Metadata exposes display names and equipment effects", "[metadata]") {
+TEST_CASE("Metadata exposes display names and equipment stat modifiers", "[metadata]") {
     const auto traits = synera::allTraits();
 
     CHECK(traits.size() == 6);
@@ -17,19 +17,19 @@ TEST_CASE("Metadata exposes display names and equipment effects", "[metadata]") 
     CHECK(synera::traitName(synera::Trait::Mystic) == "Mystic");
     CHECK(synera::equipmentName(synera::EquipmentType::ManaCrystal) == "Crystal");
 
-    const auto sword = synera::equipmentEffect(synera::EquipmentType::IronSword);
+    const auto sword = synera::equipmentStatModifier(synera::EquipmentType::IronSword);
     REQUIRE(sword.has_value());
     CHECK(sword->atkBonus == 15);
 
-    const auto vest = synera::equipmentEffect(synera::EquipmentType::ChainVest);
+    const auto vest = synera::equipmentStatModifier(synera::EquipmentType::ChainVest);
     REQUIRE(vest.has_value());
     CHECK(vest->maxHpBonus == 150);
 
-    const auto glove = synera::equipmentEffect(synera::EquipmentType::SwiftGlove);
+    const auto glove = synera::equipmentStatModifier(synera::EquipmentType::SwiftGlove);
     REQUIRE(glove.has_value());
     CHECK(glove->attackIntervalMultiplier == Catch::Approx(0.8F));
 
-    const auto crystal = synera::equipmentEffect(synera::EquipmentType::ManaCrystal);
+    const auto crystal = synera::equipmentStatModifier(synera::EquipmentType::ManaCrystal);
     REQUIRE(crystal.has_value());
     CHECK(crystal->maxManaDelta == -30);
     CHECK(crystal->minMaxMana == 20);

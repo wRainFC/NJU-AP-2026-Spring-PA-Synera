@@ -14,12 +14,13 @@ namespace {
     return static_cast<int>(static_cast<float>(value) * multiplier);
 }
 
-void applyEquipmentEffect(UnitStats& stats, EquipmentEffect effect) noexcept {
-    stats.atk += effect.atkBonus;
-    stats.maxHp += effect.maxHpBonus;
-    stats.attackInterval *= effect.attackIntervalMultiplier;
-    stats.maxMana = effect.minMaxMana > 0 ? std::max(effect.minMaxMana, stats.maxMana + effect.maxManaDelta)
-                                          : stats.maxMana + effect.maxManaDelta;
+void applyStatModifier(UnitStats& stats, EquipmentStatModifier modifier) noexcept {
+    stats.atk += modifier.atkBonus;
+    stats.maxHp += modifier.maxHpBonus;
+    stats.attackInterval *= modifier.attackIntervalMultiplier;
+    stats.maxMana = modifier.minMaxMana > 0
+                        ? std::max(modifier.minMaxMana, stats.maxMana + modifier.maxManaDelta)
+                        : stats.maxMana + modifier.maxManaDelta;
 }
 
 }  // namespace
@@ -81,8 +82,8 @@ void Unit::recomputeDerivedStats() noexcept {
     derivedStats.maxHp = scaledInt(derivedStats.maxHp, starMultiplier);
     derivedStats.atk = scaledInt(derivedStats.atk, starMultiplier);
 
-    if (const auto effect = equipment.and_then(equipmentEffect)) {
-        applyEquipmentEffect(derivedStats, *effect);
+    if (const auto modifier = equipment.and_then(equipmentStatModifier)) {
+        applyStatModifier(derivedStats, *modifier);
     }
 
     runtime.hp = std::clamp(runtime.hp, 0, derivedStats.maxHp);

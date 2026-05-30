@@ -8,7 +8,7 @@
 
 namespace synera {
 
-struct EquipmentEffect {
+struct EquipmentStatModifier {
     int atkBonus = 0;
     int maxHpBonus = 0;
     int maxManaDelta = 0;
@@ -20,6 +20,6 @@ struct EquipmentEffect {
 [[nodiscard]] std::span<const Trait> allTraits() noexcept;
 [[nodiscard]] std::string_view traitName(Trait trait) noexcept;
 [[nodiscard]] std::string_view equipmentName(EquipmentType equipment) noexcept;
-[[nodiscard]] std::optional<EquipmentEffect> equipmentEffect(EquipmentType equipment) noexcept;
+[[nodiscard]] std::optional<EquipmentStatModifier> equipmentStatModifier(EquipmentType equipment) noexcept;
 
 }  // namespace synera

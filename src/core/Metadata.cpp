@@ -20,7 +20,7 @@ struct PhaseInfo {
 struct EquipmentInfo {
     EquipmentType equipment;
     std::string_view name;
-    EquipmentEffect effect;
+    EquipmentStatModifier statModifier;
 };
 
 inline constexpr std::array PhaseInfos{
@@ -44,15 +44,21 @@ inline constexpr std::array TraitInfos{
 
 inline constexpr std::array EquipmentInfos{
     EquipmentInfo{
-        .equipment = EquipmentType::IronSword, .name = "Sword", .effect = EquipmentEffect{.atkBonus = 15}},
+        .equipment = EquipmentType::IronSword,
+        .name = "Sword",
+        .statModifier = EquipmentStatModifier{.atkBonus = 15},
+    },
     EquipmentInfo{
-        .equipment = EquipmentType::ChainVest, .name = "Vest", .effect = EquipmentEffect{.maxHpBonus = 150}},
+        .equipment = EquipmentType::ChainVest,
+        .name = "Vest",
+        .statModifier = EquipmentStatModifier{.maxHpBonus = 150},
+    },
     EquipmentInfo{.equipment = EquipmentType::SwiftGlove,
                   .name = "Glove",
-                  .effect = EquipmentEffect{.attackIntervalMultiplier = 0.8F}},
+                  .statModifier = EquipmentStatModifier{.attackIntervalMultiplier = 0.8F}},
     EquipmentInfo{.equipment = EquipmentType::ManaCrystal,
                   .name = "Crystal",
-                  .effect = EquipmentEffect{.maxManaDelta = -30, .minMaxMana = 20}},
+                  .statModifier = EquipmentStatModifier{.maxManaDelta = -30, .minMaxMana = 20}},
 };
 
 [[nodiscard]] const TraitInfo* findTraitInfo(Trait trait) noexcept {
@@ -91,9 +97,9 @@ std::string_view equipmentName(EquipmentType equipment) noexcept {
     return info == nullptr ? "Equip" : info->name;
 }
 
-std::optional<EquipmentEffect> equipmentEffect(EquipmentType equipment) noexcept {
+std::optional<EquipmentStatModifier> equipmentStatModifier(EquipmentType equipment) noexcept {
     const EquipmentInfo* info = findEquipmentInfo(equipment);
-    return info == nullptr ? std::nullopt : std::optional<EquipmentEffect>{info->effect};
+    return info == nullptr ? std::nullopt : std::optional<EquipmentStatModifier>{info->statModifier};
 }
 
 }  // namespace synera
