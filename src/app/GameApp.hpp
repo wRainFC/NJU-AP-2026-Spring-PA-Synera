@@ -8,13 +8,17 @@
 #include "systems/ShopSystem.hpp"
 #include "systems/SynergySystem.hpp"
 #include "systems/UpgradeSystem.hpp"
+#include "ui/GameWindow.hpp"
 #include "ui/InputController.hpp"
 #include "ui/Layout.hpp"
 #include "ui/Renderer.hpp"
 
 #include <string>
+#include <string_view>
 
 namespace synera {
+
+enum class GameOutcome { Playing, Victory, Defeat };
 
 class GameApp {
 public:
@@ -29,7 +33,11 @@ private:
     void handleSave();
     [[nodiscard]] bool handleLoad();
     void setStatusMessage(std::string message);
+    [[nodiscard]] bool interactionsEnabled() const noexcept;
+    [[nodiscard]] std::string_view outcomeMessage() const noexcept;
+    void refreshOutcomeFromState() noexcept;
 
+    GameWindow window_;
     GameState state_;
     Layout layout_;
     Renderer renderer_;
@@ -41,9 +49,11 @@ private:
     UpgradeSystem upgradeSystem_;
     EquipmentSystem equipmentSystem_;
     SaveSystem saveSystem_;
+    GameOutcome outcome_ = GameOutcome::Playing;
     std::string statusMessage_;
     float statusMessageTimer_ = 0.0F;
     float resolveTimer_ = 0.0F;
+    float animationTimeSeconds_ = 0.0F;
 };
 
 }  // namespace synera

@@ -10,6 +10,8 @@ namespace {
 struct TraitInfo {
     Trait trait;
     std::string_view name;
+    int activationThreshold;
+    std::string_view effectDescription;
 };
 
 struct PhaseInfo {
@@ -34,12 +36,30 @@ inline constexpr std::array Traits{
 };
 
 inline constexpr std::array TraitInfos{
-    TraitInfo{.trait = Trait::Warrior, .name = "Warrior"},
-    TraitInfo{.trait = Trait::Mage, .name = "Mage"},
-    TraitInfo{.trait = Trait::Ranger, .name = "Ranger"},
-    TraitInfo{.trait = Trait::Guardian, .name = "Guardian"},
-    TraitInfo{.trait = Trait::Mystic, .name = "Mystic"},
-    TraitInfo{.trait = Trait::Assassin, .name = "Assassin"},
+    TraitInfo{.trait = Trait::Warrior,
+              .name = "Warrior",
+              .activationThreshold = 2,
+              .effectDescription = "2: Warriors gain +15 ATK."},
+    TraitInfo{.trait = Trait::Mage,
+              .name = "Mage",
+              .activationThreshold = 0,
+              .effectDescription = "Reserved trait. No active effect yet."},
+    TraitInfo{.trait = Trait::Ranger,
+              .name = "Ranger",
+              .activationThreshold = 2,
+              .effectDescription = "2: Rangers deal two basic-attack hits."},
+    TraitInfo{.trait = Trait::Guardian,
+              .name = "Guardian",
+              .activationThreshold = 2,
+              .effectDescription = "2: Player board units gain +80 HP."},
+    TraitInfo{.trait = Trait::Mystic,
+              .name = "Mystic",
+              .activationThreshold = 2,
+              .effectDescription = "2: Player board units need 10 less max mana."},
+    TraitInfo{.trait = Trait::Assassin,
+              .name = "Assassin",
+              .activationThreshold = 0,
+              .effectDescription = "Reserved trait. No active effect yet."},
 };
 
 inline constexpr std::array EquipmentInfos{
@@ -90,6 +110,16 @@ std::span<const Trait> allTraits() noexcept {
 std::string_view traitName(Trait trait) noexcept {
     const TraitInfo* info = findTraitInfo(trait);
     return info == nullptr ? "Trait" : info->name;
+}
+
+int traitActivationThreshold(Trait trait) noexcept {
+    const TraitInfo* info = findTraitInfo(trait);
+    return info == nullptr ? 0 : info->activationThreshold;
+}
+
+std::string_view traitEffectDescription(Trait trait) noexcept {
+    const TraitInfo* info = findTraitInfo(trait);
+    return info == nullptr ? "Unknown trait." : info->effectDescription;
 }
 
 std::string_view equipmentName(EquipmentType equipment) noexcept {

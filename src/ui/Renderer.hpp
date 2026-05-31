@@ -1,31 +1,46 @@
 #pragma once
 
-#include "raylib.h"
+#include "ui/UiState.hpp"
 
+#include <filesystem>
+#include <memory>
 #include <string_view>
 
 namespace synera {
 
 class GameState;
 class Layout;
-class Unit;
+
+// Per-frame inputs required by the renderer. The context borrows state only and
+// keeps rendering concerns separate from the persistent GameState model.
+struct RenderContext {
+    const GameState& state;
+    const Layout& layout;
+    const DragState& dragState;
+    PointerInput pointer;
+    std::string_view statusMessage;
+    std::string_view outcomeMessage;
+    float animationTimeSeconds = 0.0F;
+    bool interactionsEnabled = true;
+};
 
 class Renderer {
 public:
-    void draw(const GameState& state, const Layout& layout, std::string_view statusMessage);
+    Renderer();
+    ~Renderer();
+
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+    Renderer(Renderer&&) noexcept;
+    Renderer& operator=(Renderer&&) noexcept;
+
+    void loadAssets(const std::filesystem::path& root = "assets/textures");
+    void unloadAssets() noexcept;
+    void draw(const RenderContext& context);
 
 private:
-    void drawTopBar(const GameState& state, std::string_view statusMessage);
-    void drawBoard(const GameState& state, const Layout& layout);
-    void drawBench(const GameState& state, const Layout& layout);
-    void drawShop(const GameState& state, const Layout& layout);
-    void drawPopulationUpgrade(const GameState& state, const Layout& layout);
-    void drawEquipmentPool(const GameState& state, const Layout& layout);
-    void drawSynergies(const GameState& state);
-    void drawUnits(const GameState& state, const Layout& layout);
-    void drawUnit(const Unit& unit, Rectangle rect);
-    void drawStartButton(const GameState& state, const Layout& layout);
-    void drawSaveLoadButtons(const GameState& state, const Layout& layout);
+    class Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace synera

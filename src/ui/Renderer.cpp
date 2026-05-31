@@ -4,14 +4,21 @@
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 #include "core/Metadata.hpp"
+#include "systems/SynergySystem.hpp"
+#include "ui/GridItem.hpp"
 #include "ui/Layout.hpp"
+#include "ui/RenderAssets.hpp"
+#include "ui/UiDrawing.hpp"
+#include "ui/UiTheme.hpp"
+#include "ui/UnitItem.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace synera {
 
@@ -24,182 +31,317 @@ namespace {
         });
 }
 
+[[nodiscard]] const Unit* hoveredUnit(const GameState& state, const Layout& layout, Vector2 mouse) {
+    if (const auto pos = layout.boardPosAt(mouse)) {
+        return state.boardOccupant(*pos)
+            .transform([&](UnitId unitId) { return state.findUnit(unitId); })
+            .value_or(nullptr);
+    }
+    if (const auto slot = layout.benchSlotAt(mouse)) {
+        return state.benchOccupant(*slot)
+            .transform([&](UnitId unitId) { return state.findUnit(unitId); })
+            .value_or(nullptr);
+    }
+    return nullptr;
+}
+
+[[nodiscard]] ui::ButtonStyle regularButtonStyle(bool enabled = true) noexcept {
+    return ui::ButtonStyle{
+        .background = enabled ? ui::theme::Button : ui::theme::ButtonDisabled,
+        .border = RAYWHITE,
+        .text = enabled ? RAYWHITE : GRAY,
+        .tint = enabled ? WHITE : ui::theme::DisabledTint,
+    };
+}
+
 }  // namespace
 
-void Renderer::draw(const GameState& state, const Layout& layout, std::string_view statusMessage) {
-    drawTopBar(state, statusMessage);
-    drawBoard(state, layout);
-    drawBench(state, layout);
-    drawShop(state, layout);
-    drawPopulationUpgrade(state, layout);
-    drawEquipmentPool(state, layout);
-    drawSynergies(state);
-    drawUnits(state, layout);
-    drawStartButton(state, layout);
-    drawSaveLoadButtons(state, layout);
-}
+class Renderer::Impl {
+public:
+    void loadAssets(const std::filesystem::path& root) { assets_.load(root); }
+    void unloadAssets() noexcept { assets_.unload(); }
 
-void Renderer::drawTopBar(const GameState& state, std::string_view statusMessage) {
-    const std::string text = "HP: " + std::to_string(state.player().hp) +
-                             "  Gold: " + std::to_string(state.player().gold) +
-                             "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
-                             std::to_string(state.player().populationCap) +
-                             "  Round: " + std::to_string(state.player().currentRound) +
-                             "  Phase: " + std::string(phaseName(state.phase()));
-    DrawText(text.c_str(), 32, 24, 20, RAYWHITE);
-    if (!statusMessage.empty()) {
-        DrawText(statusMessage.data(), 32, 52, 16, GOLD);
+    void draw(const RenderContext& context) {
+        drawTopBar(context);
+        drawBoard(context.state, context.layout);
+        drawBench(context.layout);
+        drawShop(context.state, context.layout);
+        drawPopulationUpgrade(context.state, context.layout);
+        drawEquipmentPool(context.state, context.layout);
+        drawSynergies(context.state, context.layout);
+        drawSellArea(context);
+        drawUnits(context);
+        drawDragPreview(context);
+        drawHoverPanel(context);
+        drawOutcomeOverlay(context.outcomeMessage);
+        drawStartButton(context);
+        drawSaveLoadButtons(context);
     }
-}
 
-void Renderer::drawBoard(const GameState& state, const Layout& layout) {
-    (void)state;
-    for (int y : std::views::iota(0, config::BoardHeight)) {
-        for (int x : std::views::iota(0, config::BoardWidth)) {
-            const AxialPos pos = hex::oddRToAxial(OffsetPos{x, y});
-            const Vector2 center = layout.boardHexCenter(pos);
-            const auto corners = layout.boardHexCorners(pos);
-            const Color color = y < config::BoardHeight / 2 ? Color{58, 64, 72, 255} : Color{48, 78, 62, 255};
-            for (int index : std::views::iota(0, 6)) {
-                const Vector2 start = corners[static_cast<std::size_t>(index)];
-                const Vector2 end = corners[static_cast<std::size_t>((index + 1) % 6)];
-                DrawTriangle(center, end, start, color);
-                DrawLineV(start, end, Color{95, 103, 112, 255});
+private:
+    RenderAssets assets_;
+
+    void drawTopBar(const RenderContext& context) {
+        const GameState& state = context.state;
+        const std::string text = "HP: " + std::to_string(state.player().hp) +
+                                 "  Gold: " + std::to_string(state.player().gold) +
+                                 "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
+                                 std::to_string(state.player().populationCap) +
+                                 "  Round: " + std::to_string(state.player().currentRound) +
+                                 "  Phase: " + std::string(phaseName(state.phase()));
+        ui::drawText(text, 32, 24, 20, RAYWHITE);
+        if (!context.statusMessage.empty()) {
+            ui::drawText(context.statusMessage, 32, 52, 16, GOLD);
+        }
+    }
+
+    void drawBoard(const GameState& state, const Layout& layout) {
+        (void)state;
+        for (int y : std::views::iota(0, config::BoardHeight)) {
+            for (int x : std::views::iota(0, config::BoardWidth)) {
+                const AxialPos pos = hex::oddRToAxial(OffsetPos{x, y});
+                GridItem::drawBoardHex(assets_, layout, pos, y < config::BoardHeight / 2);
             }
         }
     }
-}
 
-void Renderer::drawBench(const GameState& state, const Layout& layout) {
-    (void)state;
-    DrawText("Bench", 80, 548, 18, RAYWHITE);
-    for (int slot : std::views::iota(0, config::BenchSize)) {
-        const Rectangle rect = layout.benchSlotRect(slot);
-        DrawRectangleRec(rect, Color{50, 50, 55, 255});
-        DrawRectangleLinesEx(rect, 1.0F, Color{120, 120, 128, 255});
-    }
-}
-
-void Renderer::drawShop(const GameState& state, const Layout& layout) {
-    DrawText("Shop", 820, 132, 18, RAYWHITE);
-    for (int index : std::views::iota(0, config::ShopOfferCount)) {
-        const Rectangle rect = layout.shopOfferRect(index);
-        const ShopOffer& offer = state.shop().offers()[static_cast<std::size_t>(index)];
-        DrawRectangleRec(rect, Color{45, 48, 54, 255});
-        DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
-
-        const std::string name = offer.empty() ? "-" : offer.unitTemplateId;
-        const std::string cost =
-            offer.empty() ? "" : ("T" + std::to_string(offer.tier) + "  " + std::to_string(offer.cost) + "g");
-        DrawText(name.c_str(), static_cast<int>(rect.x + 10.0F), static_cast<int>(rect.y + 8.0F), 16,
-                 RAYWHITE);
-        DrawText(cost.c_str(), static_cast<int>(rect.x + rect.width - 42.0F),
-                 static_cast<int>(rect.y + 28.0F), 14, GOLD);
+    void drawBench(const Layout& layout) {
+        ui::drawText("Bench", 80, 548, 18, RAYWHITE);
+        for (int slot : std::views::iota(0, config::BenchSize)) {
+            GridItem::drawBenchSlot(layout.benchSlotRect(slot));
+        }
     }
 
-    const Rectangle refresh = layout.shopRefreshButtonRect();
-    DrawRectangleRec(refresh, Color{76, 82, 92, 255});
-    DrawRectangleLinesEx(refresh, 1.0F, RAYWHITE);
-    DrawText("Refresh", static_cast<int>(refresh.x + 14.0F), static_cast<int>(refresh.y + 12.0F), 16,
-             RAYWHITE);
+    void drawShop(const GameState& state, const Layout& layout) {
+        ui::drawText("Shop", 820, 132, 18, RAYWHITE);
+        for (int index : std::views::iota(0, config::ShopOfferCount)) {
+            const Rectangle rect = layout.shopOfferRect(index);
+            const ShopOffer& offer = state.shop().offers()[static_cast<std::size_t>(index)];
+            DrawRectangleRec(rect, ui::theme::Surface);
+            DrawRectangleLinesEx(rect, 1.0F, ui::theme::SurfaceBorder);
 
-    const Rectangle lock = layout.shopLockButtonRect();
-    const bool locked = state.shop().locked();
-    DrawRectangleRec(lock, locked ? Color{114, 83, 44, 255} : Color{76, 82, 92, 255});
-    DrawRectangleLinesEx(lock, 1.0F, RAYWHITE);
-    DrawText(locked ? "Locked" : "Lock", static_cast<int>(lock.x + 18.0F), static_cast<int>(lock.y + 12.0F),
-             16, RAYWHITE);
-}
+            const std::string name = offer.empty() ? "-" : offer.unitTemplateId;
+            const std::string cost =
+                offer.empty() ? "" : ("T" + std::to_string(offer.tier) + "  " +
+                                       std::to_string(offer.cost) + "g");
+            float textLeft = rect.x + 10.0F;
+            if (!offer.empty()) {
+                const Rectangle preview{rect.x + 8.0F, rect.y + 8.0F, 36.0F, 36.0F};
+                if (ui::drawTextureToRect(assets_.unitTexture(offer.unitTemplateId, Owner::PlayerCtrl),
+                                          preview)) {
+                    DrawRectangleLinesEx(preview, 1.0F, ui::theme::SurfaceBorder);
+                    textLeft = rect.x + 52.0F;
+                }
+            }
 
-void Renderer::drawPopulationUpgrade(const GameState& state, const Layout& layout) {
-    const Rectangle rect = layout.populationUpgradeButtonRect();
-    DrawRectangleRec(rect, Color{76, 82, 92, 255});
-    DrawRectangleLinesEx(rect, 1.0F, RAYWHITE);
-    const std::string label = "Level Up  " + std::to_string(2 + state.player().level * 2) + "g";
-    DrawText(label.c_str(), static_cast<int>(rect.x + 18.0F), static_cast<int>(rect.y + 12.0F), 16, RAYWHITE);
-}
+            ui::drawTextInRect(name, Rectangle{textLeft, rect.y + 7.0F,
+                                               rect.x + rect.width - textLeft - 48.0F, 18.0F},
+                               16, RAYWHITE);
+            ui::drawTextInRect(cost, Rectangle{rect.x + rect.width - 64.0F, rect.y + 26.0F, 58.0F, 18.0F},
+                               14, GOLD, ui::HorizontalAlign::Right);
+        }
 
-void Renderer::drawEquipmentPool(const GameState& state, const Layout& layout) {
-    DrawText("Equipment", 820, 566, 16, RAYWHITE);
-    const auto pool = state.equipmentPool();
-    for (std::size_t index : std::views::iota(std::size_t{0}, pool.size())) {
-        const Rectangle rect = layout.equipmentSlotRect(index);
-        DrawRectangleRec(rect, Color{45, 48, 54, 255});
-        DrawRectangleLinesEx(rect, 1.0F, Color{128, 134, 144, 255});
-        const std::string name{equipmentName(pool[index])};
-        DrawText(name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 16.0F), 10,
-                 RAYWHITE);
+        ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopRefreshButtonRect(), "Refresh",
+                       regularButtonStyle());
+
+        const bool locked = state.shop().locked();
+        ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopLockButtonRect(),
+                       locked ? "Locked" : "Lock",
+                       ui::ButtonStyle{
+                           .background = locked ? ui::theme::ButtonLocked : ui::theme::Button,
+                           .border = RAYWHITE,
+                           .text = RAYWHITE,
+                           .tint = locked ? ui::theme::ButtonLockedTint : WHITE,
+                       });
     }
-}
 
-void Renderer::drawSynergies(const GameState& state) {
-    DrawText("Traits", 820, 650, 16, RAYWHITE);
-    int row = 0;
-    for (Trait trait : allTraits()) {
-        int count = 0;
-        state.forEachPlayerBoardUnit([&](const Unit& unit) {
-            if (std::ranges::find(unit.traits, trait) != unit.traits.end()) {
-                ++count;
+    void drawPopulationUpgrade(const GameState& state, const Layout& layout) {
+        const std::string label = "Level Up  " + std::to_string(2 + state.player().level * 2) + "g";
+        ui::drawButton(assets_.texture(TextureSlot::Button), layout.populationUpgradeButtonRect(), label,
+                       regularButtonStyle());
+    }
+
+    void drawEquipmentPool(const GameState& state, const Layout& layout) {
+        ui::drawText("Equipment", 820, 566, 16, RAYWHITE);
+        const auto pool = state.equipmentPool();
+        for (std::size_t index : std::views::iota(std::size_t{0}, pool.size())) {
+            UnitItem::drawEquipmentIcon(assets_, pool[index], layout.equipmentSlotRect(index));
+        }
+    }
+
+    void drawSynergies(const GameState& state, const Layout& layout) {
+        for (Trait trait : allTraits()) {
+            const TraitSummary summary = summarizeTrait(state, trait);
+            const Rectangle rect = layout.traitSlotRect(trait);
+            const TextureSlot textureSlot =
+                summary.active ? TextureSlot::TraitActive : TextureSlot::TraitInactive;
+            ui::drawTexturedRect(assets_.texture(textureSlot), rect,
+                                 summary.active ? Color{93, 82, 42, 255} : ui::theme::Surface);
+            DrawRectangleLinesEx(rect, 1.0F, summary.active ? GOLD : ui::theme::SurfaceBorder);
+            const std::string label = std::string(summary.name) + " " + std::to_string(summary.count);
+            ui::drawTextInRect(label, rect, 11, summary.active ? GOLD : RAYWHITE,
+                               ui::HorizontalAlign::Center, ui::VerticalAlign::Middle, 4.0F);
+        }
+    }
+
+    void drawUnits(const RenderContext& context) {
+        context.state.forEachUnit([&](const Unit& unit) {
+            if ((context.dragState.kind == DragKind::UnitFromBench ||
+                 context.dragState.kind == DragKind::UnitFromBoard) &&
+                unit.id == context.dragState.unitId) {
+                return;
+            }
+            if (const auto rect = unitRect(unit, context.layout)) {
+                UnitItem::drawUnit(assets_, unit, *rect, context.animationTimeSeconds);
             }
         });
-        if (count <= 0) {
-            continue;
-        }
-        const std::string label = std::string(traitName(trait)) + " " + std::to_string(count);
-        DrawText(label.c_str(), 820, 672 + row * 16, 12, count >= 2 ? GOLD : RAYWHITE);
-        ++row;
     }
-}
 
-void Renderer::drawUnits(const GameState& state, const Layout& layout) {
-    state.forEachUnit([&](const Unit& unit) {
-        if (const auto rect = unitRect(unit, layout)) {
-            drawUnit(unit, *rect);
-        }
-    });
-}
-
-void Renderer::drawUnit(const Unit& unit, Rectangle rect) {
-    const Color body = unit.owner == Owner::PlayerCtrl ? Color{74, 144, 226, 255} : Color{212, 91, 91, 255};
-    DrawCircle(static_cast<int>(rect.x + rect.width / 2.0F), static_cast<int>(rect.y + rect.height / 2.0F),
-               rect.width * 0.32F, body);
-
-    const float hpRatio = static_cast<float>(unit.runtime.hp) / static_cast<float>(unit.derivedStats.maxHp);
-    const float manaRatio =
-        static_cast<float>(unit.runtime.mana) / static_cast<float>(unit.derivedStats.maxMana);
-    DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 4.0F),
-                  static_cast<int>((rect.width - 12.0F) * hpRatio), 5, GREEN);
-    DrawRectangle(static_cast<int>(rect.x + 6.0F), static_cast<int>(rect.y + 10.0F),
-                  static_cast<int>((rect.width - 12.0F) * manaRatio), 4, BLUE);
-    const std::string label = unit.name + " *" + std::to_string(unit.star);
-    DrawText(label.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 38.0F), 9, RAYWHITE);
-    if (unit.equipment) {
-        const std::string name{equipmentName(*unit.equipment)};
-        DrawText(name.c_str(), static_cast<int>(rect.x + 4.0F), static_cast<int>(rect.y + 49.0F), 8, GOLD);
+    void drawStartButton(const RenderContext& context) {
+        const bool enabled = context.interactionsEnabled && context.state.phase() == Phase::Prep;
+        ui::drawButton(assets_.texture(enabled ? TextureSlot::Button : TextureSlot::ButtonDisabled),
+                       context.layout.startButtonRect(), "Start Combat",
+                       ui::ButtonStyle{
+                           .background = enabled ? ui::theme::ButtonPrimary
+                                                 : ui::theme::ButtonPrimaryDisabled,
+                           .border = RAYWHITE,
+                           .text = enabled ? RAYWHITE : GRAY,
+                           .tint = enabled ? WHITE : ui::theme::DisabledTint,
+                       },
+                       18);
     }
+
+    void drawSaveLoadButtons(const RenderContext& context) {
+        const bool saveEnabled = context.interactionsEnabled && context.state.phase() == Phase::Prep;
+        ui::drawButton(assets_.texture(saveEnabled ? TextureSlot::Button : TextureSlot::ButtonDisabled),
+                       context.layout.saveButtonRect(), "Save", regularButtonStyle(saveEnabled), 18);
+        ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.loadButtonRect(), "Load",
+                       regularButtonStyle(), 18);
+    }
+
+    void drawSellArea(const RenderContext& context) {
+        const Rectangle rect = context.layout.sellAreaRect();
+        ui::drawTexturedRect(assets_.texture(TextureSlot::SellArea), rect,
+                             context.interactionsEnabled ? ui::theme::SellArea
+                                                         : ui::theme::SellAreaDisabled,
+                             context.interactionsEnabled ? WHITE : ui::theme::DisabledTint);
+        DrawRectangleLinesEx(rect, 1.0F,
+                             context.interactionsEnabled ? ui::theme::SellAreaBorder : GRAY);
+        ui::drawTextInRect("Sell", Rectangle{rect.x, rect.y + 16.0F, rect.width, 28.0F}, 20,
+                           context.interactionsEnabled ? RAYWHITE : GRAY,
+                           ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+        ui::drawTextInRect("Drop unit", Rectangle{rect.x, rect.y + 48.0F, rect.width, 20.0F}, 13,
+                           context.interactionsEnabled ? RAYWHITE : GRAY,
+                           ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+    }
+
+    void drawDragPreview(const RenderContext& context) {
+        const Vector2 mouse = context.pointer.position;
+        if (context.dragState.kind == DragKind::UnitFromBench ||
+            context.dragState.kind == DragKind::UnitFromBoard) {
+            const Unit* unit = context.state.findUnit(context.dragState.unitId);
+            if (unit == nullptr) {
+                return;
+            }
+            const Rectangle rect{mouse.x - 30.0F, mouse.y - 30.0F, 60.0F, 60.0F};
+            UnitItem::drawUnit(assets_, *unit, rect, context.animationTimeSeconds);
+            return;
+        }
+
+        if (context.dragState.kind == DragKind::EquipmentFromPool &&
+            context.dragState.sourceEquipmentIndex) {
+            const auto pool = context.state.equipmentPool();
+            if (*context.dragState.sourceEquipmentIndex >= pool.size()) {
+                return;
+            }
+            const Rectangle rect{mouse.x - 23.0F, mouse.y - 23.0F, 46.0F, 46.0F};
+            UnitItem::drawEquipmentIcon(assets_, pool[*context.dragState.sourceEquipmentIndex], rect);
+            DrawRectangleLinesEx(rect, 1.0F, GOLD);
+        }
+    }
+
+    void drawHoverPanel(const RenderContext& context) {
+        if (context.dragState.kind != DragKind::None || !context.pointer.insideVirtualCanvas) {
+            return;
+        }
+
+        const Vector2 mouse = context.pointer.position;
+        if (const Unit* unit = hoveredUnit(context.state, context.layout, mouse); unit != nullptr) {
+            std::vector<std::string> lines;
+            lines.push_back(unit->name + "  *" + std::to_string(unit->star));
+            lines.push_back(unit->owner == Owner::PlayerCtrl ? "Owner: Player" : "Owner: Enemy");
+            lines.push_back("HP: " + std::to_string(unit->runtime.hp) + "/" +
+                            std::to_string(unit->derivedStats.maxHp));
+            lines.push_back("Mana: " + std::to_string(unit->runtime.mana) + "/" +
+                            std::to_string(unit->derivedStats.maxMana));
+            lines.push_back("ATK: " + std::to_string(unit->derivedStats.atk) +
+                            "  Range: " + std::to_string(unit->derivedStats.range));
+            lines.push_back("Attack Int: " +
+                            std::to_string(unit->derivedStats.attackInterval).substr(0, 4));
+            lines.push_back(unit->equipment ? "Equip: " + std::string(equipmentName(*unit->equipment))
+                                            : "Equip: None");
+            std::string traits = "Traits:";
+            for (Trait trait : unit->traits) {
+                traits += " ";
+                traits += traitName(trait);
+            }
+            lines.push_back(traits);
+            ui::drawPanel(ui::panelNear(mouse, 250.0F, 170.0F), lines,
+                          assets_.texture(TextureSlot::Panel));
+            return;
+        }
+
+        if (const auto trait = context.layout.traitAt(mouse)) {
+            const TraitSummary summary = summarizeTrait(context.state, *trait);
+            std::vector<std::string> lines{
+                std::string(summary.name),
+                "Count: " + std::to_string(summary.count),
+                summary.activationThreshold > 0
+                    ? "Threshold: " + std::to_string(summary.activationThreshold)
+                    : "Threshold: none",
+                std::string(summary.effectDescription),
+            };
+            ui::drawPanel(ui::panelNear(mouse, 300.0F, 96.0F), lines,
+                          assets_.texture(TextureSlot::Panel));
+        }
+    }
+
+    void drawOutcomeOverlay(std::string_view outcomeMessage) {
+        if (outcomeMessage.empty()) {
+            return;
+        }
+
+        DrawRectangle(0, 0, config::WindowWidth, config::WindowHeight, ui::theme::Overlay);
+        const Rectangle panel{390.0F, 250.0F, 500.0F, 150.0F};
+        ui::drawTexturedRect(assets_.texture(TextureSlot::Panel), panel, ui::theme::PanelStrong,
+                             Color{255, 255, 255, 245});
+        DrawRectangleLinesEx(panel, 2.0F, GOLD);
+        ui::drawTextInRect(outcomeMessage, Rectangle{panel.x, panel.y + 30.0F, panel.width, 44.0F},
+                           34, GOLD, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+        ui::drawTextInRect("Load a save to continue.",
+                           Rectangle{panel.x, panel.y + 88.0F, panel.width, 24.0F}, 18,
+                           RAYWHITE, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+    }
+};
+
+Renderer::Renderer() : impl_(std::make_unique<Impl>()) {}
+
+Renderer::~Renderer() = default;
+
+Renderer::Renderer(Renderer&&) noexcept = default;
+
+Renderer& Renderer::operator=(Renderer&&) noexcept = default;
+
+void Renderer::loadAssets(const std::filesystem::path& root) {
+    impl_->loadAssets(root);
 }
 
-void Renderer::drawStartButton(const GameState& state, const Layout& layout) {
-    const Rectangle rect = layout.startButtonRect();
-    const bool enabled = state.phase() == Phase::Prep;
-    DrawRectangleRec(rect, enabled ? Color{66, 132, 92, 255} : Color{70, 70, 70, 255});
-    DrawRectangleLinesEx(rect, 1.0F, RAYWHITE);
-    DrawText("Start Combat", static_cast<int>(rect.x + 22.0F), static_cast<int>(rect.y + 13.0F), 18,
-             RAYWHITE);
+void Renderer::unloadAssets() noexcept {
+    impl_->unloadAssets();
 }
 
-void Renderer::drawSaveLoadButtons(const GameState& state, const Layout& layout) {
-    const Rectangle save = layout.saveButtonRect();
-    const bool saveEnabled = state.phase() == Phase::Prep;
-    DrawRectangleRec(save, saveEnabled ? Color{76, 82, 92, 255} : Color{58, 58, 62, 255});
-    DrawRectangleLinesEx(save, 1.0F, RAYWHITE);
-    DrawText("Save", static_cast<int>(save.x + 22.0F), static_cast<int>(save.y + 13.0F), 18,
-             saveEnabled ? RAYWHITE : GRAY);
-
-    const Rectangle load = layout.loadButtonRect();
-    DrawRectangleRec(load, Color{76, 82, 92, 255});
-    DrawRectangleLinesEx(load, 1.0F, RAYWHITE);
-    DrawText("Load", static_cast<int>(load.x + 22.0F), static_cast<int>(load.y + 13.0F), 18, RAYWHITE);
+void Renderer::draw(const RenderContext& context) {
+    impl_->draw(context);
 }
 
 }  // namespace synera

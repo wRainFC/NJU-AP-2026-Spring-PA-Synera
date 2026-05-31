@@ -31,6 +31,7 @@ public:
     [[nodiscard]] Shop::Offers rollOffers(ShopRollContext context, std::mt19937& rng) const;
     [[nodiscard]] ShopOffer rollOffer(ShopRollContext context, std::mt19937& rng) const;
     [[nodiscard]] ShopTierWeights tierWeightsForLevel(int playerLevel) const noexcept;
+    [[nodiscard]] int costForTemplate(std::string_view templateId) const noexcept;
     [[nodiscard]] std::span<const ShopPoolEntry> entries() const noexcept;
 };
 

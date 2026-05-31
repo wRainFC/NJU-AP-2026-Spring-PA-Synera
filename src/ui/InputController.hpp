@@ -1,9 +1,6 @@
 #pragma once
 
-#include "core/Types.hpp"
-
-#include <cstddef>
-#include <optional>
+#include "ui/UiState.hpp"
 
 namespace synera {
 
@@ -15,35 +12,23 @@ class ShopSystem;
 class SynergySystem;
 class UpgradeSystem;
 
-enum class DragKind { None, UnitFromBench, UnitFromBoard, EquipmentFromPool };
-
-struct DragState {
-    DragKind kind = DragKind::None;
-    UnitId unitId = InvalidUnitId;
-    std::optional<int> sourceBenchSlot;
-    std::optional<AxialPos> sourceBoardPos;
-    std::optional<std::size_t> sourceEquipmentIndex;
-};
-
-struct InputResult {
-    bool saveRequested = false;
-    bool loadRequested = false;
-};
-
 class InputController {
 public:
     [[nodiscard]] InputResult update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
                                      ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
-                                     SynergySystem& synergySystem, EquipmentSystem& equipmentSystem);
+                                     SynergySystem& synergySystem, EquipmentSystem& equipmentSystem,
+                                     const PointerInput& pointer, bool interactionsEnabled);
+    [[nodiscard]] const DragState& dragState() const noexcept;
 
 private:
     DragState drag_;
 
-    void beginDrag(GameState& state, const Layout& layout);
-    void endDrag(GameState& state, const Layout& layout, SynergySystem& synergySystem,
-                 EquipmentSystem& equipmentSystem);
+    void beginDrag(GameState& state, const Layout& layout, Vector2 mouse);
+    void endDrag(GameState& state, const Layout& layout, ShopSystem& shopSystem, SynergySystem& synergySystem,
+                 EquipmentSystem& equipmentSystem, Vector2 mouse, InputResult& result);
     [[nodiscard]] bool handlePrepClick(GameState& state, const Layout& layout, ShopSystem& shopSystem,
-                                       UpgradeSystem& upgradeSystem, SynergySystem& synergySystem);
+                                       UpgradeSystem& upgradeSystem, SynergySystem& synergySystem,
+                                       Vector2 mouse);
 };
 
 }  // namespace synera

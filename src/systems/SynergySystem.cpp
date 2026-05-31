@@ -1,6 +1,7 @@
 #include "systems/SynergySystem.hpp"
 
 #include "core/GameState.hpp"
+#include "core/Metadata.hpp"
 
 #include <algorithm>
 #include <array>
@@ -38,21 +39,51 @@ void clampRuntime(Unit& unit) noexcept {
 
 }  // namespace
 
+int countPlayerBoardTrait(const GameState& state, Trait trait) {
+    int count = 0;
+    state.forEachPlayerBoardUnit([&](const Unit& unit) {
+        if (hasTrait(unit, trait)) {
+            ++count;
+        }
+    });
+    return count;
+}
+
+bool traitIsActive(Trait trait, int count) noexcept {
+    const int threshold = traitActivationThreshold(trait);
+    return threshold > 0 && count >= threshold;
+}
+
+TraitSummary summarizeTrait(const GameState& state, Trait trait) {
+    const int count = countPlayerBoardTrait(state, trait);
+    const int threshold = traitActivationThreshold(trait);
+    return TraitSummary{
+        .trait = trait,
+        .count = count,
+        .activationThreshold = threshold,
+        .active = threshold > 0 && count >= threshold,
+        .name = traitName(trait),
+        .effectDescription = traitEffectDescription(trait),
+    };
+}
+
 void SynergySystem::recompute(GameState& state) {
     state.forEachUnit([](Unit& unit) { unit.recomputeDerivedStats(); });
 
     const TraitCounts counts = countPlayerBoardTraits(state);
     state.forEachPlayerBoardUnit([&](Unit& unit) {
-        if (counts[traitIndex(Trait::Guardian)] >= 2) {
+        if (traitIsActive(Trait::Guardian, counts[traitIndex(Trait::Guardian)])) {
             unit.derivedStats.maxHp += 80;
         }
-        if (counts[traitIndex(Trait::Mystic)] >= 2) {
+        if (traitIsActive(Trait::Mystic, counts[traitIndex(Trait::Mystic)])) {
             unit.derivedStats.maxMana = std::max(20, unit.derivedStats.maxMana - 10);
         }
-        if (counts[traitIndex(Trait::Warrior)] >= 2 && hasTrait(unit, Trait::Warrior)) {
+        if (traitIsActive(Trait::Warrior, counts[traitIndex(Trait::Warrior)]) &&
+            hasTrait(unit, Trait::Warrior)) {
             unit.derivedStats.atk += 15;
         }
-        if (counts[traitIndex(Trait::Ranger)] >= 2 && hasTrait(unit, Trait::Ranger)) {
+        if (traitIsActive(Trait::Ranger, counts[traitIndex(Trait::Ranger)]) &&
+            hasTrait(unit, Trait::Ranger)) {
             unit.mechanics.doubleBasicAttack = true;
         }
         clampRuntime(unit);

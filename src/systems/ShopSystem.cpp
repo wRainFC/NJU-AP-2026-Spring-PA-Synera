@@ -4,6 +4,8 @@
 #include "core/Contract.hpp"
 #include "core/GameState.hpp"
 
+#include <algorithm>
+
 namespace synera {
 
 namespace {
@@ -66,6 +68,27 @@ ShopBuyResult ShopSystem::buy(GameState& state, int offerIndex) {
 
     state.shop().clearOffer(offerIndex);
     return {.status = ShopBuyStatus::Ok, .gainedUnitId = unit};
+}
+
+ShopSellResult ShopSystem::sellUnit(GameState& state, UnitId unitId) {
+    if (state.phase() != Phase::Prep) {
+        return {.status = ShopSellStatus::InvalidPhase};
+    }
+
+    const Unit* unit = state.findUnit(unitId);
+    if (unit == nullptr) {
+        return {.status = ShopSellStatus::InvalidUnit};
+    }
+    if (unit->owner != Owner::PlayerCtrl) {
+        return {.status = ShopSellStatus::InvalidOwner};
+    }
+
+    const int gold = pool_.costForTemplate(unit->templateId) * std::max(1, unit->star);
+    if (!state.removeUnit(unitId)) {
+        return {.status = ShopSellStatus::InvalidUnit};
+    }
+    state.player().addGold(gold);
+    return {.status = ShopSellStatus::Ok, .goldGained = gold};
 }
 
 void ShopSystem::setLocked(GameState& state, bool locked) const {

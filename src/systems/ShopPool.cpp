@@ -107,6 +107,11 @@ ShopTierWeights ShopPool::tierWeightsForLevel(int playerLevel) const noexcept {
     return TierOddsByLevel[static_cast<std::size_t>(level - 1)];
 }
 
+int ShopPool::costForTemplate(std::string_view templateId) const noexcept {
+    const auto iter = std::ranges::find(UnitPool, templateId, &ShopPoolEntry::templateId);
+    return iter == UnitPool.end() ? 1 : iter->cost;
+}
+
 std::span<const ShopPoolEntry> ShopPool::entries() const noexcept {
     return UnitPool;
 }

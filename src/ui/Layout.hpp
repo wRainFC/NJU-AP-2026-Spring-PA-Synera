@@ -24,10 +24,13 @@ public:
     [[nodiscard]] Rectangle startButtonRect() const noexcept;
     [[nodiscard]] Rectangle saveButtonRect() const noexcept;
     [[nodiscard]] Rectangle loadButtonRect() const noexcept;
+    [[nodiscard]] Rectangle traitSlotRect(Trait trait) const noexcept;
+    [[nodiscard]] Rectangle sellAreaRect() const noexcept;
     // Returns nullopt when the pointer is in the visual gap between hexes or outside the board.
     [[nodiscard]] std::optional<AxialPos> boardPosAt(Vector2 mouse) const noexcept;
     [[nodiscard]] std::optional<int> benchSlotAt(Vector2 mouse) const noexcept;
     [[nodiscard]] std::optional<int> shopOfferAt(Vector2 mouse) const noexcept;
+    [[nodiscard]] std::optional<Trait> traitAt(Vector2 mouse) const noexcept;
     [[nodiscard]] std::optional<std::size_t> equipmentSlotAt(Vector2 mouse,
                                                              std::size_t itemCount) const noexcept;
 };

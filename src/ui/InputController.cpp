@@ -1,24 +1,20 @@
 #include "ui/InputController.hpp"
 
 #include "core/GameState.hpp"
-#include "raylib.h"
 #include "systems/EquipmentSystem.hpp"
 #include "systems/RoundSystem.hpp"
 #include "systems/ShopSystem.hpp"
 #include "systems/SynergySystem.hpp"
 #include "systems/UpgradeSystem.hpp"
 #include "ui/Layout.hpp"
+#include "ui/UiDrawing.hpp"
 
 #include <optional>
+#include <string>
 
 namespace synera {
 
 namespace {
-
-[[nodiscard]] bool contains(Rectangle rect, Vector2 point) noexcept {
-    return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y &&
-           point.y <= rect.y + rect.height;
-}
 
 [[nodiscard]] std::optional<DragState> dragFromBench(GameState& state, const Layout& layout, Vector2 mouse) {
     return layout.benchSlotAt(mouse).and_then([&](int slot) -> std::optional<DragState> {
@@ -83,21 +79,28 @@ namespace {
 
 InputResult InputController::update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
                                     ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
-                                    SynergySystem& synergySystem, EquipmentSystem& equipmentSystem) {
-    const Vector2 mouse = GetMousePosition();
+                                    SynergySystem& synergySystem, EquipmentSystem& equipmentSystem,
+                                    const PointerInput& pointer, bool interactionsEnabled) {
+    const Vector2 mouse = pointer.position;
     InputResult result;
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.startButtonRect(), mouse)) {
+    if (pointer.leftPressed && ui::contains(layout.loadButtonRect(), mouse)) {
+        result.loadRequested = true;
+        return result;
+    }
+
+    if (!interactionsEnabled) {
+        drag_ = DragState{};
+        return result;
+    }
+
+    if (pointer.leftPressed && state.phase() == Phase::Prep && ui::contains(layout.startButtonRect(), mouse)) {
         synergySystem.recompute(state);
         roundSystem.startCombat(state);
         return result;
     }
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.saveButtonRect(), mouse)) {
+    if (pointer.leftPressed && state.phase() == Phase::Prep && ui::contains(layout.saveButtonRect(), mouse)) {
         result.saveRequested = true;
-        return result;
-    }
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.loadButtonRect(), mouse)) {
-        result.loadRequested = true;
         return result;
     }
 
@@ -105,33 +108,36 @@ InputResult InputController::update(GameState& state, const Layout& layout, Roun
         return result;
     }
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        if (handlePrepClick(state, layout, shopSystem, upgradeSystem, synergySystem)) {
+    if (pointer.leftPressed) {
+        if (handlePrepClick(state, layout, shopSystem, upgradeSystem, synergySystem, mouse)) {
             return result;
         }
-        beginDrag(state, layout);
+        beginDrag(state, layout, mouse);
     }
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        endDrag(state, layout, synergySystem, equipmentSystem);
+    if (pointer.leftReleased) {
+        endDrag(state, layout, shopSystem, synergySystem, equipmentSystem, mouse, result);
     }
     return result;
 }
 
-void InputController::beginDrag(GameState& state, const Layout& layout) {
-    const Vector2 mouse = GetMousePosition();
+const DragState& InputController::dragState() const noexcept {
+    return drag_;
+}
+
+void InputController::beginDrag(GameState& state, const Layout& layout, Vector2 mouse) {
     drag_ = dragFromEquipment(state, layout, mouse)
                 .or_else([&] { return dragFromBench(state, layout, mouse); })
                 .or_else([&] { return dragFromBoard(state, layout, mouse); })
                 .value_or(DragState{});
 }
 
-void InputController::endDrag(GameState& state, const Layout& layout, SynergySystem& synergySystem,
-                              EquipmentSystem& equipmentSystem) {
+void InputController::endDrag(GameState& state, const Layout& layout, ShopSystem& shopSystem,
+                              SynergySystem& synergySystem, EquipmentSystem& equipmentSystem,
+                              Vector2 mouse, InputResult& result) {
     if (drag_.kind == DragKind::None) {
         return;
     }
 
-    const Vector2 mouse = GetMousePosition();
     if (drag_.kind == DragKind::EquipmentFromPool) {
         const bool equipped = drag_.sourceEquipmentIndex
                                   .and_then([&](std::size_t index) {
@@ -142,6 +148,16 @@ void InputController::endDrag(GameState& state, const Layout& layout, SynergySys
                                   .value_or(false);
         if (equipped) {
             synergySystem.recompute(state);
+        }
+    } else if (ui::contains(layout.sellAreaRect(), mouse)) {
+        const Unit* unit = state.findUnit(drag_.unitId);
+        const std::string unitName = unit == nullptr ? "Unit" : unit->name;
+        const ShopSellResult sellResult = shopSystem.sellUnit(state, drag_.unitId);
+        if (sellResult.ok()) {
+            synergySystem.recompute(state);
+            result.statusMessage = "Sold " + unitName + " for " + std::to_string(sellResult.goldGained) + "g";
+        } else {
+            result.statusMessage = "Sell failed";
         }
     } else if (const auto pos = layout.boardPosAt(mouse)) {
         if (state.placeUnitOnBoardResult(drag_.unitId, *pos) == PlacementResult::Ok) {
@@ -157,19 +173,19 @@ void InputController::endDrag(GameState& state, const Layout& layout, SynergySys
 }
 
 bool InputController::handlePrepClick(GameState& state, const Layout& layout, ShopSystem& shopSystem,
-                                      UpgradeSystem& upgradeSystem, SynergySystem& synergySystem) {
-    const Vector2 mouse = GetMousePosition();
-    if (contains(layout.populationUpgradeButtonRect(), mouse)) {
+                                      UpgradeSystem& upgradeSystem, SynergySystem& synergySystem,
+                                      Vector2 mouse) {
+    if (ui::contains(layout.populationUpgradeButtonRect(), mouse)) {
         if (state.player().upgradePopulation()) {
             synergySystem.recompute(state);
         }
         return true;
     }
-    if (contains(layout.shopRefreshButtonRect(), mouse)) {
+    if (ui::contains(layout.shopRefreshButtonRect(), mouse)) {
         (void)shopSystem.refresh(state, ShopRefreshMode::Manual);
         return true;
     }
-    if (contains(layout.shopLockButtonRect(), mouse)) {
+    if (ui::contains(layout.shopLockButtonRect(), mouse)) {
         (void)shopSystem.toggleLocked(state);
         return true;
     }

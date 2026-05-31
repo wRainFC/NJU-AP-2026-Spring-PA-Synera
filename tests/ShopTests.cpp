@@ -2,12 +2,21 @@
 
 #include "core/GameState.hpp"
 #include "core/Shop.hpp"
+#include "board/HexGrid.hpp"
 #include "systems/ShopPool.hpp"
 #include "systems/ShopSystem.hpp"
 
 #include <algorithm>
 #include <random>
 #include <ranges>
+
+namespace {
+
+[[nodiscard]] synera::AxialPos pos(int col, int row) noexcept {
+    return synera::hex::oddRToAxial(synera::OffsetPos{col, row});
+}
+
+}  // namespace
 
 TEST_CASE("Shop stores offers and lock state", "[shop]") {
     synera::Shop shop;
@@ -45,6 +54,9 @@ TEST_CASE("ShopPool rolls level-gated offers", "[shop]") {
     const synera::Shop::Offers offers = pool.rollOffers(synera::ShopRollContext{.playerLevel = 1}, rng);
     CHECK(std::ranges::all_of(
         offers, [](const synera::ShopOffer& offer) { return !offer.empty() && offer.tier == 1; }));
+
+    CHECK(pool.costForTemplate("storm_archer") == 3);
+    CHECK(pool.costForTemplate("unknown_template") == 1);
 }
 
 TEST_CASE("ShopSystem refreshes, locks, and buys through GameState", "[shop]") {
@@ -73,4 +85,37 @@ TEST_CASE("ShopSystem refreshes, locks, and buys through GameState", "[shop]") {
     CHECK(state.benchOccupant(0) == result.gainedUnitId);
     REQUIRE(state.shop().offerAt(0).has_value());
     CHECK(state.shop().offerAt(0)->get().empty());
+}
+
+TEST_CASE("ShopSystem sells player units and clears placement", "[shop]") {
+    synera::GameState state;
+    synera::ShopSystem shopSystem{123};
+    const synera::UnitId unitId = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
+    REQUIRE(state.placeUnitOnBoard(unitId, pos(0, 4)));
+
+    auto* unit = state.findUnit(unitId);
+    REQUIRE(unit != nullptr);
+    unit->star = 2;
+    const int goldBefore = state.player().gold;
+
+    const synera::ShopSellResult result = shopSystem.sellUnit(state, unitId);
+
+    REQUIRE(result.ok());
+    CHECK(result.goldGained == 6);
+    CHECK(state.player().gold == goldBefore + 6);
+    CHECK(state.findUnit(unitId) == nullptr);
+    CHECK_FALSE(state.boardOccupant(pos(0, 4)).has_value());
+}
+
+TEST_CASE("ShopSystem rejects invalid unit sales", "[shop]") {
+    synera::GameState state;
+    synera::ShopSystem shopSystem{123};
+    const synera::UnitId enemyId = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
+
+    CHECK(shopSystem.sellUnit(state, synera::InvalidUnitId).status == synera::ShopSellStatus::InvalidUnit);
+    CHECK(shopSystem.sellUnit(state, enemyId).status == synera::ShopSellStatus::InvalidOwner);
+
+    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    state.setPhase(synera::Phase::Combat);
+    CHECK(shopSystem.sellUnit(state, playerId).status == synera::ShopSellStatus::InvalidPhase);
 }

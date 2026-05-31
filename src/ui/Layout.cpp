@@ -2,6 +2,7 @@
 
 #include "app/GameConfig.hpp"
 #include "board/HexGrid.hpp"
+#include "ui/UiDrawing.hpp"
 
 #include <cstddef>
 #include <cmath>
@@ -15,7 +16,7 @@ constexpr float HexRadius = 34.0F;
 constexpr float HexWidth = HexRadius * 1.73205080757F;
 constexpr float BenchSlotSize = 58.0F;
 constexpr float BoardLeft = 80.0F;
-constexpr float BoardTop = 92.0F;
+constexpr float BoardTop = 136.0F;
 constexpr float BenchTop = 580.0F;
 constexpr float SlotGap = 8.0F;
 constexpr float ShopLeft = 820.0F;
@@ -25,12 +26,12 @@ constexpr float ShopOfferHeight = 52.0F;
 constexpr float ShopGap = 8.0F;
 constexpr float EquipmentSlotSize = 46.0F;
 constexpr float EquipmentTop = 590.0F;
+constexpr float TraitLeft = 54.0F;
+constexpr float TraitTop = 68.0F;
+constexpr float TraitWidth = 78.0F;
+constexpr float TraitHeight = 28.0F;
+constexpr float TraitGap = 6.0F;
 constexpr float Pi = 3.14159265359F;
-
-[[nodiscard]] bool contains(Rectangle rect, Vector2 point) noexcept {
-    return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y &&
-           point.y <= rect.y + rect.height;
-}
 
 [[nodiscard]] bool containsPolygon(const std::array<Vector2, 6>& points, Vector2 point) noexcept {
     bool inside = false;
@@ -102,6 +103,19 @@ Rectangle Layout::loadButtonRect() const noexcept {
     return Rectangle{1112.0F, 96.0F, 88.0F, 44.0F};
 }
 
+Rectangle Layout::traitSlotRect(Trait trait) const noexcept {
+    return Rectangle{
+        TraitLeft + static_cast<float>(static_cast<int>(trait)) * (TraitWidth + TraitGap),
+        TraitTop,
+        TraitWidth,
+        TraitHeight,
+    };
+}
+
+Rectangle Layout::sellAreaRect() const noexcept {
+    return Rectangle{1052.0F, 160.0F, 148.0F, 88.0F};
+}
+
 Rectangle Layout::shopOfferRect(int index) const noexcept {
     return Rectangle{
         ShopLeft,
@@ -136,7 +150,7 @@ std::optional<AxialPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
     for (int y : std::views::iota(0, config::BoardHeight)) {
         for (int x : std::views::iota(0, config::BoardWidth)) {
             const AxialPos pos = hex::oddRToAxial(OffsetPos{x, y});
-            if (contains(boardHexBounds(pos), mouse) && containsPolygon(boardHexCorners(pos), mouse)) {
+            if (ui::contains(boardHexBounds(pos), mouse) && containsPolygon(boardHexCorners(pos), mouse)) {
                 return pos;
             }
         }
@@ -146,7 +160,7 @@ std::optional<AxialPos> Layout::boardPosAt(Vector2 mouse) const noexcept {
 
 std::optional<int> Layout::benchSlotAt(Vector2 mouse) const noexcept {
     for (int slot : std::views::iota(0, config::BenchSize)) {
-        if (contains(benchSlotRect(slot), mouse)) {
+        if (ui::contains(benchSlotRect(slot), mouse)) {
             return slot;
         }
     }
@@ -155,8 +169,18 @@ std::optional<int> Layout::benchSlotAt(Vector2 mouse) const noexcept {
 
 std::optional<int> Layout::shopOfferAt(Vector2 mouse) const noexcept {
     for (int index : std::views::iota(0, config::ShopOfferCount)) {
-        if (contains(shopOfferRect(index), mouse)) {
+        if (ui::contains(shopOfferRect(index), mouse)) {
             return index;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<Trait> Layout::traitAt(Vector2 mouse) const noexcept {
+    for (int index : std::views::iota(0, 6)) {
+        const auto trait = static_cast<Trait>(index);
+        if (ui::contains(traitSlotRect(trait), mouse)) {
+            return trait;
         }
     }
     return std::nullopt;
@@ -164,7 +188,7 @@ std::optional<int> Layout::shopOfferAt(Vector2 mouse) const noexcept {
 
 std::optional<std::size_t> Layout::equipmentSlotAt(Vector2 mouse, std::size_t itemCount) const noexcept {
     for (std::size_t index : std::views::iota(std::size_t{0}, itemCount)) {
-        if (contains(equipmentSlotRect(index), mouse)) {
+        if (ui::contains(equipmentSlotRect(index), mouse)) {
             return index;
         }
     }

@@ -61,6 +61,12 @@ TEST_CASE("SynergySystem counts only player board units", "[synergy]") {
 
     synergies.recompute(state);
 
+    const synera::TraitSummary guardian = synera::summarizeTrait(state, synera::Trait::Guardian);
+    CHECK(guardian.count == 2);
+    CHECK(guardian.activationThreshold == 2);
+    CHECK(guardian.active);
+    CHECK(synera::countPlayerBoardTrait(state, synera::Trait::Mage) == 0);
+
     const auto* guardUnit = state.findUnit(guard);
     const auto* medicUnit = state.findUnit(medic);
     const auto* mageUnit = state.findUnit(mage);

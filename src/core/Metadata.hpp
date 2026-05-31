@@ -19,6 +19,8 @@ struct EquipmentStatModifier {
 [[nodiscard]] std::string_view phaseName(Phase phase) noexcept;
 [[nodiscard]] std::span<const Trait> allTraits() noexcept;
 [[nodiscard]] std::string_view traitName(Trait trait) noexcept;
+[[nodiscard]] int traitActivationThreshold(Trait trait) noexcept;
+[[nodiscard]] std::string_view traitEffectDescription(Trait trait) noexcept;
 [[nodiscard]] std::string_view equipmentName(EquipmentType equipment) noexcept;
 [[nodiscard]] std::optional<EquipmentStatModifier> equipmentStatModifier(EquipmentType equipment) noexcept;
 

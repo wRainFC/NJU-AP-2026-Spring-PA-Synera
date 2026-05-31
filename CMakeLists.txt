@@ -70,9 +70,14 @@ target_link_libraries(synera_logic PUBLIC ${SYNERA_CEREAL_TARGET})
 add_executable(synera
     src/main.cpp
     src/app/GameApp.cpp
+    src/ui/GameWindow.cpp
+    src/ui/GridItem.cpp
     src/ui/InputController.cpp
     src/ui/Layout.cpp
+    src/ui/RenderAssets.cpp
     src/ui/Renderer.cpp
+    src/ui/UiDrawing.cpp
+    src/ui/UnitItem.cpp
 )
 
 target_link_libraries(synera PRIVATE synera_logic raylib)
