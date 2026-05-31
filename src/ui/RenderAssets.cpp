@@ -1,8 +1,8 @@
 #include "ui/RenderAssets.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <algorithm>
 #include <filesystem>
 #include <string>
 #include <system_error>
@@ -46,12 +46,9 @@ inline constexpr std::array EquipmentTexturePaths{
 };
 
 inline constexpr std::array StateTexturePaths{
-    StateTexturePath{UnitState::Idle, "idle"},
-    StateTexturePath{UnitState::Moving, "moving"},
-    StateTexturePath{UnitState::Attacking, "attacking"},
-    StateTexturePath{UnitState::Casting, "casting"},
-    StateTexturePath{UnitState::Stunned, "stunned"},
-    StateTexturePath{UnitState::Dead, "dead"},
+    StateTexturePath{UnitState::Idle, "idle"},           StateTexturePath{UnitState::Moving, "moving"},
+    StateTexturePath{UnitState::Attacking, "attacking"}, StateTexturePath{UnitState::Casting, "casting"},
+    StateTexturePath{UnitState::Stunned, "stunned"},     StateTexturePath{UnitState::Dead, "dead"},
 };
 
 [[nodiscard]] std::size_t slotIndex(TextureSlot slot) noexcept {
@@ -93,6 +90,26 @@ inline constexpr std::array StateTexturePaths{
     return std::optional<TextureResource>{std::in_place, texture};
 }
 
+[[nodiscard]] std::optional<FontResource> loadFontIfPresent(const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(path, error)) {
+        return std::nullopt;
+    }
+
+    const Font font = LoadFontEx(path.string().c_str(), 32, nullptr, 0);
+    if (font.texture.id == 0) {
+        return std::nullopt;
+    }
+    return std::optional<FontResource>{std::in_place, font};
+}
+
+[[nodiscard]] std::optional<FontResource> loadUiFont(const std::filesystem::path& textureRoot) {
+    const std::filesystem::path fontsRoot = textureRoot.parent_path() / "fonts";
+    return loadFontIfPresent(fontsRoot / "ui.ttf").or_else([&] {
+        return loadFontIfPresent(fontsRoot / "ui.otf");
+    });
+}
+
 [[nodiscard]] std::optional<RenderAssets::SpriteAnimation> loadAnimationIfPresent(
     const std::filesystem::path& path) {
     auto texture = loadTextureIfPresent(path);
@@ -101,9 +118,8 @@ inline constexpr std::array StateTexturePaths{
     }
 
     const Texture2D* loaded = texture->get();
-    const int frameCount = loaded == nullptr || loaded->height <= 0
-                               ? 1
-                               : std::max(1, loaded->width / loaded->height);
+    const int frameCount =
+        loaded == nullptr || loaded->height <= 0 ? 1 : std::max(1, loaded->width / loaded->height);
     return RenderAssets::SpriteAnimation{
         .texture = std::move(*texture),
         .frameCount = frameCount,
@@ -145,12 +161,45 @@ void TextureResource::reset() noexcept {
     texture_ = Texture2D{};
 }
 
+FontResource::FontResource(Font font) noexcept : font_(font) {}
+
+FontResource::~FontResource() {
+    reset();
+}
+
+FontResource::FontResource(FontResource&& other) noexcept : font_(std::exchange(other.font_, Font{})) {}
+
+FontResource& FontResource::operator=(FontResource&& other) noexcept {
+    if (this != &other) {
+        reset();
+        font_ = std::exchange(other.font_, Font{});
+    }
+    return *this;
+}
+
+const Font* FontResource::get() const noexcept {
+    return loaded() ? &font_ : nullptr;
+}
+
+bool FontResource::loaded() const noexcept {
+    return font_.texture.id != 0;
+}
+
+void FontResource::reset() noexcept {
+    if (loaded() && IsWindowReady()) {
+        UnloadFont(font_);
+    }
+    font_ = Font{};
+}
+
 RenderAssets::~RenderAssets() {
     unload();
 }
 
 void RenderAssets::load(const std::filesystem::path& root) {
     unload();
+
+    font_ = loadUiFont(root);
 
     for (const SlotTexturePath& entry : SlotTexturePaths) {
         textures_[slotIndex(entry.slot)] = loadTextureIfPresent(root / entry.path);
@@ -164,8 +213,8 @@ void RenderAssets::load(const std::filesystem::path& root) {
             const std::string unitId = entry.path().filename().string();
             for (Owner owner : {Owner::PlayerCtrl, Owner::EnemyCtrl}) {
                 for (const StateTexturePath& state : StateTexturePaths) {
-                    const std::string filename = std::string{ownerName(owner)} + "_" +
-                                                 std::string{state.name} + ".png";
+                    const std::string filename =
+                        std::string{ownerName(owner)} + "_" + std::string{state.name} + ".png";
                     auto animation = loadAnimationIfPresent(entry.path() / filename);
                     if (animation) {
                         unitAnimations_.emplace(animationKey(unitId, owner, state.state),
@@ -209,6 +258,7 @@ void RenderAssets::unload() noexcept {
     unitAnimations_.clear();
     playerDefaultUnitTexture_.reset();
     enemyDefaultUnitTexture_.reset();
+    font_.reset();
 }
 
 const Texture2D* RenderAssets::texture(TextureSlot slot) const noexcept {
@@ -254,6 +304,10 @@ const Texture2D* RenderAssets::equipmentTexture(EquipmentType equipment) const n
         return nullptr;
     }
     return equipmentTextures_[index]->get();
+}
+
+const Font* RenderAssets::font() const noexcept {
+    return font_ ? font_->get() : nullptr;
 }
 
 }  // namespace synera

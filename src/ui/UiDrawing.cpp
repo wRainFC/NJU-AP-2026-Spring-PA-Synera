@@ -11,6 +11,9 @@ namespace synera::ui {
 
 namespace {
 
+constexpr float FontSpacing = 1.0F;
+const Font* CurrentFont = nullptr;
+
 [[nodiscard]] std::string owned(std::string_view text) {
     return std::string{text};
 }
@@ -19,7 +22,15 @@ namespace {
     return static_cast<int>(std::lround(value));
 }
 
+[[nodiscard]] Font activeFont() noexcept {
+    return CurrentFont == nullptr ? GetFontDefault() : *CurrentFont;
+}
+
 }  // namespace
+
+void setFont(const Font* font) noexcept {
+    CurrentFont = font;
+}
 
 bool contains(Rectangle rect, Vector2 point) noexcept {
     return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y &&
@@ -45,7 +56,7 @@ float clampedRatio(int value, int maximum) noexcept {
 
 int measureText(std::string_view text, int fontSize) {
     const std::string value = owned(text);
-    return MeasureText(value.c_str(), fontSize);
+    return rounded(MeasureTextEx(activeFont(), value.c_str(), static_cast<float>(fontSize), FontSpacing).x);
 }
 
 int fitFontSize(std::string_view text, float maxWidth, int preferredSize, int minimumSize) {
@@ -58,7 +69,8 @@ int fitFontSize(std::string_view text, float maxWidth, int preferredSize, int mi
 
 void drawText(std::string_view text, int x, int y, int fontSize, Color color) {
     const std::string value = owned(text);
-    DrawText(value.c_str(), x, y, fontSize, color);
+    DrawTextEx(activeFont(), value.c_str(), Vector2{static_cast<float>(x), static_cast<float>(y)},
+               static_cast<float>(fontSize), FontSpacing, color);
 }
 
 void drawTextInRect(std::string_view text, Rectangle rect, int fontSize, Color color,
@@ -105,12 +117,11 @@ void drawTexturedRect(const Texture2D* texture, Rectangle rect, Color fallback, 
     }
 }
 
-void drawButton(const Texture2D* texture, Rectangle rect, std::string_view label,
-                ButtonStyle style, int fontSize) {
+void drawButton(const Texture2D* texture, Rectangle rect, std::string_view label, ButtonStyle style,
+                int fontSize) {
     drawTexturedRect(texture, rect, style.background, style.tint);
     DrawRectangleLinesEx(rect, 1.0F, style.border);
-    drawTextInRect(label, rect, fontSize, style.text, HorizontalAlign::Center,
-                   VerticalAlign::Middle, 8.0F);
+    drawTextInRect(label, rect, fontSize, style.text, HorizontalAlign::Center, VerticalAlign::Middle, 8.0F);
 }
 
 void drawBar(Rectangle rect, float ratio, Color fill, Color track, Color outline) {

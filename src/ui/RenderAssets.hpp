@@ -51,6 +51,26 @@ private:
     Texture2D texture_{};
 };
 
+// Owns a Raylib font loaded from optional UI assets.
+class FontResource {
+public:
+    FontResource() = default;
+    explicit FontResource(Font font) noexcept;
+    ~FontResource();
+
+    FontResource(const FontResource&) = delete;
+    FontResource& operator=(const FontResource&) = delete;
+    FontResource(FontResource&& other) noexcept;
+    FontResource& operator=(FontResource&& other) noexcept;
+
+    [[nodiscard]] const Font* get() const noexcept;
+    [[nodiscard]] bool loaded() const noexcept;
+    void reset() noexcept;
+
+private:
+    Font font_{};
+};
+
 class RenderAssets {
 public:
     struct SpriteAnimation {
@@ -75,6 +95,8 @@ public:
     [[nodiscard]] SpriteAnimationView unitAnimation(std::string_view templateId, Owner owner,
                                                     UnitState state) const;
     [[nodiscard]] const Texture2D* equipmentTexture(EquipmentType equipment) const noexcept;
+    // Returns nullptr when no UI font was loaded, letting drawing helpers use Raylib's default font.
+    [[nodiscard]] const Font* font() const noexcept;
 
 private:
     static constexpr std::size_t TextureSlotCount = static_cast<std::size_t>(TextureSlot::Count);
@@ -87,6 +109,7 @@ private:
     std::unordered_map<std::string, SpriteAnimation> unitAnimations_;
     std::optional<TextureResource> playerDefaultUnitTexture_;
     std::optional<TextureResource> enemyDefaultUnitTexture_;
+    std::optional<FontResource> font_;
 };
 
 }  // namespace synera
