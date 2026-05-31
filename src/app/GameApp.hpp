@@ -30,6 +30,7 @@ private:
     void update(float dt);
     void render();
     void shutdown();
+    void startNewRun();
     void handleSave();
     [[nodiscard]] bool handleLoad();
     void setStatusMessage(std::string message);

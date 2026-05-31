@@ -90,11 +90,20 @@ InputResult InputController::update(GameState& state, const Layout& layout, Roun
     }
 
     if (!interactionsEnabled) {
+        if (pointer.leftPressed && ui::contains(layout.outcomeRestartButtonRect(), mouse)) {
+            result.restartRequested = true;
+            return result;
+        }
+        if (pointer.leftPressed && ui::contains(layout.outcomeLoadButtonRect(), mouse)) {
+            result.loadRequested = true;
+            return result;
+        }
         drag_ = DragState{};
         return result;
     }
 
-    if (pointer.leftPressed && state.phase() == Phase::Prep && ui::contains(layout.startButtonRect(), mouse)) {
+    if (pointer.leftPressed && state.phase() == Phase::Prep &&
+        ui::contains(layout.startButtonRect(), mouse)) {
         synergySystem.recompute(state);
         roundSystem.startCombat(state);
         return result;
@@ -132,8 +141,8 @@ void InputController::beginDrag(GameState& state, const Layout& layout, Vector2 
 }
 
 void InputController::endDrag(GameState& state, const Layout& layout, ShopSystem& shopSystem,
-                              SynergySystem& synergySystem, EquipmentSystem& equipmentSystem,
-                              Vector2 mouse, InputResult& result) {
+                              SynergySystem& synergySystem, EquipmentSystem& equipmentSystem, Vector2 mouse,
+                              InputResult& result) {
     if (drag_.kind == DragKind::None) {
         return;
     }

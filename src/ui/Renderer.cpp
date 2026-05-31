@@ -85,7 +85,7 @@ public:
         drawUnits(context);
         drawDragPreview(context);
         drawHoverPanel(context);
-        drawOutcomeOverlay(context.outcomeMessage);
+        drawOutcomeOverlay(context);
 
         // Controls drawn last so they stay readable over the base scene.
         drawStartButton(context);
@@ -318,22 +318,26 @@ private:
     }
 
     // Modal overlays.
-    void drawOutcomeOverlay(std::string_view outcomeMessage) {
-        if (outcomeMessage.empty()) {
+    void drawOutcomeOverlay(const RenderContext& context) {
+        if (context.outcomeMessage.empty()) {
             return;
         }
 
         DrawRectangle(0, 0, config::WindowWidth, config::WindowHeight, ui::theme::Overlay);
         const Rectangle panel{static_cast<float>(config::WindowWidth) / 2.0F - 320.0F,
-                              static_cast<float>(config::WindowHeight) / 2.0F - 100.0F, 640.0F, 200.0F};
+                              static_cast<float>(config::WindowHeight) / 2.0F - 120.0F, 640.0F, 240.0F};
         ui::drawTexturedRect(assets_.texture(TextureSlot::Panel), panel, ui::theme::PanelStrong,
                              Color{255, 255, 255, 245});
         DrawRectangleLinesEx(panel, 2.0F, GOLD);
-        ui::drawTextInRect(outcomeMessage, Rectangle{panel.x, panel.y + 40.0F, panel.width, 58.0F}, 44, GOLD,
+        ui::drawTextInRect(context.outcomeMessage, Rectangle{panel.x, panel.y + 34.0F, panel.width, 58.0F},
+                           44, GOLD, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+        ui::drawTextInRect("Choose how to continue.",
+                           Rectangle{panel.x, panel.y + 102.0F, panel.width, 32.0F}, 24, RAYWHITE,
                            ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
-        ui::drawTextInRect("Load a save to continue.",
-                           Rectangle{panel.x, panel.y + 116.0F, panel.width, 32.0F}, 24, RAYWHITE,
-                           ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+        ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.outcomeRestartButtonRect(),
+                       "New Run", regularButtonStyle(), 24);
+        ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.outcomeLoadButtonRect(),
+                       "Load Save", regularButtonStyle(), 24);
     }
 };
 

@@ -32,13 +32,26 @@ void GameApp::init() {
     window_.init(config::WindowWidth, config::WindowHeight, "Synera: Synergy Auto-Arena");
     window_.setTargetFps(config::TargetFps);
     renderer_.loadAssets();
+    startNewRun();
+}
+
+void GameApp::startNewRun() {
+    state_ = GameState{};
+    input_ = InputController{};
+    shopSystem_ = ShopSystem{};
+    equipmentSystem_ = EquipmentSystem{};
+    outcome_ = GameOutcome::Playing;
+    statusMessage_.clear();
+    statusMessageTimer_ = 0.0F;
+    resolveTimer_ = 0.0F;
+    animationTimeSeconds_ = 0.0F;
 
     const UnitId first = state_.createUnit("iron_guard", Owner::PlayerCtrl);
-    state_.placeUnitOnBench(first, 0);
+    (void)state_.placeUnitOnBench(first, 0);
     const UnitId second = state_.createUnit("ember_mage", Owner::PlayerCtrl);
-    state_.placeUnitOnBench(second, 1);
+    (void)state_.placeUnitOnBench(second, 1);
     const UnitId third = state_.createUnit("field_medic", Owner::PlayerCtrl);
-    state_.placeUnitOnBench(third, 2);
+    (void)state_.placeUnitOnBench(third, 2);
     (void)shopSystem_.refresh(state_, ShopRefreshMode::Initial);
 }
 
@@ -58,6 +71,11 @@ void GameApp::update(float dt) {
                       equipmentSystem_, pointer, interactionsEnabled());
     if (inputResult.saveRequested) {
         handleSave();
+    }
+    if (inputResult.restartRequested) {
+        startNewRun();
+        setStatusMessage("Started a new run");
+        return;
     }
     if (inputResult.loadRequested && handleLoad()) {
         return;

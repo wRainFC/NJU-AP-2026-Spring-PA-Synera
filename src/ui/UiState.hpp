@@ -22,6 +22,7 @@ struct DragState {
 struct InputResult {
     bool saveRequested = false;
     bool loadRequested = false;
+    bool restartRequested = false;
     std::string statusMessage;
 };
 
