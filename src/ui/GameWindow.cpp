@@ -20,7 +20,7 @@ void GameWindow::init(int virtualWidth, int virtualHeight, std::string_view titl
     const std::string windowTitle{title};
     InitWindow(virtualWidth_, virtualHeight_, windowTitle.c_str());
     target_ = LoadRenderTexture(virtualWidth_, virtualHeight_);
-    SetTextureFilter(target_.texture, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(target_.texture, TEXTURE_FILTER_POINT);
     initialized_ = true;
 }
 

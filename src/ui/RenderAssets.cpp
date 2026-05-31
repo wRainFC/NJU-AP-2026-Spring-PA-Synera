@@ -133,11 +133,12 @@ inline constexpr std::array StateTexturePaths{
         return std::nullopt;
     }
 
-    const Font font = LoadFontEx(path.string().c_str(), 32, nullptr, 0);
+    Font font = LoadFontEx(path.string().c_str(), 24, nullptr, 0);
     if (font.texture.id == 0) {
         TraceLog(LOG_WARNING, "ASSETS: Failed to load UI font: %s", path.string().c_str());
         return std::nullopt;
     }
+    SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
     TraceLog(LOG_INFO, "ASSETS: Loaded UI font: %s", path.string().c_str());
     return std::optional<FontResource>{std::in_place, font};
 }

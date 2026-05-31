@@ -99,7 +99,7 @@ private:
                                  "  Phase: " + std::string(phaseName(state.phase()));
         ui::drawText(text, 150, 24, 24, RAYWHITE);
         if (!context.statusMessage.empty()) {
-            ui::drawText(context.statusMessage, 150, 56, 20, GOLD);
+            ui::drawText(context.statusMessage, 150, 58, 18, GOLD);
         }
     }
 
@@ -143,14 +143,14 @@ private:
             }
 
             ui::drawTextInRect(
-                name, Rectangle{textLeft, rect.y + 10.0F, rect.x + rect.width - textLeft - 72.0F, 26.0F}, 21,
+                name, Rectangle{textLeft, rect.y + 10.0F, rect.x + rect.width - textLeft - 72.0F, 26.0F}, 24,
                 RAYWHITE);
             ui::drawTextInRect(cost, Rectangle{rect.x + rect.width - 88.0F, rect.y + 38.0F, 76.0F, 24.0F}, 18,
                                GOLD, ui::HorizontalAlign::Right);
         }
 
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopRefreshButtonRect(), "Refresh",
-                       regularButtonStyle(), 22);
+                       regularButtonStyle(), 24);
 
         const bool locked = state.shop().locked();
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopLockButtonRect(),
@@ -161,13 +161,13 @@ private:
                            .text = RAYWHITE,
                            .tint = locked ? ui::theme::ButtonLockedTint : WHITE,
                        },
-                       22);
+                       24);
     }
 
     void drawPopulationUpgrade(const GameState& state, const Layout& layout) {
         const std::string label = "Level Up  " + std::to_string(2 + state.player().level * 2) + "g";
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.populationUpgradeButtonRect(), label,
-                       regularButtonStyle(), 22);
+                       regularButtonStyle(), 24);
     }
 
     void drawEquipmentPool(const GameState& state, const Layout& layout) {
@@ -188,7 +188,7 @@ private:
                                  summary.active ? Color{93, 82, 42, 255} : ui::theme::Surface);
             DrawRectangleLinesEx(rect, 1.0F, summary.active ? GOLD : ui::theme::SurfaceBorder);
             const std::string label = std::string(summary.name) + " " + std::to_string(summary.count);
-            ui::drawTextInRect(label, rect, 15, summary.active ? GOLD : RAYWHITE, ui::HorizontalAlign::Center,
+            ui::drawTextInRect(label, rect, 18, summary.active ? GOLD : RAYWHITE, ui::HorizontalAlign::Center,
                                ui::VerticalAlign::Middle, 6.0F);
         }
     }
@@ -217,15 +217,15 @@ private:
                 .text = enabled ? RAYWHITE : GRAY,
                 .tint = enabled ? WHITE : ui::theme::DisabledTint,
             },
-            22);
+            24);
     }
 
     void drawSaveLoadButtons(const RenderContext& context) {
         const bool saveEnabled = context.interactionsEnabled && context.state.phase() == Phase::Prep;
         ui::drawButton(assets_.texture(saveEnabled ? TextureSlot::Button : TextureSlot::ButtonDisabled),
-                       context.layout.saveButtonRect(), "Save", regularButtonStyle(saveEnabled), 22);
+                       context.layout.saveButtonRect(), "Save", regularButtonStyle(saveEnabled), 24);
         ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.loadButtonRect(), "Load",
-                       regularButtonStyle(), 22);
+                       regularButtonStyle(), 24);
     }
 
     void drawSellArea(const RenderContext& context) {
@@ -234,7 +234,7 @@ private:
                              context.interactionsEnabled ? ui::theme::SellArea : ui::theme::SellAreaDisabled,
                              context.interactionsEnabled ? WHITE : ui::theme::DisabledTint);
         DrawRectangleLinesEx(rect, 1.0F, context.interactionsEnabled ? ui::theme::SellAreaBorder : GRAY);
-        ui::drawTextInRect("Sell", Rectangle{rect.x, rect.y + 22.0F, rect.width, 34.0F}, 26,
+        ui::drawTextInRect("Sell", Rectangle{rect.x, rect.y + 22.0F, rect.width, 34.0F}, 24,
                            context.interactionsEnabled ? RAYWHITE : GRAY, ui::HorizontalAlign::Center,
                            ui::VerticalAlign::Middle);
         ui::drawTextInRect("Drop unit", Rectangle{rect.x, rect.y + 62.0F, rect.width, 26.0F}, 18,
@@ -291,7 +291,7 @@ private:
                 traits += traitName(trait);
             }
             lines.push_back(traits);
-            ui::drawPanel(ui::panelNear(mouse, 320.0F, 210.0F), lines, assets_.texture(TextureSlot::Panel));
+            ui::drawPanel(ui::panelNear(mouse, lines), lines, assets_.texture(TextureSlot::Panel));
             return;
         }
 
@@ -304,7 +304,7 @@ private:
                                                 : "Threshold: none",
                 std::string(summary.effectDescription),
             };
-            ui::drawPanel(ui::panelNear(mouse, 380.0F, 130.0F), lines, assets_.texture(TextureSlot::Panel));
+            ui::drawPanel(ui::panelNear(mouse, lines), lines, assets_.texture(TextureSlot::Panel));
         }
     }
 

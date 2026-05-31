@@ -18,6 +18,14 @@ struct ButtonStyle {
     Color tint;
 };
 
+struct PanelStyle {
+    int fontSize = 18;
+    int lineHeight = 28;
+    float padding = 14.0F;
+    float minWidth = 240.0F;
+    float maxWidth = 520.0F;
+};
+
 // Sets the font used by text helpers; nullptr selects Raylib's built-in fallback font.
 void setFont(const Font* font) noexcept;
 [[nodiscard]] bool contains(Rectangle rect, Vector2 point) noexcept;
@@ -38,6 +46,8 @@ void drawButton(const Texture2D* texture, Rectangle rect, std::string_view label
                 int fontSize = 16);
 void drawBar(Rectangle rect, float ratio, Color fill, Color track, Color outline);
 [[nodiscard]] Rectangle panelNear(Vector2 anchor, float width, float height) noexcept;
-void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture2D* texture);
+[[nodiscard]] Rectangle panelNear(Vector2 anchor, std::span<const std::string> lines, PanelStyle style = {});
+void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture2D* texture,
+               PanelStyle style = {});
 
 }  // namespace synera::ui

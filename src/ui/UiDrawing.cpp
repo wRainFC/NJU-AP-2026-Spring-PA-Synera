@@ -11,7 +11,7 @@ namespace synera::ui {
 
 namespace {
 
-constexpr float FontSpacing = 1.0F;
+constexpr float FontSpacing = 0.0F;
 const Font* CurrentFont = nullptr;
 
 [[nodiscard]] std::string owned(std::string_view text) {
@@ -24,6 +24,22 @@ const Font* CurrentFont = nullptr;
 
 [[nodiscard]] Font activeFont() noexcept {
     return CurrentFont == nullptr ? GetFontDefault() : *CurrentFont;
+}
+
+[[nodiscard]] int pixelFontSize(int requested) noexcept {
+    if (requested <= 13) {
+        return 12;
+    }
+    if (requested <= 20) {
+        return 18;
+    }
+    if (requested <= 30) {
+        return 24;
+    }
+    if (requested <= 42) {
+        return 36;
+    }
+    return 48;
 }
 
 }  // namespace
@@ -56,7 +72,9 @@ float clampedRatio(int value, int maximum) noexcept {
 
 int measureText(std::string_view text, int fontSize) {
     const std::string value = owned(text);
-    return rounded(MeasureTextEx(activeFont(), value.c_str(), static_cast<float>(fontSize), FontSpacing).x);
+    return rounded(
+        MeasureTextEx(activeFont(), value.c_str(), static_cast<float>(pixelFontSize(fontSize)), FontSpacing)
+            .x);
 }
 
 int fitFontSize(std::string_view text, float maxWidth, int preferredSize, int minimumSize) {
@@ -70,7 +88,7 @@ int fitFontSize(std::string_view text, float maxWidth, int preferredSize, int mi
 void drawText(std::string_view text, int x, int y, int fontSize, Color color) {
     const std::string value = owned(text);
     DrawTextEx(activeFont(), value.c_str(), Vector2{static_cast<float>(x), static_cast<float>(y)},
-               static_cast<float>(fontSize), FontSpacing, color);
+               static_cast<float>(pixelFontSize(fontSize)), FontSpacing, color);
 }
 
 void drawTextInRect(std::string_view text, Rectangle rect, int fontSize, Color color,
@@ -145,14 +163,35 @@ Rectangle panelNear(Vector2 anchor, float width, float height) noexcept {
     return rect;
 }
 
-void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture2D* texture) {
+Rectangle panelNear(Vector2 anchor, std::span<const std::string> lines, PanelStyle style) {
+    const Rectangle bounds = virtualCanvasRect();
+    const float availableWidth = std::max(1.0F, bounds.width - 48.0F);
+    const float maxWidth = std::min(style.maxWidth, availableWidth);
+    int widestLine = 0;
+    for (const std::string& line : lines) {
+        widestLine = std::max(widestLine, measureText(line, style.fontSize));
+    }
+
+    const float width =
+        std::clamp(static_cast<float>(widestLine) + style.padding * 2.0F, style.minWidth, maxWidth);
+    const float height =
+        style.padding * 2.0F + static_cast<float>(lines.size()) * static_cast<float>(style.lineHeight);
+    return panelNear(anchor, width, height);
+}
+
+void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture2D* texture,
+               PanelStyle style) {
     drawTexturedRect(texture, rect, theme::Panel, Color{255, 255, 255, 238});
     DrawRectangleLinesEx(rect, 1.0F, theme::PanelBorder);
 
-    int y = rounded(rect.y + 14.0F);
+    const float textWidth = std::max(0.0F, rect.width - style.padding * 2.0F);
+    int y = rounded(rect.y + style.padding);
     for (const std::string& line : lines) {
-        drawText(line, rounded(rect.x + 14.0F), y, 18, RAYWHITE);
-        y += 25;
+        drawTextInRect(line,
+                       Rectangle{rect.x + style.padding, static_cast<float>(y), textWidth,
+                                 static_cast<float>(style.lineHeight)},
+                       style.fontSize, RAYWHITE);
+        y += style.lineHeight;
     }
 }
 
