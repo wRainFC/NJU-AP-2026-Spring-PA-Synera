@@ -12,25 +12,29 @@ namespace synera {
 
 namespace {
 
-constexpr float HexRadius = 34.0F;
+constexpr float HexRadius = 42.0F;
 constexpr float HexWidth = HexRadius * 1.73205080757F;
-constexpr float BenchSlotSize = 58.0F;
-constexpr float BoardLeft = 80.0F;
-constexpr float BoardTop = 136.0F;
-constexpr float BenchTop = 580.0F;
-constexpr float SlotGap = 8.0F;
-constexpr float ShopLeft = 820.0F;
-constexpr float ShopTop = 160.0F;
-constexpr float ShopOfferWidth = 220.0F;
-constexpr float ShopOfferHeight = 52.0F;
-constexpr float ShopGap = 8.0F;
-constexpr float EquipmentSlotSize = 46.0F;
-constexpr float EquipmentTop = 590.0F;
-constexpr float TraitLeft = 54.0F;
-constexpr float TraitTop = 68.0F;
-constexpr float TraitWidth = 78.0F;
-constexpr float TraitHeight = 28.0F;
-constexpr float TraitGap = 6.0F;
+constexpr float BenchSlotSize = 76.0F;
+constexpr float BoardLeft = 210.0F;
+constexpr float BoardTop = 180.0F;
+constexpr float BenchLeft = 150.0F;
+constexpr float BenchTop = 780.0F;
+constexpr float SlotGap = 12.0F;
+constexpr float ShopLeft = 1040.0F;
+constexpr float ShopTop = 178.0F;
+constexpr float ShopOfferWidth = 300.0F;
+constexpr float ShopOfferHeight = 70.0F;
+constexpr float ShopGap = 10.0F;
+constexpr float EquipmentSlotSize = 60.0F;
+constexpr float EquipmentTop = 766.0F;
+constexpr float TraitLeft = 150.0F;
+constexpr float TraitTop = 82.0F;
+constexpr float TraitWidth = 112.0F;
+constexpr float TraitHeight = 34.0F;
+constexpr float TraitGap = 10.0F;
+constexpr float ButtonTop = 82.0F;
+constexpr float SellLeft = 1370.0F;
+constexpr float SellTop = 178.0F;
 constexpr float Pi = 3.14159265359F;
 
 [[nodiscard]] bool containsPolygon(const std::array<Vector2, 6>& points, Vector2 point) noexcept {
@@ -84,7 +88,7 @@ Rectangle Layout::boardHexBounds(AxialPos pos) const noexcept {
 
 Rectangle Layout::benchSlotRect(int slot) const noexcept {
     return Rectangle{
-        BoardLeft + static_cast<float>(slot) * (BenchSlotSize + SlotGap),
+        BenchLeft + static_cast<float>(slot) * (BenchSlotSize + SlotGap),
         BenchTop,
         BenchSlotSize,
         BenchSlotSize,
@@ -92,15 +96,15 @@ Rectangle Layout::benchSlotRect(int slot) const noexcept {
 }
 
 Rectangle Layout::startButtonRect() const noexcept {
-    return Rectangle{820.0F, 96.0F, 180.0F, 44.0F};
+    return Rectangle{1040.0F, ButtonTop, 196.0F, 52.0F};
 }
 
 Rectangle Layout::saveButtonRect() const noexcept {
-    return Rectangle{1012.0F, 96.0F, 88.0F, 44.0F};
+    return Rectangle{1250.0F, ButtonTop, 96.0F, 52.0F};
 }
 
 Rectangle Layout::loadButtonRect() const noexcept {
-    return Rectangle{1112.0F, 96.0F, 88.0F, 44.0F};
+    return Rectangle{1360.0F, ButtonTop, 96.0F, 52.0F};
 }
 
 Rectangle Layout::traitSlotRect(Trait trait) const noexcept {
@@ -113,7 +117,7 @@ Rectangle Layout::traitSlotRect(Trait trait) const noexcept {
 }
 
 Rectangle Layout::sellAreaRect() const noexcept {
-    return Rectangle{1052.0F, 160.0F, 148.0F, 88.0F};
+    return Rectangle{SellLeft, SellTop, 170.0F, 110.0F};
 }
 
 Rectangle Layout::shopOfferRect(int index) const noexcept {
@@ -126,15 +130,15 @@ Rectangle Layout::shopOfferRect(int index) const noexcept {
 }
 
 Rectangle Layout::shopRefreshButtonRect() const noexcept {
-    return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 8.0F, 110.0F, 40.0F};
+    return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 12.0F, 144.0F, 48.0F};
 }
 
 Rectangle Layout::shopLockButtonRect() const noexcept {
-    return Rectangle{ShopLeft + 118.0F, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 8.0F, 102.0F, 40.0F};
+    return Rectangle{ShopLeft + 156.0F, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 12.0F, 144.0F, 48.0F};
 }
 
 Rectangle Layout::populationUpgradeButtonRect() const noexcept {
-    return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 56.0F, ShopOfferWidth, 40.0F};
+    return Rectangle{ShopLeft, ShopTop + 5.0F * (ShopOfferHeight + ShopGap) + 72.0F, ShopOfferWidth, 48.0F};
 }
 
 Rectangle Layout::equipmentSlotRect(std::size_t index) const noexcept {

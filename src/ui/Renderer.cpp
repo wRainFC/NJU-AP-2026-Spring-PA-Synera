@@ -54,6 +54,10 @@ namespace {
     };
 }
 
+void drawSectionTitle(std::string_view title, Rectangle anchor) {
+    ui::drawText(title, static_cast<int>(anchor.x), static_cast<int>(anchor.y - 34.0F), 22, RAYWHITE);
+}
+
 }  // namespace
 
 class Renderer::Impl {
@@ -93,9 +97,9 @@ private:
                                  std::to_string(state.player().populationCap) +
                                  "  Round: " + std::to_string(state.player().currentRound) +
                                  "  Phase: " + std::string(phaseName(state.phase()));
-        ui::drawText(text, 32, 24, 20, RAYWHITE);
+        ui::drawText(text, 150, 24, 22, RAYWHITE);
         if (!context.statusMessage.empty()) {
-            ui::drawText(context.statusMessage, 32, 52, 16, GOLD);
+            ui::drawText(context.statusMessage, 150, 54, 18, GOLD);
         }
     }
 
@@ -110,14 +114,14 @@ private:
     }
 
     void drawBench(const Layout& layout) {
-        ui::drawText("Bench", 80, 548, 18, RAYWHITE);
+        drawSectionTitle("Bench", layout.benchSlotRect(0));
         for (int slot : std::views::iota(0, config::BenchSize)) {
             GridItem::drawBenchSlot(layout.benchSlotRect(slot));
         }
     }
 
     void drawShop(const GameState& state, const Layout& layout) {
-        ui::drawText("Shop", 820, 132, 18, RAYWHITE);
+        drawSectionTitle("Shop", layout.shopOfferRect(0));
         for (int index : std::views::iota(0, config::ShopOfferCount)) {
             const Rectangle rect = layout.shopOfferRect(index);
             const ShopOffer& offer = state.shop().offers()[static_cast<std::size_t>(index)];
@@ -128,25 +132,25 @@ private:
             const std::string cost =
                 offer.empty() ? ""
                               : ("T" + std::to_string(offer.tier) + "  " + std::to_string(offer.cost) + "g");
-            float textLeft = rect.x + 10.0F;
+            float textLeft = rect.x + 14.0F;
             if (!offer.empty()) {
-                const Rectangle preview{rect.x + 8.0F, rect.y + 8.0F, 36.0F, 36.0F};
+                const Rectangle preview{rect.x + 12.0F, rect.y + 10.0F, 50.0F, 50.0F};
                 if (ui::drawTextureToRect(assets_.unitTexture(offer.unitTemplateId, Owner::PlayerCtrl),
                                           preview)) {
                     DrawRectangleLinesEx(preview, 1.0F, ui::theme::SurfaceBorder);
-                    textLeft = rect.x + 52.0F;
+                    textLeft = rect.x + 72.0F;
                 }
             }
 
             ui::drawTextInRect(
-                name, Rectangle{textLeft, rect.y + 7.0F, rect.x + rect.width - textLeft - 48.0F, 18.0F}, 16,
+                name, Rectangle{textLeft, rect.y + 10.0F, rect.x + rect.width - textLeft - 72.0F, 24.0F}, 19,
                 RAYWHITE);
-            ui::drawTextInRect(cost, Rectangle{rect.x + rect.width - 64.0F, rect.y + 26.0F, 58.0F, 18.0F}, 14,
+            ui::drawTextInRect(cost, Rectangle{rect.x + rect.width - 86.0F, rect.y + 38.0F, 74.0F, 22.0F}, 16,
                                GOLD, ui::HorizontalAlign::Right);
         }
 
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopRefreshButtonRect(), "Refresh",
-                       regularButtonStyle());
+                       regularButtonStyle(), 20);
 
         const bool locked = state.shop().locked();
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.shopLockButtonRect(),
@@ -156,17 +160,18 @@ private:
                            .border = RAYWHITE,
                            .text = RAYWHITE,
                            .tint = locked ? ui::theme::ButtonLockedTint : WHITE,
-                       });
+                       },
+                       20);
     }
 
     void drawPopulationUpgrade(const GameState& state, const Layout& layout) {
         const std::string label = "Level Up  " + std::to_string(2 + state.player().level * 2) + "g";
         ui::drawButton(assets_.texture(TextureSlot::Button), layout.populationUpgradeButtonRect(), label,
-                       regularButtonStyle());
+                       regularButtonStyle(), 20);
     }
 
     void drawEquipmentPool(const GameState& state, const Layout& layout) {
-        ui::drawText("Equipment", 820, 566, 16, RAYWHITE);
+        drawSectionTitle("Equipment", layout.equipmentSlotRect(0));
         const auto pool = state.equipmentPool();
         for (std::size_t index : std::views::iota(std::size_t{0}, pool.size())) {
             UnitItem::drawEquipmentIcon(assets_, pool[index], layout.equipmentSlotRect(index));
@@ -183,8 +188,8 @@ private:
                                  summary.active ? Color{93, 82, 42, 255} : ui::theme::Surface);
             DrawRectangleLinesEx(rect, 1.0F, summary.active ? GOLD : ui::theme::SurfaceBorder);
             const std::string label = std::string(summary.name) + " " + std::to_string(summary.count);
-            ui::drawTextInRect(label, rect, 11, summary.active ? GOLD : RAYWHITE, ui::HorizontalAlign::Center,
-                               ui::VerticalAlign::Middle, 4.0F);
+            ui::drawTextInRect(label, rect, 14, summary.active ? GOLD : RAYWHITE, ui::HorizontalAlign::Center,
+                               ui::VerticalAlign::Middle, 6.0F);
         }
     }
 
@@ -212,15 +217,15 @@ private:
                 .text = enabled ? RAYWHITE : GRAY,
                 .tint = enabled ? WHITE : ui::theme::DisabledTint,
             },
-            18);
+            20);
     }
 
     void drawSaveLoadButtons(const RenderContext& context) {
         const bool saveEnabled = context.interactionsEnabled && context.state.phase() == Phase::Prep;
         ui::drawButton(assets_.texture(saveEnabled ? TextureSlot::Button : TextureSlot::ButtonDisabled),
-                       context.layout.saveButtonRect(), "Save", regularButtonStyle(saveEnabled), 18);
+                       context.layout.saveButtonRect(), "Save", regularButtonStyle(saveEnabled), 20);
         ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.loadButtonRect(), "Load",
-                       regularButtonStyle(), 18);
+                       regularButtonStyle(), 20);
     }
 
     void drawSellArea(const RenderContext& context) {
@@ -229,10 +234,10 @@ private:
                              context.interactionsEnabled ? ui::theme::SellArea : ui::theme::SellAreaDisabled,
                              context.interactionsEnabled ? WHITE : ui::theme::DisabledTint);
         DrawRectangleLinesEx(rect, 1.0F, context.interactionsEnabled ? ui::theme::SellAreaBorder : GRAY);
-        ui::drawTextInRect("Sell", Rectangle{rect.x, rect.y + 16.0F, rect.width, 28.0F}, 20,
+        ui::drawTextInRect("Sell", Rectangle{rect.x, rect.y + 22.0F, rect.width, 32.0F}, 24,
                            context.interactionsEnabled ? RAYWHITE : GRAY, ui::HorizontalAlign::Center,
                            ui::VerticalAlign::Middle);
-        ui::drawTextInRect("Drop unit", Rectangle{rect.x, rect.y + 48.0F, rect.width, 20.0F}, 13,
+        ui::drawTextInRect("Drop unit", Rectangle{rect.x, rect.y + 62.0F, rect.width, 24.0F}, 16,
                            context.interactionsEnabled ? RAYWHITE : GRAY, ui::HorizontalAlign::Center,
                            ui::VerticalAlign::Middle);
     }
@@ -245,7 +250,7 @@ private:
             if (unit == nullptr) {
                 return;
             }
-            const Rectangle rect{mouse.x - 30.0F, mouse.y - 30.0F, 60.0F, 60.0F};
+            const Rectangle rect{mouse.x - 38.0F, mouse.y - 38.0F, 76.0F, 76.0F};
             UnitItem::drawUnit(assets_, *unit, rect, context.animationTimeSeconds);
             return;
         }
@@ -255,7 +260,7 @@ private:
             if (*context.dragState.sourceEquipmentIndex >= pool.size()) {
                 return;
             }
-            const Rectangle rect{mouse.x - 23.0F, mouse.y - 23.0F, 46.0F, 46.0F};
+            const Rectangle rect{mouse.x - 30.0F, mouse.y - 30.0F, 60.0F, 60.0F};
             UnitItem::drawEquipmentIcon(assets_, pool[*context.dragState.sourceEquipmentIndex], rect);
             DrawRectangleLinesEx(rect, 1.0F, GOLD);
         }
@@ -286,7 +291,7 @@ private:
                 traits += traitName(trait);
             }
             lines.push_back(traits);
-            ui::drawPanel(ui::panelNear(mouse, 250.0F, 170.0F), lines, assets_.texture(TextureSlot::Panel));
+            ui::drawPanel(ui::panelNear(mouse, 320.0F, 210.0F), lines, assets_.texture(TextureSlot::Panel));
             return;
         }
 
@@ -299,7 +304,7 @@ private:
                                                 : "Threshold: none",
                 std::string(summary.effectDescription),
             };
-            ui::drawPanel(ui::panelNear(mouse, 300.0F, 96.0F), lines, assets_.texture(TextureSlot::Panel));
+            ui::drawPanel(ui::panelNear(mouse, 380.0F, 130.0F), lines, assets_.texture(TextureSlot::Panel));
         }
     }
 
@@ -309,14 +314,15 @@ private:
         }
 
         DrawRectangle(0, 0, config::WindowWidth, config::WindowHeight, ui::theme::Overlay);
-        const Rectangle panel{390.0F, 250.0F, 500.0F, 150.0F};
+        const Rectangle panel{static_cast<float>(config::WindowWidth) / 2.0F - 320.0F,
+                              static_cast<float>(config::WindowHeight) / 2.0F - 100.0F, 640.0F, 200.0F};
         ui::drawTexturedRect(assets_.texture(TextureSlot::Panel), panel, ui::theme::PanelStrong,
                              Color{255, 255, 255, 245});
         DrawRectangleLinesEx(panel, 2.0F, GOLD);
-        ui::drawTextInRect(outcomeMessage, Rectangle{panel.x, panel.y + 30.0F, panel.width, 44.0F}, 34, GOLD,
+        ui::drawTextInRect(outcomeMessage, Rectangle{panel.x, panel.y + 42.0F, panel.width, 54.0F}, 40, GOLD,
                            ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
         ui::drawTextInRect("Load a save to continue.",
-                           Rectangle{panel.x, panel.y + 88.0F, panel.width, 24.0F}, 18, RAYWHITE,
+                           Rectangle{panel.x, panel.y + 116.0F, panel.width, 30.0F}, 22, RAYWHITE,
                            ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
     }
 };

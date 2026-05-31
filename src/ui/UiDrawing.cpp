@@ -149,10 +149,10 @@ void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture
     drawTexturedRect(texture, rect, theme::Panel, Color{255, 255, 255, 238});
     DrawRectangleLinesEx(rect, 1.0F, theme::PanelBorder);
 
-    int y = rounded(rect.y + 10.0F);
+    int y = rounded(rect.y + 14.0F);
     for (const std::string& line : lines) {
-        drawText(line, rounded(rect.x + 10.0F), y, 14, RAYWHITE);
-        y += 19;
+        drawText(line, rounded(rect.x + 14.0F), y, 16, RAYWHITE);
+        y += 23;
     }
 }
 
