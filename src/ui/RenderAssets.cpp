@@ -77,6 +77,43 @@ inline constexpr std::array StateTexturePaths{
     return key;
 }
 
+[[nodiscard]] bool pathExists(const std::filesystem::path& path) noexcept {
+    std::error_code error;
+    return std::filesystem::exists(path, error);
+}
+
+[[nodiscard]] bool assetRootExists(const std::filesystem::path& assetRoot) noexcept {
+    return pathExists(assetRoot / "fonts") || pathExists(assetRoot / "textures");
+}
+
+[[nodiscard]] std::filesystem::path assetRootFromCandidate(const std::filesystem::path& candidate) {
+    return candidate.filename() == "textures" ? candidate.parent_path() : candidate;
+}
+
+[[nodiscard]] std::filesystem::path cleanPath(const std::filesystem::path& path) {
+    std::error_code error;
+    const std::filesystem::path normalized = std::filesystem::weakly_canonical(path, error);
+    return error ? path.lexically_normal() : normalized;
+}
+
+[[nodiscard]] std::filesystem::path resolveAssetRoot(const std::filesystem::path& requestedRoot) {
+    const std::filesystem::path appDir = GetApplicationDirectory();
+    const std::array candidates{
+        requestedRoot,
+        std::filesystem::current_path() / requestedRoot,
+        appDir / requestedRoot,
+        appDir / ".." / requestedRoot,
+    };
+
+    for (const std::filesystem::path& candidate : candidates) {
+        const std::filesystem::path assetRoot = assetRootFromCandidate(candidate);
+        if (assetRootExists(assetRoot)) {
+            return cleanPath(assetRoot);
+        }
+    }
+    return requestedRoot;
+}
+
 [[nodiscard]] std::optional<TextureResource> loadTextureIfPresent(const std::filesystem::path& path) {
     std::error_code error;
     if (!std::filesystem::is_regular_file(path, error)) {
@@ -98,16 +135,23 @@ inline constexpr std::array StateTexturePaths{
 
     const Font font = LoadFontEx(path.string().c_str(), 32, nullptr, 0);
     if (font.texture.id == 0) {
+        TraceLog(LOG_WARNING, "ASSETS: Failed to load UI font: %s", path.string().c_str());
         return std::nullopt;
     }
+    TraceLog(LOG_INFO, "ASSETS: Loaded UI font: %s", path.string().c_str());
     return std::optional<FontResource>{std::in_place, font};
 }
 
-[[nodiscard]] std::optional<FontResource> loadUiFont(const std::filesystem::path& textureRoot) {
-    const std::filesystem::path fontsRoot = textureRoot.parent_path() / "fonts";
-    return loadFontIfPresent(fontsRoot / "ui.ttf").or_else([&] {
+[[nodiscard]] std::optional<FontResource> loadUiFont(const std::filesystem::path& assetRoot) {
+    const std::filesystem::path fontsRoot = assetRoot / "fonts";
+    auto font = loadFontIfPresent(fontsRoot / "ui.ttf").or_else([&] {
         return loadFontIfPresent(fontsRoot / "ui.otf");
     });
+    if (!font) {
+        TraceLog(LOG_INFO, "ASSETS: No UI font found under %s; using Raylib default font",
+                 fontsRoot.string().c_str());
+    }
+    return font;
 }
 
 [[nodiscard]] std::optional<RenderAssets::SpriteAnimation> loadAnimationIfPresent(
@@ -196,17 +240,21 @@ RenderAssets::~RenderAssets() {
     unload();
 }
 
-void RenderAssets::load(const std::filesystem::path& root) {
+void RenderAssets::load(const std::filesystem::path& requestedRoot) {
     unload();
 
-    font_ = loadUiFont(root);
+    const std::filesystem::path assetRoot = resolveAssetRoot(requestedRoot);
+    const std::filesystem::path textureRoot = assetRoot / "textures";
+    TraceLog(LOG_INFO, "ASSETS: Root: %s", assetRoot.string().c_str());
+
+    font_ = loadUiFont(assetRoot);
 
     for (const SlotTexturePath& entry : SlotTexturePaths) {
-        textures_[slotIndex(entry.slot)] = loadTextureIfPresent(root / entry.path);
+        textures_[slotIndex(entry.slot)] = loadTextureIfPresent(textureRoot / entry.path);
     }
 
     std::error_code error;
-    const std::filesystem::path unitsRoot = root / "units";
+    const std::filesystem::path unitsRoot = textureRoot / "units";
     for (const std::filesystem::directory_entry& entry :
          std::filesystem::directory_iterator{unitsRoot, error}) {
         if (entry.is_directory(error)) {
@@ -239,11 +287,11 @@ void RenderAssets::load(const std::filesystem::path& root) {
         }
     }
 
-    playerDefaultUnitTexture_ = loadTextureIfPresent(root / "units/player_default.png");
-    enemyDefaultUnitTexture_ = loadTextureIfPresent(root / "units/enemy_default.png");
+    playerDefaultUnitTexture_ = loadTextureIfPresent(textureRoot / "units/player_default.png");
+    enemyDefaultUnitTexture_ = loadTextureIfPresent(textureRoot / "units/enemy_default.png");
 
     for (const EquipmentTexturePath& entry : EquipmentTexturePaths) {
-        equipmentTextures_[equipmentIndex(entry.equipment)] = loadTextureIfPresent(root / entry.path);
+        equipmentTextures_[equipmentIndex(entry.equipment)] = loadTextureIfPresent(textureRoot / entry.path);
     }
 }
 

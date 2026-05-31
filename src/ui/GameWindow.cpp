@@ -77,10 +77,9 @@ PointerInput GameWindow::pointerInput() const noexcept {
 
     return PointerInput{
         .position = virtualPosition,
-        .insideVirtualCanvas = virtualPosition.x >= 0.0F &&
-                               virtualPosition.x <= static_cast<float>(virtualWidth_) &&
-                               virtualPosition.y >= 0.0F &&
-                               virtualPosition.y <= static_cast<float>(virtualHeight_),
+        .insideVirtualCanvas =
+            virtualPosition.x >= 0.0F && virtualPosition.x <= static_cast<float>(virtualWidth_) &&
+            virtualPosition.y >= 0.0F && virtualPosition.y <= static_cast<float>(virtualHeight_),
         .leftPressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
         .leftReleased = IsMouseButtonReleased(MOUSE_BUTTON_LEFT),
         .leftDown = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
@@ -106,10 +105,10 @@ float GameWindow::viewportScale() const noexcept {
         return 1.0F;
     }
 
-    const float widthScale = static_cast<float>(std::max(1, GetScreenWidth())) /
-                             static_cast<float>(virtualWidth_);
-    const float heightScale = static_cast<float>(std::max(1, GetScreenHeight())) /
-                              static_cast<float>(virtualHeight_);
+    const float widthScale =
+        static_cast<float>(std::max(1, GetScreenWidth())) / static_cast<float>(virtualWidth_);
+    const float heightScale =
+        static_cast<float>(std::max(1, GetScreenHeight())) / static_cast<float>(virtualHeight_);
     return std::min(widthScale, heightScale);
 }
 

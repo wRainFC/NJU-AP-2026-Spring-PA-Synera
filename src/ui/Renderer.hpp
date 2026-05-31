@@ -34,7 +34,7 @@ public:
     Renderer(Renderer&&) noexcept;
     Renderer& operator=(Renderer&&) noexcept;
 
-    void loadAssets(const std::filesystem::path& root = "assets/textures");
+    void loadAssets(const std::filesystem::path& root = "assets");
     void unloadAssets() noexcept;
     void draw(const RenderContext& context);
 

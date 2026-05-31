@@ -53,9 +53,9 @@ void GameApp::update(float dt) {
     }
 
     const PointerInput pointer = window_.pointerInput();
-    const InputResult inputResult = input_.update(state_, layout_, roundSystem_, shopSystem_, upgradeSystem_,
-                                                  synergySystem_, equipmentSystem_, pointer,
-                                                  interactionsEnabled());
+    const InputResult inputResult =
+        input_.update(state_, layout_, roundSystem_, shopSystem_, upgradeSystem_, synergySystem_,
+                      equipmentSystem_, pointer, interactionsEnabled());
     if (inputResult.saveRequested) {
         handleSave();
     }

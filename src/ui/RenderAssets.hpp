@@ -87,7 +87,7 @@ public:
     RenderAssets(RenderAssets&&) noexcept = default;
     RenderAssets& operator=(RenderAssets&&) noexcept = default;
 
-    void load(const std::filesystem::path& root);
+    void load(const std::filesystem::path& assetRoot);
     void unload() noexcept;
 
     [[nodiscard]] const Texture2D* texture(TextureSlot slot) const noexcept;
