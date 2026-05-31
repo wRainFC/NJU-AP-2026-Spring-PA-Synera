@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <random>
 #include <ranges>
+#include <set>
+#include <string>
 
 namespace {
 
@@ -46,6 +48,9 @@ TEST_CASE("ShopPool rolls level-gated offers", "[shop]") {
     const auto levelOneOdds = pool.tierWeightsForLevel(1);
     CHECK(levelOneOdds[0] == 100);
     CHECK(levelOneOdds[1] == 0);
+    CHECK(std::ranges::distance(pool.entries() | std::views::filter([](const synera::ShopPoolEntry& entry) {
+                                    return entry.tier == 1;
+                                })) >= 2);
 
     const auto levelFiveOdds = pool.tierWeightsForLevel(5);
     CHECK(levelFiveOdds[1] > 0);
@@ -54,6 +59,11 @@ TEST_CASE("ShopPool rolls level-gated offers", "[shop]") {
     const synera::Shop::Offers offers = pool.rollOffers(synera::ShopRollContext{.playerLevel = 1}, rng);
     CHECK(std::ranges::all_of(
         offers, [](const synera::ShopOffer& offer) { return !offer.empty() && offer.tier == 1; }));
+    std::set<std::string> templates;
+    for (const synera::ShopOffer& offer : offers) {
+        templates.insert(offer.unitTemplateId);
+    }
+    CHECK(templates.size() > 1);
 
     CHECK(pool.costForTemplate("storm_archer") == 3);
     CHECK(pool.costForTemplate("unknown_template") == 1);

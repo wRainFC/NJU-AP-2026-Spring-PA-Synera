@@ -13,8 +13,8 @@ namespace {
 
 inline constexpr std::array<ShopPoolEntry, 4> UnitPool{{
     ShopPoolEntry{.templateId = "iron_guard", .cost = 1, .tier = 1, .weight = 55},
+    ShopPoolEntry{.templateId = "field_medic", .cost = 1, .tier = 1, .weight = 45},
     ShopPoolEntry{.templateId = "ember_mage", .cost = 2, .tier = 2, .weight = 35},
-    ShopPoolEntry{.templateId = "field_medic", .cost = 2, .tier = 2, .weight = 35},
     ShopPoolEntry{.templateId = "storm_archer", .cost = 3, .tier = 3, .weight = 25},
 }};
 
