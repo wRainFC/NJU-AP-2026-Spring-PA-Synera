@@ -151,8 +151,8 @@ void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture
 
     int y = rounded(rect.y + 14.0F);
     for (const std::string& line : lines) {
-        drawText(line, rounded(rect.x + 14.0F), y, 16, RAYWHITE);
-        y += 23;
+        drawText(line, rounded(rect.x + 14.0F), y, 18, RAYWHITE);
+        y += 25;
     }
 }
 

@@ -37,6 +37,16 @@ void clampRuntime(Unit& unit) noexcept {
     unit.runtime.mana = std::clamp(unit.runtime.mana, 0, unit.derivedStats.maxMana);
 }
 
+void applyMaxHpBonus(Unit& unit, int bonus) noexcept {
+    if (bonus <= 0) {
+        return;
+    }
+    unit.derivedStats.maxHp += bonus;
+    if (unit.runtime.state != UnitState::Dead) {
+        unit.runtime.hp += bonus;
+    }
+}
+
 }  // namespace
 
 int countPlayerBoardTrait(const GameState& state, Trait trait) {
@@ -73,7 +83,7 @@ void SynergySystem::recompute(GameState& state) {
     const TraitCounts counts = countPlayerBoardTraits(state);
     state.forEachPlayerBoardUnit([&](Unit& unit) {
         if (traitIsActive(Trait::Guardian, counts[traitIndex(Trait::Guardian)])) {
-            unit.derivedStats.maxHp += 80;
+            applyMaxHpBonus(unit, 80);
         }
         if (traitIsActive(Trait::Mystic, counts[traitIndex(Trait::Mystic)])) {
             unit.derivedStats.maxMana = std::max(20, unit.derivedStats.maxMana - 10);

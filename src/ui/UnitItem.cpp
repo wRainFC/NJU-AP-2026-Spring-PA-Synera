@@ -71,7 +71,7 @@ void UnitItem::drawUnit(const RenderAssets& assets, const Unit& unit, Rectangle 
     ui::drawTextInRect(label,
                        Rectangle{rect.x + rect.width * 0.05F, rect.y + rect.height * 0.61F,
                                  rect.width * 0.90F, rect.height * 0.16F},
-                       12, RAYWHITE, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
+                       13, RAYWHITE, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
 
     if (!unit.equipment) {
         return;
@@ -85,14 +85,14 @@ void UnitItem::drawUnit(const RenderAssets& assets, const Unit& unit, Rectangle 
         ui::drawTextInRect(name,
                            Rectangle{icon.x + icon.width + 4.0F, rect.y + rect.height * 0.80F,
                                      rect.x + rect.width - icon.x - icon.width - 6.0F, rect.height * 0.14F},
-                           10, GOLD, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
+                           11, GOLD, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
         return;
     }
 
     ui::drawTextInRect(name,
                        Rectangle{rect.x + rect.width * 0.06F, rect.y + rect.height * 0.80F,
                                  rect.width * 0.88F, rect.height * 0.14F},
-                       10, GOLD, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
+                       11, GOLD, ui::HorizontalAlign::Left, ui::VerticalAlign::Top);
 }
 
 void UnitItem::drawEquipmentIcon(const RenderAssets& assets, EquipmentType equipment, Rectangle rect) {
@@ -101,7 +101,7 @@ void UnitItem::drawEquipmentIcon(const RenderAssets& assets, EquipmentType equip
         (void)ui::drawTextureToRect(texture, ui::inset(rect, rect.width * 0.12F));
     } else {
         const std::string name{equipmentName(equipment)};
-        ui::drawTextInRect(name, ui::inset(rect, rect.width * 0.08F), 12, RAYWHITE,
+        ui::drawTextInRect(name, ui::inset(rect, rect.width * 0.08F), 13, RAYWHITE,
                            ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
     }
     DrawRectangleLinesEx(rect, 1.0F, ui::theme::SurfaceBorder);

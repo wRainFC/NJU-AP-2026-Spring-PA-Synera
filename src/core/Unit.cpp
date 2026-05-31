@@ -76,6 +76,10 @@ void Unit::gainMana(int amount) noexcept {
 }
 
 void Unit::recomputeDerivedStats() noexcept {
+    const int previousMaxHp = derivedStats.maxHp;
+    const int previousHp = runtime.hp;
+    const int previousMissingHp = std::max(0, previousMaxHp - previousHp);
+
     derivedStats = baseStats;
     mechanics = {};
 
@@ -87,7 +91,9 @@ void Unit::recomputeDerivedStats() noexcept {
         applyStatModifier(derivedStats, *modifier);
     }
 
-    runtime.hp = std::clamp(runtime.hp, 0, derivedStats.maxHp);
+    runtime.hp = runtime.state == UnitState::Dead
+                     ? 0
+                     : std::clamp(derivedStats.maxHp - previousMissingHp, 0, derivedStats.maxHp);
     runtime.mana = std::clamp(runtime.mana, 0, derivedStats.maxMana);
 }
 

@@ -76,8 +76,15 @@ TEST_CASE("SynergySystem counts only player board units", "[synergy]") {
 
     CHECK(guardUnit->derivedStats.maxHp == guardUnit->baseStats.maxHp + 80);
     CHECK(medicUnit->derivedStats.maxHp == medicUnit->baseStats.maxHp + 80);
+    CHECK(guardUnit->runtime.hp == guardUnit->derivedStats.maxHp);
+    CHECK(medicUnit->runtime.hp == medicUnit->derivedStats.maxHp);
     CHECK(mageUnit->derivedStats.maxHp == mageUnit->baseStats.maxHp);
     CHECK(mageUnit->derivedStats.maxMana == mageUnit->baseStats.maxMana);
+
+    state.findUnit(guard)->runtime.hp -= 50;
+    const int damagedHp = state.findUnit(guard)->runtime.hp;
+    synergies.recompute(state);
+    CHECK(state.findUnit(guard)->runtime.hp == damagedHp);
 }
 
 TEST_CASE("EquipmentSystem grants drops and equips from the pool", "[equipment]") {
@@ -99,4 +106,21 @@ TEST_CASE("EquipmentSystem grants drops and equips from the pool", "[equipment]"
     CHECK(unit->equipment == synera::EquipmentType::IronSword);
     CHECK(unit->derivedStats.atk == unit->baseStats.atk + 15);
     CHECK_FALSE(equipment.equip(state, unitId, synera::EquipmentType::ChainVest));
+}
+
+TEST_CASE("Max hp equipment heals by the gained maximum hp", "[equipment]") {
+    synera::GameState state;
+    synera::EquipmentSystem equipment;
+    const synera::UnitId unitId = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
+    auto* unit = state.findUnit(unitId);
+    REQUIRE(unit != nullptr);
+
+    unit->runtime.hp -= 40;
+    const int previousHp = unit->runtime.hp;
+    const int previousMaxHp = unit->derivedStats.maxHp;
+
+    REQUIRE(equipment.equip(state, unitId, synera::EquipmentType::ChainVest));
+
+    CHECK(unit->derivedStats.maxHp == previousMaxHp + 150);
+    CHECK(unit->runtime.hp == previousHp + 150);
 }
