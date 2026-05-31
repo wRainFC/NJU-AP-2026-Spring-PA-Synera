@@ -81,30 +81,40 @@ namespace {
 
 }  // namespace
 
-void InputController::update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
-                             ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
-                             SynergySystem& synergySystem, EquipmentSystem& equipmentSystem) {
+InputResult InputController::update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
+                                    ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
+                                    SynergySystem& synergySystem, EquipmentSystem& equipmentSystem) {
     const Vector2 mouse = GetMousePosition();
+    InputResult result;
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.startButtonRect(), mouse)) {
         synergySystem.recompute(state);
         roundSystem.startCombat(state);
-        return;
+        return result;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.saveButtonRect(), mouse)) {
+        result.saveRequested = true;
+        return result;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && contains(layout.loadButtonRect(), mouse)) {
+        result.loadRequested = true;
+        return result;
     }
 
     if (state.phase() != Phase::Prep) {
-        return;
+        return result;
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (handlePrepClick(state, layout, shopSystem, upgradeSystem, synergySystem)) {
-            return;
+            return result;
         }
         beginDrag(state, layout);
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         endDrag(state, layout, synergySystem, equipmentSystem);
     }
+    return result;
 }
 
 void InputController::beginDrag(GameState& state, const Layout& layout) {

@@ -25,10 +25,16 @@ struct DragState {
     std::optional<std::size_t> sourceEquipmentIndex;
 };
 
+struct InputResult {
+    bool saveRequested = false;
+    bool loadRequested = false;
+};
+
 class InputController {
 public:
-    void update(GameState& state, const Layout& layout, RoundSystem& roundSystem, ShopSystem& shopSystem,
-                UpgradeSystem& upgradeSystem, SynergySystem& synergySystem, EquipmentSystem& equipmentSystem);
+    [[nodiscard]] InputResult update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
+                                     ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
+                                     SynergySystem& synergySystem, EquipmentSystem& equipmentSystem);
 
 private:
     DragState drag_;

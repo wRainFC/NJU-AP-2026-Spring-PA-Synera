@@ -94,6 +94,14 @@ Rectangle Layout::startButtonRect() const noexcept {
     return Rectangle{820.0F, 96.0F, 180.0F, 44.0F};
 }
 
+Rectangle Layout::saveButtonRect() const noexcept {
+    return Rectangle{1012.0F, 96.0F, 88.0F, 44.0F};
+}
+
+Rectangle Layout::loadButtonRect() const noexcept {
+    return Rectangle{1112.0F, 96.0F, 88.0F, 44.0F};
+}
+
 Rectangle Layout::shopOfferRect(int index) const noexcept {
     return Rectangle{
         ShopLeft,

@@ -64,7 +64,6 @@ TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     offers[1] = synera::ShopOffer{.unitTemplateId = "ember_mage", .cost = 2, .tier = 2};
     state.shop().replaceOffers(offers);
     state.shop().setLocked(true);
-    state.setPhase(synera::Phase::Combat);
 
     const synera::SaveSystem saveSystem;
     const auto path = savePath("roundtrip");
@@ -75,7 +74,7 @@ TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     synera::GameState loaded = std::move(*loadedResult);
     std::filesystem::remove(path);
 
-    CHECK(loaded.phase() == synera::Phase::Combat);
+    CHECK(loaded.phase() == synera::Phase::Prep);
     CHECK(loaded.player().hp == 73);
     CHECK(loaded.player().gold == 11);
     CHECK(loaded.player().level == 2);
@@ -113,6 +112,17 @@ TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     CHECK(loadedMage->runtime.state == synera::UnitState::Stunned);
     CHECK(loadedMage->runtime.stunTimer == 0.5F);
     CHECK(loadedMage->derivedStats.maxMana == 30);
+}
+
+TEST_CASE("SaveSystem only allows saving during preparation", "[save]") {
+    synera::GameState state;
+    state.setPhase(synera::Phase::Combat);
+
+    const synera::SaveSystem saveSystem;
+    const auto path = savePath("combat_rejected");
+
+    CHECK_FALSE(saveSystem.save(state, path.string()).has_value());
+    CHECK_FALSE(std::filesystem::exists(path));
 }
 
 TEST_CASE("SaveSystem reports missing and malformed save files", "[save]") {

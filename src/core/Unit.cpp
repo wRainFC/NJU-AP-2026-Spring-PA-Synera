@@ -77,6 +77,7 @@ void Unit::gainMana(int amount) noexcept {
 
 void Unit::recomputeDerivedStats() noexcept {
     derivedStats = baseStats;
+    mechanics = {};
 
     const float starMultiplier = 1.0F + 0.7F * static_cast<float>(star - 1);
     derivedStats.maxHp = scaledInt(derivedStats.maxHp, starMultiplier);

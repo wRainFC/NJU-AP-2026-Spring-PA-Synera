@@ -5,6 +5,7 @@
 #include "core/GameState.hpp"
 
 #include <limits>
+#include <tuple>
 
 namespace synera {
 
@@ -53,20 +54,21 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
 
 Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
     Unit* best = nullptr;
-    int bestDist = std::numeric_limits<int>::max();
+    auto bestKey =
+        std::tuple{std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+                   std::numeric_limits<int>::max(), std::numeric_limits<int>::min(), InvalidUnitId};
 
     state.forEachUnit([&](Unit& candidate) {
         if (!candidate.alive() || !candidate.onBoard() || candidate.owner == unit.owner) {
             return;
         }
 
-        const int dist = hex::hexDistance(*unit.boardPos, *candidate.boardPos);
-        const bool betterTie =
-            best != nullptr && (candidate.runtime.hp < best->runtime.hp ||
-                                (candidate.runtime.hp == best->runtime.hp && candidate.id < best->id));
-        if (dist < bestDist || (dist == bestDist && betterTie)) {
+        const OffsetPos offset = hex::axialToOddR(*candidate.boardPos);
+        const auto candidateKey = std::tuple{hex::hexDistance(*unit.boardPos, *candidate.boardPos),
+                                             candidate.runtime.hp, offset.col, -offset.row, candidate.id};
+        if (candidateKey < bestKey) {
             best = &candidate;
-            bestDist = dist;
+            bestKey = candidateKey;
         }
     });
 
@@ -115,6 +117,9 @@ void CombatSystem::moveTowardTarget(GameState& state, Unit& unit, const Unit& ta
 void CombatSystem::performAttack(Unit& attacker, Unit& target) {
     attacker.runtime.state = UnitState::Attacking;
     target.receiveDamage(attacker.derivedStats.atk);
+    if (attacker.mechanics.doubleBasicAttack && target.alive()) {
+        target.receiveDamage(attacker.derivedStats.atk);
+    }
     attacker.gainMana(10);
 }
 

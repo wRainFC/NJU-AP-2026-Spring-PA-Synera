@@ -11,6 +11,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <string_view>
 
 namespace synera {
 
@@ -25,8 +26,8 @@ namespace {
 
 }  // namespace
 
-void Renderer::draw(const GameState& state, const Layout& layout) {
-    drawTopBar(state);
+void Renderer::draw(const GameState& state, const Layout& layout, std::string_view statusMessage) {
+    drawTopBar(state, statusMessage);
     drawBoard(state, layout);
     drawBench(state, layout);
     drawShop(state, layout);
@@ -35,9 +36,10 @@ void Renderer::draw(const GameState& state, const Layout& layout) {
     drawSynergies(state);
     drawUnits(state, layout);
     drawStartButton(state, layout);
+    drawSaveLoadButtons(state, layout);
 }
 
-void Renderer::drawTopBar(const GameState& state) {
+void Renderer::drawTopBar(const GameState& state, std::string_view statusMessage) {
     const std::string text = "HP: " + std::to_string(state.player().hp) +
                              "  Gold: " + std::to_string(state.player().gold) +
                              "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
@@ -45,6 +47,9 @@ void Renderer::drawTopBar(const GameState& state) {
                              "  Round: " + std::to_string(state.player().currentRound) +
                              "  Phase: " + std::string(phaseName(state.phase()));
     DrawText(text.c_str(), 32, 24, 20, RAYWHITE);
+    if (!statusMessage.empty()) {
+        DrawText(statusMessage.data(), 32, 52, 16, GOLD);
+    }
 }
 
 void Renderer::drawBoard(const GameState& state, const Layout& layout) {
@@ -181,6 +186,20 @@ void Renderer::drawStartButton(const GameState& state, const Layout& layout) {
     DrawRectangleLinesEx(rect, 1.0F, RAYWHITE);
     DrawText("Start Combat", static_cast<int>(rect.x + 22.0F), static_cast<int>(rect.y + 13.0F), 18,
              RAYWHITE);
+}
+
+void Renderer::drawSaveLoadButtons(const GameState& state, const Layout& layout) {
+    const Rectangle save = layout.saveButtonRect();
+    const bool saveEnabled = state.phase() == Phase::Prep;
+    DrawRectangleRec(save, saveEnabled ? Color{76, 82, 92, 255} : Color{58, 58, 62, 255});
+    DrawRectangleLinesEx(save, 1.0F, RAYWHITE);
+    DrawText("Save", static_cast<int>(save.x + 22.0F), static_cast<int>(save.y + 13.0F), 18,
+             saveEnabled ? RAYWHITE : GRAY);
+
+    const Rectangle load = layout.loadButtonRect();
+    DrawRectangleRec(load, Color{76, 82, 92, 255});
+    DrawRectangleLinesEx(load, 1.0F, RAYWHITE);
+    DrawText("Load", static_cast<int>(load.x + 22.0F), static_cast<int>(load.y + 13.0F), 18, RAYWHITE);
 }
 
 }  // namespace synera

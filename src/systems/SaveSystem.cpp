@@ -414,6 +414,10 @@ struct SaveDataV1 {
 }  // namespace
 
 std::expected<void, std::string> SaveSystem::save(const GameState& state, const std::string& path) const {
+    if (state.phase() != Phase::Prep) {
+        return std::unexpected("Saving is only allowed during preparation phase");
+    }
+
     try {
         const std::filesystem::path savePath{path};
         if (const auto parent = savePath.parent_path(); !parent.empty()) {

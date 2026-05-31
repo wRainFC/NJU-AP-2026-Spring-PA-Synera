@@ -53,7 +53,7 @@ void SynergySystem::recompute(GameState& state) {
             unit.derivedStats.atk += 15;
         }
         if (counts[traitIndex(Trait::Ranger)] >= 2 && hasTrait(unit, Trait::Ranger)) {
-            unit.derivedStats.attackInterval *= 0.85F;
+            unit.mechanics.doubleBasicAttack = true;
         }
         clampRuntime(unit);
     });

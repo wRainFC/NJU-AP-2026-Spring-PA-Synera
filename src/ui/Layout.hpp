@@ -22,6 +22,8 @@ public:
     [[nodiscard]] Rectangle populationUpgradeButtonRect() const noexcept;
     [[nodiscard]] Rectangle equipmentSlotRect(std::size_t index) const noexcept;
     [[nodiscard]] Rectangle startButtonRect() const noexcept;
+    [[nodiscard]] Rectangle saveButtonRect() const noexcept;
+    [[nodiscard]] Rectangle loadButtonRect() const noexcept;
     // Returns nullopt when the pointer is in the visual gap between hexes or outside the board.
     [[nodiscard]] std::optional<AxialPos> boardPosAt(Vector2 mouse) const noexcept;
     [[nodiscard]] std::optional<int> benchSlotAt(Vector2 mouse) const noexcept;

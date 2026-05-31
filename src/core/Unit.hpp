@@ -30,6 +30,10 @@ struct UnitRuntime {
     std::optional<AxialPos> combatStartPos;
 };
 
+struct UnitMechanics {
+    bool doubleBasicAttack = false;
+};
+
 // A unit stores persistent identity/stats plus combat runtime; systems own behavior decisions.
 class Unit {
 public:
@@ -41,6 +45,7 @@ public:
     UnitStats baseStats;
     UnitStats derivedStats;
     UnitRuntime runtime;
+    UnitMechanics mechanics;
     std::vector<Trait> traits;
     int star = 1;
 
