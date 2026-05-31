@@ -143,11 +143,47 @@ inline constexpr std::array StateTexturePaths{
     return std::optional<FontResource>{std::in_place, font};
 }
 
+[[nodiscard]] bool isAngelCodeBitmapFont(const std::filesystem::path& path) {
+    int dataSize = 0;
+    unsigned char* fileData = LoadFileData(path.string().c_str(), &dataSize);
+    if (fileData == nullptr) {
+        return false;
+    }
+
+    const bool valid = dataSize >= 5 && fileData[0] == 'i' && fileData[1] == 'n' &&
+                       fileData[2] == 'f' && fileData[3] == 'o' && fileData[4] == ' ';
+    UnloadFileData(fileData);
+    return valid;
+}
+
+[[nodiscard]] std::optional<FontResource> loadBitmapFontIfPresent(const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(path, error)) {
+        return std::nullopt;
+    }
+
+    if (!isAngelCodeBitmapFont(path)) {
+        TraceLog(LOG_WARNING, "ASSETS: Skipping unsupported bitmap font format: %s",
+                 path.string().c_str());
+        return std::nullopt;
+    }
+
+    Font font = LoadFont(path.string().c_str());
+    if (font.texture.id == 0) {
+        TraceLog(LOG_WARNING, "ASSETS: Failed to load bitmap UI font: %s", path.string().c_str());
+        return std::nullopt;
+    }
+    SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+    TraceLog(LOG_INFO, "ASSETS: Loaded bitmap UI font: %s", path.string().c_str());
+    return std::optional<FontResource>{std::in_place, font};
+}
+
 [[nodiscard]] std::optional<FontResource> loadUiFont(const std::filesystem::path& assetRoot) {
     const std::filesystem::path fontsRoot = assetRoot / "fonts";
-    auto font = loadFontIfPresent(fontsRoot / "ui.ttf").or_else([&] {
-        return loadFontIfPresent(fontsRoot / "ui.otf");
-    });
+    auto font = loadBitmapFontIfPresent(fontsRoot / "minecraftia.fnt")
+                    .or_else([&] { return loadBitmapFontIfPresent(fontsRoot / "ui.fnt"); })
+                    .or_else([&] { return loadFontIfPresent(fontsRoot / "ui.ttf"); })
+                    .or_else([&] { return loadFontIfPresent(fontsRoot / "ui.otf"); });
     if (!font) {
         TraceLog(LOG_INFO, "ASSETS: No UI font found under %s; using Raylib default font",
                  fontsRoot.string().c_str());

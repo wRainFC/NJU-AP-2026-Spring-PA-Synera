@@ -82,11 +82,15 @@ add_executable(synera
 
 target_link_libraries(synera PRIVATE synera_logic raylib)
 
-add_custom_command(TARGET synera POST_BUILD
+add_custom_target(synera_assets
+    COMMAND ${CMAKE_COMMAND} -E rm -rf
+        $<TARGET_FILE_DIR:synera>/assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets
         $<TARGET_FILE_DIR:synera>/assets
+    COMMENT "Copying Synera assets"
 )
+add_dependencies(synera synera_assets)
 
 if (MSVC)
     target_compile_options(synera_logic PRIVATE /W4 /permissive-)
