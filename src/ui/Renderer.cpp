@@ -70,6 +70,8 @@ public:
 
     void draw(const RenderContext& context) {
         ui::setFont(assets_.font());
+
+        // Base scene and persistent UI regions.
         drawTopBar(context);
         drawBoard(context.state, context.layout);
         drawBench(context.layout);
@@ -77,11 +79,15 @@ public:
         drawPopulationUpgrade(context.state, context.layout);
         drawEquipmentPool(context.state, context.layout);
         drawSynergies(context.state, context.layout);
+
+        // Dynamic board content and interaction feedback.
         drawSellArea(context);
         drawUnits(context);
         drawDragPreview(context);
         drawHoverPanel(context);
         drawOutcomeOverlay(context.outcomeMessage);
+
+        // Controls drawn last so they stay readable over the base scene.
         drawStartButton(context);
         drawSaveLoadButtons(context);
     }
@@ -89,6 +95,7 @@ public:
 private:
     RenderAssets assets_;
 
+    // Base scene, economy panels, and inventory panels.
     void drawTopBar(const RenderContext& context) {
         const GameState& state = context.state;
         const std::string text = "HP: " + std::to_string(state.player().hp) +
@@ -178,6 +185,7 @@ private:
         }
     }
 
+    // Dynamic board state and prep controls.
     void drawSynergies(const GameState& state, const Layout& layout) {
         for (Trait trait : allTraits()) {
             const TraitSummary summary = summarizeTrait(state, trait);
@@ -242,6 +250,7 @@ private:
                            ui::VerticalAlign::Middle);
     }
 
+    // Pointer-driven feedback.
     void drawDragPreview(const RenderContext& context) {
         const Vector2 mouse = context.pointer.position;
         if (context.dragState.kind == DragKind::UnitFromBench ||
@@ -308,6 +317,7 @@ private:
         }
     }
 
+    // Modal overlays.
     void drawOutcomeOverlay(std::string_view outcomeMessage) {
         if (outcomeMessage.empty()) {
             return;
