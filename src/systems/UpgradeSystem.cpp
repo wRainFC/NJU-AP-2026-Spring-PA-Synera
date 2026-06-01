@@ -15,6 +15,15 @@ namespace {
            unit.star == gained.star && (unit.onBoard() || unit.onBench());
 }
 
+void returnEquipment(GameState& state, Unit& unit) {
+    if (!unit.equipment) {
+        return;
+    }
+
+    state.addEquipment(*unit.equipment);
+    unit.equipment.reset();
+}
+
 }  // namespace
 
 bool UpgradeSystem::tryMergeAfterGain(GameState& state, UnitId gainedUnitId) {
@@ -47,11 +56,15 @@ bool UpgradeSystem::tryMergeAfterGain(GameState& state, UnitId gainedUnitId) {
         });
 
         for (UnitId consumed : candidates | std::views::take(2)) {
+            if (Unit* consumedUnit = state.findUnit(consumed); consumedUnit != nullptr) {
+                returnEquipment(state, *consumedUnit);
+            }
             if (consumed != gainedUnitId) {
                 (void)state.removeUnit(consumed);
             }
         }
 
+        returnEquipment(state, *gained);
         ++gained->star;
         gained->recomputeDerivedStats();
         gained->runtime.hp   = gained->derivedStats.maxHp;

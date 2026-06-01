@@ -6,6 +6,8 @@
 #include "systems/SynergySystem.hpp"
 #include "systems/UpgradeSystem.hpp"
 
+#include <algorithm>
+
 namespace {
 
 [[nodiscard]] synera::AxialPos pos(int col, int row) noexcept {
@@ -46,6 +48,36 @@ TEST_CASE("UpgradeSystem merges three matching player units into the gained unit
     CHECK(merged->benchSlot == 2);
     CHECK(merged->derivedStats.maxHp == 612);
     CHECK(merged->runtime.hp == merged->derivedStats.maxHp);
+}
+
+TEST_CASE("UpgradeSystem returns equipment from merged units to the pool", "[upgrade][equipment]") {
+    synera::GameState state;
+    synera::EquipmentSystem equipment;
+    synera::UpgradeSystem upgrades;
+    const synera::UnitId first  = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId second = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId gained = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+
+    REQUIRE(state.placeUnitOnBench(first, 0));
+    REQUIRE(state.placeUnitOnBench(second, 1));
+    REQUIRE(state.placeUnitOnBench(gained, 2));
+    REQUIRE(equipment.equip(state, first, synera::EquipmentType::IronSword));
+    REQUIRE(equipment.equip(state, second, synera::EquipmentType::ChainVest));
+    REQUIRE(equipment.equip(state, gained, synera::EquipmentType::ManaCrystal));
+
+    CHECK(upgrades.tryMergeAfterGain(state, gained));
+
+    auto* merged = state.findUnit(gained);
+    REQUIRE(merged != nullptr);
+    CHECK_FALSE(merged->equipment);
+    CHECK(merged->derivedStats.maxHp == 612);
+    CHECK(merged->runtime.hp == merged->derivedStats.maxHp);
+
+    const auto pool = state.equipmentPool();
+    REQUIRE(pool.size() == 3);
+    CHECK(std::ranges::count(pool, synera::EquipmentType::IronSword) == 1);
+    CHECK(std::ranges::count(pool, synera::EquipmentType::ChainVest) == 1);
+    CHECK(std::ranges::count(pool, synera::EquipmentType::ManaCrystal) == 1);
 }
 
 TEST_CASE("SynergySystem counts only player board units", "[synergy]") {
