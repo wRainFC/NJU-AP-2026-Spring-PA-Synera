@@ -28,7 +28,7 @@ TEST_CASE("Player population upgrade spends gold and increases cap", "[economy]"
 TEST_CASE("UpgradeSystem merges three matching player units into the gained unit", "[upgrade]") {
     synera::GameState state;
     synera::UpgradeSystem upgrades;
-    const synera::UnitId first = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId first  = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId second = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId gained = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
 
@@ -53,7 +53,7 @@ TEST_CASE("SynergySystem counts only player board units", "[synergy]") {
     synera::SynergySystem synergies;
     const synera::UnitId guard = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId medic = state.createUnit("field_medic", synera::Owner::PlayerCtrl);
-    const synera::UnitId mage = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
+    const synera::UnitId mage  = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
 
     REQUIRE(state.placeUnitOnBoard(guard, pos(0, 4)));
     REQUIRE(state.placeUnitOnBoard(medic, pos(1, 4)));
@@ -69,7 +69,7 @@ TEST_CASE("SynergySystem counts only player board units", "[synergy]") {
 
     const auto* guardUnit = state.findUnit(guard);
     const auto* medicUnit = state.findUnit(medic);
-    const auto* mageUnit = state.findUnit(mage);
+    const auto* mageUnit  = state.findUnit(mage);
     REQUIRE(guardUnit != nullptr);
     REQUIRE(medicUnit != nullptr);
     REQUIRE(mageUnit != nullptr);
@@ -112,11 +112,11 @@ TEST_CASE("Max hp equipment heals by the gained maximum hp", "[equipment]") {
     synera::GameState state;
     synera::EquipmentSystem equipment;
     const synera::UnitId unitId = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
-    auto* unit = state.findUnit(unitId);
+    auto* unit                  = state.findUnit(unitId);
     REQUIRE(unit != nullptr);
 
     unit->runtime.hp -= 40;
-    const int previousHp = unit->runtime.hp;
+    const int previousHp    = unit->runtime.hp;
     const int previousMaxHp = unit->derivedStats.maxHp;
 
     REQUIRE(equipment.equip(state, unitId, synera::EquipmentType::ChainVest));

@@ -61,9 +61,9 @@ namespace {
 [[nodiscard]] ui::ButtonStyle regularButtonStyle(bool enabled = true) noexcept {
     return ui::ButtonStyle{
         .background = enabled ? ui::theme::Button : ui::theme::ButtonDisabled,
-        .border = RAYWHITE,
-        .text = enabled ? RAYWHITE : GRAY,
-        .tint = enabled ? WHITE : ui::theme::DisabledTint,
+        .border     = RAYWHITE,
+        .text       = enabled ? RAYWHITE : GRAY,
+        .tint       = enabled ? WHITE : ui::theme::DisabledTint,
     };
 }
 
@@ -143,7 +143,7 @@ private:
     void drawShop(const GameState& state, const Layout& layout) {
         drawSectionTitle("Shop", layout.shopOfferRect(0));
         for (int index : std::views::iota(0, config::ShopOfferCount)) {
-            const Rectangle rect = layout.shopOfferRect(index);
+            const Rectangle rect   = layout.shopOfferRect(index);
             const ShopOffer& offer = state.shop().offers()[static_cast<std::size_t>(index)];
             DrawRectangleRec(rect, ui::theme::Surface);
             DrawRectangleLinesEx(rect, 1.0F, ui::theme::SurfaceBorder);
@@ -177,9 +177,9 @@ private:
                        locked ? "Locked" : "Lock",
                        ui::ButtonStyle{
                            .background = locked ? ui::theme::ButtonLocked : ui::theme::Button,
-                           .border = RAYWHITE,
-                           .text = RAYWHITE,
-                           .tint = locked ? ui::theme::ButtonLockedTint : WHITE,
+                           .border     = RAYWHITE,
+                           .text       = RAYWHITE,
+                           .tint       = locked ? ui::theme::ButtonLockedTint : WHITE,
                        },
                        24);
     }
@@ -202,7 +202,7 @@ private:
     void drawSynergies(const GameState& state, const Layout& layout) {
         for (Trait trait : allTraits()) {
             const TraitSummary summary = summarizeTrait(state, trait);
-            const Rectangle rect = layout.traitSlotRect(trait);
+            const Rectangle rect       = layout.traitSlotRect(trait);
             const TextureSlot textureSlot =
                 summary.active ? TextureSlot::TraitActive : TextureSlot::TraitInactive;
             ui::drawTexturedRect(assets_.texture(textureSlot), rect,
@@ -236,9 +236,9 @@ private:
             context.layout.startButtonRect(), "Start Combat",
             ui::ButtonStyle{
                 .background = enabled ? ui::theme::ButtonPrimary : ui::theme::ButtonPrimaryDisabled,
-                .border = RAYWHITE,
-                .text = enabled ? RAYWHITE : GRAY,
-                .tint = enabled ? WHITE : ui::theme::DisabledTint,
+                .border     = RAYWHITE,
+                .text       = enabled ? RAYWHITE : GRAY,
+                .tint       = enabled ? WHITE : ui::theme::DisabledTint,
             },
             24);
     }

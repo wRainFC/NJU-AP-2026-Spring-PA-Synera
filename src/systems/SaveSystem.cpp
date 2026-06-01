@@ -27,9 +27,9 @@ namespace {
 
 constexpr int SaveVersion = 1;
 
-constexpr auto KnownOwners = std::array{Owner::PlayerCtrl, Owner::EnemyCtrl};
-constexpr auto KnownPhases = std::array{Phase::Prep, Phase::Combat, Phase::Resolve};
-constexpr auto KnownUnitStates = std::array{UnitState::Idle,    UnitState::Moving,  UnitState::Attacking,
+constexpr auto KnownOwners         = std::array{Owner::PlayerCtrl, Owner::EnemyCtrl};
+constexpr auto KnownPhases         = std::array{Phase::Prep, Phase::Combat, Phase::Resolve};
+constexpr auto KnownUnitStates     = std::array{UnitState::Idle,    UnitState::Moving,  UnitState::Attacking,
                                             UnitState::Casting, UnitState::Stunned, UnitState::Dead};
 constexpr auto KnownEquipmentTypes = std::array{EquipmentType::IronSword, EquipmentType::ChainVest,
                                                 EquipmentType::SwiftGlove, EquipmentType::ManaCrystal};
@@ -64,23 +64,23 @@ struct PosData {
 struct UnitData {
     UnitId id = InvalidUnitId;
     std::string templateId;
-    int owner = enumToInt(Owner::PlayerCtrl);
-    int state = enumToInt(UnitState::Idle);
-    int star = 1;
-    int hp = 0;
-    int mana = 0;
-    UnitId targetId = InvalidUnitId;
-    float attackTimer = 0.0F;
-    float moveTimer = 0.0F;
-    float stunTimer = 0.0F;
+    int owner              = enumToInt(Owner::PlayerCtrl);
+    int state              = enumToInt(UnitState::Idle);
+    int star               = 1;
+    int hp                 = 0;
+    int mana               = 0;
+    UnitId targetId        = InvalidUnitId;
+    float attackTimer      = 0.0F;
+    float moveTimer        = 0.0F;
+    float stunTimer        = 0.0F;
     bool hasCombatStartPos = false;
     PosData combatStartPos{};
     bool hasBoardPos = false;
     PosData boardPos{};
     bool hasBenchSlot = false;
-    int benchSlot = -1;
+    int benchSlot     = -1;
     bool hasEquipment = false;
-    int equipment = enumToInt(EquipmentType::IronSword);
+    int equipment     = enumToInt(EquipmentType::IronSword);
 
     template <class Archive>
     void serialize(Archive& archive) {
@@ -94,11 +94,11 @@ struct UnitData {
 };
 
 struct PlayerData {
-    int hp = config::InitialPlayerHp;
-    int gold = config::InitialGold;
-    int level = 1;
+    int hp            = config::InitialPlayerHp;
+    int gold          = config::InitialGold;
+    int level         = 1;
     int populationCap = config::InitialPopulationCap;
-    int currentRound = 1;
+    int currentRound  = 1;
 
     template <class Archive>
     void serialize(Archive& archive) {
@@ -130,7 +130,7 @@ struct ShopData {
 
 struct SaveDataV1 {
     int version = SaveVersion;
-    int phase = enumToInt(Phase::Prep);
+    int phase   = enumToInt(Phase::Prep);
     PlayerData player{};
     std::vector<UnitData> units;
     ShopData shop{};
@@ -154,24 +154,24 @@ struct SaveDataV1 {
 
 [[nodiscard]] UnitData unitDataFrom(const Unit& unit) {
     UnitData data{
-        .id = unit.id,
-        .templateId = unit.templateId,
-        .owner = enumToInt(unit.owner),
-        .state = enumToInt(unit.runtime.state),
-        .star = unit.star,
-        .hp = unit.runtime.hp,
-        .mana = unit.runtime.mana,
-        .targetId = unit.runtime.targetId,
-        .attackTimer = unit.runtime.attackTimer,
-        .moveTimer = unit.runtime.moveTimer,
-        .stunTimer = unit.runtime.stunTimer,
+        .id                = unit.id,
+        .templateId        = unit.templateId,
+        .owner             = enumToInt(unit.owner),
+        .state             = enumToInt(unit.runtime.state),
+        .star              = unit.star,
+        .hp                = unit.runtime.hp,
+        .mana              = unit.runtime.mana,
+        .targetId          = unit.runtime.targetId,
+        .attackTimer       = unit.runtime.attackTimer,
+        .moveTimer         = unit.runtime.moveTimer,
+        .stunTimer         = unit.runtime.stunTimer,
         .hasCombatStartPos = unit.runtime.combatStartPos.has_value(),
-        .combatStartPos = unit.runtime.combatStartPos.transform(posDataFrom).value_or(PosData{}),
-        .hasBoardPos = unit.boardPos.has_value(),
-        .boardPos = unit.boardPos.transform(posDataFrom).value_or(PosData{}),
-        .hasBenchSlot = unit.benchSlot.has_value(),
-        .benchSlot = unit.benchSlot.value_or(-1),
-        .hasEquipment = unit.equipment.has_value(),
+        .combatStartPos    = unit.runtime.combatStartPos.transform(posDataFrom).value_or(PosData{}),
+        .hasBoardPos       = unit.boardPos.has_value(),
+        .boardPos          = unit.boardPos.transform(posDataFrom).value_or(PosData{}),
+        .hasBenchSlot      = unit.benchSlot.has_value(),
+        .benchSlot         = unit.benchSlot.value_or(-1),
+        .hasEquipment      = unit.equipment.has_value(),
         .equipment =
             unit.equipment.transform(enumToInt<EquipmentType>).value_or(enumToInt(EquipmentType::IronSword)),
     };
@@ -180,11 +180,11 @@ struct SaveDataV1 {
 
 [[nodiscard]] PlayerData playerDataFrom(const Player& player) noexcept {
     return PlayerData{
-        .hp = player.hp,
-        .gold = player.gold,
-        .level = player.level,
+        .hp            = player.hp,
+        .gold          = player.gold,
+        .level         = player.level,
         .populationCap = player.populationCap,
-        .currentRound = player.currentRound,
+        .currentRound  = player.currentRound,
     };
 }
 
@@ -194,8 +194,8 @@ struct SaveDataV1 {
     for (const auto index : std::views::iota(std::size_t{0}, data.offers.size())) {
         data.offers[index] = ShopOfferData{
             .unitTemplateId = offers[index].unitTemplateId,
-            .cost = offers[index].cost,
-            .tier = offers[index].tier,
+            .cost           = offers[index].cost,
+            .tier           = offers[index].tier,
         };
     }
     return data;
@@ -203,11 +203,11 @@ struct SaveDataV1 {
 
 [[nodiscard]] SaveDataV1 saveDataFrom(const GameState& state) {
     SaveDataV1 data{
-        .version = SaveVersion,
-        .phase = enumToInt(state.phase()),
-        .player = playerDataFrom(state.player()),
-        .units = {},
-        .shop = shopDataFrom(state.shop()),
+        .version       = SaveVersion,
+        .phase         = enumToInt(state.phase()),
+        .player        = playerDataFrom(state.player()),
+        .units         = {},
+        .shop          = shopDataFrom(state.shop()),
         .equipmentPool = {},
     };
 
@@ -255,12 +255,12 @@ struct SaveDataV1 {
         return validation;
     }
 
-    Player& player = state.player();
-    player.hp = data.hp;
-    player.gold = data.gold;
-    player.level = data.level;
+    Player& player       = state.player();
+    player.hp            = data.hp;
+    player.gold          = data.gold;
+    player.level         = data.level;
     player.populationCap = data.populationCap;
-    player.currentRound = data.currentRound;
+    player.currentRound  = data.currentRound;
     return {};
 }
 
@@ -273,8 +273,8 @@ struct SaveDataV1 {
     for (const auto index : std::views::iota(std::size_t{0}, offers.size())) {
         offers[index] = ShopOffer{
             .unitTemplateId = data.offers[index].unitTemplateId,
-            .cost = data.offers[index].cost,
-            .tier = data.offers[index].tier,
+            .cost           = data.offers[index].cost,
+            .tier           = data.offers[index].tier,
         };
     }
     state.shop().replaceOffers(offers);
@@ -341,13 +341,13 @@ struct SaveDataV1 {
     }
     unit.recomputeDerivedStats();
 
-    unit.runtime.hp = std::clamp(data.hp, 0, unit.derivedStats.maxHp);
-    unit.runtime.mana = std::clamp(data.mana, 0, unit.derivedStats.maxMana);
-    unit.runtime.state = *unitState;
-    unit.runtime.targetId = data.targetId;
+    unit.runtime.hp          = std::clamp(data.hp, 0, unit.derivedStats.maxHp);
+    unit.runtime.mana        = std::clamp(data.mana, 0, unit.derivedStats.maxMana);
+    unit.runtime.state       = *unitState;
+    unit.runtime.targetId    = data.targetId;
     unit.runtime.attackTimer = std::max(0.0F, data.attackTimer);
-    unit.runtime.moveTimer = std::max(0.0F, data.moveTimer);
-    unit.runtime.stunTimer = std::max(0.0F, data.stunTimer);
+    unit.runtime.moveTimer   = std::max(0.0F, data.moveTimer);
+    unit.runtime.stunTimer   = std::max(0.0F, data.stunTimer);
     unit.runtime.combatStartPos =
         data.hasCombatStartPos ? std::optional{posFromData(data.combatStartPos)} : std::nullopt;
     unit.checkInvariants();

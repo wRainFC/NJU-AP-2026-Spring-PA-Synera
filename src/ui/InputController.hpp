@@ -14,7 +14,7 @@ public:
     InputController();
     ~InputController();
 
-    InputController(const InputController&) = delete;
+    InputController(const InputController&)            = delete;
     InputController& operator=(const InputController&) = delete;
     InputController(InputController&&) noexcept;
     InputController& operator=(InputController&&) noexcept;

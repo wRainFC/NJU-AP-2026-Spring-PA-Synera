@@ -12,41 +12,41 @@ namespace synera {
 
 namespace {
 
-constexpr float HexRadius = 42.0F;
-constexpr float HexWidth = HexRadius * 1.73205080757F;
-constexpr float BenchSlotSize = 76.0F;
-constexpr float BoardLeft = 210.0F;
-constexpr float BoardTop = 180.0F;
-constexpr float BenchLeft = 150.0F;
-constexpr float BenchTop = 780.0F;
-constexpr float SlotGap = 12.0F;
-constexpr float ShopLeft = 1040.0F;
-constexpr float ShopTop = 178.0F;
-constexpr float ShopOfferWidth = 300.0F;
-constexpr float ShopOfferHeight = 70.0F;
-constexpr float ShopGap = 10.0F;
+constexpr float HexRadius         = 42.0F;
+constexpr float HexWidth          = HexRadius * 1.73205080757F;
+constexpr float BenchSlotSize     = 76.0F;
+constexpr float BoardLeft         = 210.0F;
+constexpr float BoardTop          = 180.0F;
+constexpr float BenchLeft         = 150.0F;
+constexpr float BenchTop          = 780.0F;
+constexpr float SlotGap           = 12.0F;
+constexpr float ShopLeft          = 1040.0F;
+constexpr float ShopTop           = 178.0F;
+constexpr float ShopOfferWidth    = 300.0F;
+constexpr float ShopOfferHeight   = 70.0F;
+constexpr float ShopGap           = 10.0F;
 constexpr float EquipmentSlotSize = 60.0F;
-constexpr float EquipmentTop = 766.0F;
-constexpr float TraitLeft = 150.0F;
-constexpr float TraitTop = 82.0F;
-constexpr float TraitWidth = 112.0F;
-constexpr float TraitHeight = 34.0F;
-constexpr float TraitGap = 10.0F;
-constexpr float ButtonTop = 82.0F;
-constexpr float SellLeft = 1370.0F;
-constexpr float SellTop = 178.0F;
-constexpr float Pi = 3.14159265359F;
+constexpr float EquipmentTop      = 766.0F;
+constexpr float TraitLeft         = 150.0F;
+constexpr float TraitTop          = 82.0F;
+constexpr float TraitWidth        = 112.0F;
+constexpr float TraitHeight       = 34.0F;
+constexpr float TraitGap          = 10.0F;
+constexpr float ButtonTop         = 82.0F;
+constexpr float SellLeft          = 1370.0F;
+constexpr float SellTop           = 178.0F;
+constexpr float Pi                = 3.14159265359F;
 
 [[nodiscard]] bool containsPolygon(const std::array<Vector2, 6>& points, Vector2 point) noexcept {
     bool inside = false;
     // Ray casting keeps hit testing accurate in the empty gaps between staggered hex rows.
     for (std::size_t i = 0, j = points.size() - 1; i < points.size(); j = i++) {
-        const Vector2 a = points[i];
-        const Vector2 b = points[j];
+        const Vector2 a    = points[i];
+        const Vector2 b    = points[j];
         const bool crosses = (a.y > point.y) != (b.y > point.y);
         if (crosses) {
             const float xAtY = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x;
-            inside = inside != (point.x < xAtY);
+            inside           = inside != (point.x < xAtY);
         }
     }
     return inside;
@@ -67,7 +67,7 @@ std::array<Vector2, 6> Layout::boardHexCorners(AxialPos pos) const noexcept {
     const Vector2 center = boardHexCenter(pos);
     std::array<Vector2, 6> corners{};
     for (int index : std::views::iota(0, 6)) {
-        const float angle = (-90.0F + 60.0F * static_cast<float>(index)) * Pi / 180.0F;
+        const float angle                        = (-90.0F + 60.0F * static_cast<float>(index)) * Pi / 180.0F;
         corners[static_cast<std::size_t>(index)] = Vector2{
             center.x + HexRadius * std::cos(angle),
             center.y + HexRadius * std::sin(angle),

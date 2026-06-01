@@ -15,8 +15,8 @@ namespace {
 
 TEST_CASE("Board tracks placement movement and swaps", "[board]") {
     synera::Board board{4, 4};
-    const auto left = pos(0, 0);
-    const auto right = pos(1, 0);
+    const auto left    = pos(0, 0);
+    const auto right   = pos(1, 0);
     const auto invalid = pos(9, 9);
 
     REQUIRE(board.place(synera::UnitId{1}, left));
@@ -54,8 +54,8 @@ TEST_CASE("Bench tracks placement first empty slot and swaps", "[bench]") {
 
 TEST_CASE("Pathfinder reaches attack range through empty cells only", "[pathfinder]") {
     synera::Board board{8, 8};
-    const auto start = pos(0, 4);
-    const auto target = pos(4, 4);
+    const auto start   = pos(0, 4);
+    const auto target  = pos(4, 4);
     const auto blocker = pos(1, 4);
 
     REQUIRE(board.place(synera::UnitId{10}, blocker));

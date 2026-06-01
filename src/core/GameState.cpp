@@ -133,7 +133,7 @@ std::optional<int> GameState::firstEmptyBenchSlot() const {
 
 UnitId GameState::createUnit(std::string_view templateId, Owner owner) {
     const UnitId id = nextUnitId_++;
-    auto unit = std::make_unique<Unit>(UnitCatalog::createUnit(id, templateId, owner));
+    auto unit       = std::make_unique<Unit>(UnitCatalog::createUnit(id, templateId, owner));
     units_.emplace(id, std::move(unit));
     return id;
 }
@@ -201,8 +201,8 @@ PlacementResult GameState::placeUnitOnBoardResult(UnitId id, AxialPos pos) {
     if (unit->owner == Owner::PlayerCtrl && phase_ != Phase::Prep) {
         return PlacementResult::InvalidPhase;
     }
-    const UnitLocation destination = BoardLocation{.pos = pos};
-    const auto occupiedBy = occupantAt(destination);
+    const UnitLocation destination   = BoardLocation{.pos = pos};
+    const auto occupiedBy            = occupantAt(destination);
     const PlacementResult validation = validateBoardPlacement(*unit, pos, !unit->onBoard() && !occupiedBy);
     if (validation != PlacementResult::Ok) {
         return validation;
@@ -308,14 +308,14 @@ PlacementResult GameState::moveUnitToEmptyLocation(Unit& unit, UnitLocation dest
 }
 
 PlacementResult GameState::swapPlayerUnits(Unit& left, Unit& right) {
-    const UnitLocation leftLocation = locationOf(left);
+    const UnitLocation leftLocation  = locationOf(left);
     const UnitLocation rightLocation = locationOf(right);
     if (std::holds_alternative<std::monostate>(leftLocation) ||
         std::holds_alternative<std::monostate>(rightLocation)) {
         return PlacementResult::InvalidPosition;
     }
 
-    const auto* leftBoard = std::get_if<BoardLocation>(&leftLocation);
+    const auto* leftBoard  = std::get_if<BoardLocation>(&leftLocation);
     const auto* rightBoard = std::get_if<BoardLocation>(&rightLocation);
     if (leftBoard != nullptr && rightBoard != nullptr) {
         if (!board_.swapCells(leftBoard->pos, rightBoard->pos)) {
@@ -330,7 +330,7 @@ PlacementResult GameState::swapPlayerUnits(Unit& left, Unit& right) {
         return PlacementResult::Ok;
     }
 
-    const auto* leftBench = std::get_if<BenchLocation>(&leftLocation);
+    const auto* leftBench  = std::get_if<BenchLocation>(&leftLocation);
     const auto* rightBench = std::get_if<BenchLocation>(&rightLocation);
     if (leftBench != nullptr && rightBench != nullptr) {
         if (!bench_.swapSlots(leftBench->slot, rightBench->slot)) {
@@ -347,7 +347,7 @@ PlacementResult GameState::swapPlayerUnits(Unit& left, Unit& right) {
 
     clearUnitLocation(left);
     clearUnitLocation(right);
-    const bool placedLeft = placeDetachedUnit(left, rightLocation);
+    const bool placedLeft  = placeDetachedUnit(left, rightLocation);
     const bool placedRight = placeDetachedUnit(right, leftLocation);
     SYNERA_ENSURES(placedLeft && placedRight);
     return placedLeft && placedRight ? PlacementResult::Ok : PlacementResult::Occupied;
@@ -362,7 +362,7 @@ bool GameState::moveBoardUnit(UnitId id, AxialPos pos) {
     if (!board_.move(source, pos)) {
         return false;
     }
-    unit->boardPos = pos;
+    unit->boardPos      = pos;
     unit->runtime.state = UnitState::Moving;
     unit->checkInvariants();
     return true;

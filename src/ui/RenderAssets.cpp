@@ -144,14 +144,14 @@ inline constexpr std::array StateTexturePaths{
 }
 
 [[nodiscard]] bool isAngelCodeBitmapFont(const std::filesystem::path& path) {
-    int dataSize = 0;
+    int dataSize            = 0;
     unsigned char* fileData = LoadFileData(path.string().c_str(), &dataSize);
     if (fileData == nullptr) {
         return false;
     }
 
-    const bool valid = dataSize >= 5 && fileData[0] == 'i' && fileData[1] == 'n' &&
-                       fileData[2] == 'f' && fileData[3] == 'o' && fileData[4] == ' ';
+    const bool valid = dataSize >= 5 && fileData[0] == 'i' && fileData[1] == 'n' && fileData[2] == 'f' &&
+                       fileData[3] == 'o' && fileData[4] == ' ';
     UnloadFileData(fileData);
     return valid;
 }
@@ -163,8 +163,7 @@ inline constexpr std::array StateTexturePaths{
     }
 
     if (!isAngelCodeBitmapFont(path)) {
-        TraceLog(LOG_WARNING, "ASSETS: Skipping unsupported bitmap font format: %s",
-                 path.string().c_str());
+        TraceLog(LOG_WARNING, "ASSETS: Skipping unsupported bitmap font format: %s", path.string().c_str());
         return std::nullopt;
     }
 
@@ -180,7 +179,7 @@ inline constexpr std::array StateTexturePaths{
 
 [[nodiscard]] std::optional<FontResource> loadUiFont(const std::filesystem::path& assetRoot) {
     const std::filesystem::path fontsRoot = assetRoot / "fonts";
-    auto font = loadBitmapFontIfPresent(fontsRoot / "minecraftia.fnt")
+    auto font                             = loadBitmapFontIfPresent(fontsRoot / "minecraftia.fnt")
                     .or_else([&] { return loadBitmapFontIfPresent(fontsRoot / "ui.fnt"); })
                     .or_else([&] { return loadFontIfPresent(fontsRoot / "ui.ttf"); })
                     .or_else([&] { return loadFontIfPresent(fontsRoot / "ui.otf"); });
@@ -202,8 +201,8 @@ inline constexpr std::array StateTexturePaths{
     const int frameCount =
         loaded == nullptr || loaded->height <= 0 ? 1 : std::max(1, loaded->width / loaded->height);
     return RenderAssets::SpriteAnimation{
-        .texture = std::move(*texture),
-        .frameCount = frameCount,
+        .texture         = std::move(*texture),
+        .frameCount      = frameCount,
         .framesPerSecond = 8.0F,
     };
 }
@@ -280,7 +279,7 @@ RenderAssets::~RenderAssets() {
 void RenderAssets::load(const std::filesystem::path& requestedRoot) {
     unload();
 
-    const std::filesystem::path assetRoot = resolveAssetRoot(requestedRoot);
+    const std::filesystem::path assetRoot   = resolveAssetRoot(requestedRoot);
     const std::filesystem::path textureRoot = assetRoot / "textures";
     TraceLog(LOG_INFO, "ASSETS: Root: %s", assetRoot.string().c_str());
 
@@ -325,7 +324,7 @@ void RenderAssets::load(const std::filesystem::path& requestedRoot) {
     }
 
     playerDefaultUnitTexture_ = loadTextureIfPresent(textureRoot / "units/player_default.png");
-    enemyDefaultUnitTexture_ = loadTextureIfPresent(textureRoot / "units/enemy_default.png");
+    enemyDefaultUnitTexture_  = loadTextureIfPresent(textureRoot / "units/enemy_default.png");
 
     for (const EquipmentTexturePath& entry : EquipmentTexturePaths) {
         equipmentTextures_[equipmentIndex(entry.equipment)] = loadTextureIfPresent(textureRoot / entry.path);
@@ -377,8 +376,8 @@ SpriteAnimationView RenderAssets::unitAnimation(std::string_view templateId, Own
         return {};
     }
     return SpriteAnimationView{
-        .texture = animation->texture.get(),
-        .frameCount = animation->frameCount,
+        .texture         = animation->texture.get(),
+        .frameCount      = animation->frameCount,
         .framesPerSecond = animation->framesPerSecond,
     };
 }

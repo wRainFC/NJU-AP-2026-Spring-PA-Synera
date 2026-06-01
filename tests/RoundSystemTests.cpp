@@ -33,7 +33,7 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
     synera::GameState state;
     synera::RoundSystem rounds;
     const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
-    const auto startPos = pos(0, 4);
+    const auto startPos           = pos(0, 4);
 
     REQUIRE(state.placeUnitOnBoard(playerId, startPos));
 
@@ -49,7 +49,7 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
     auto* player = state.findUnit(playerId);
     REQUIRE(player != nullptr);
     state.removeUnitFromBoard(*player);
-    player->runtime.hp = 1;
+    player->runtime.hp   = 1;
     player->runtime.mana = 25;
 
     rounds.enterResolve(state, true);

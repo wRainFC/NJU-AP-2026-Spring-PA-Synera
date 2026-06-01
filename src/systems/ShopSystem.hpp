@@ -28,14 +28,14 @@ enum class ShopSellStatus { Ok, InvalidPhase, InvalidUnit, InvalidOwner };
 // Carries the gained unit id so UpgradeSystem can later run merge checks after a successful purchase.
 struct ShopBuyResult {
     ShopBuyStatus status = ShopBuyStatus::Ok;
-    UnitId gainedUnitId = InvalidUnitId;
+    UnitId gainedUnitId  = InvalidUnitId;
 
     [[nodiscard]] bool ok() const noexcept { return status == ShopBuyStatus::Ok; }
 };
 
 struct ShopSellResult {
     ShopSellStatus status = ShopSellStatus::Ok;
-    int goldGained = 0;
+    int goldGained        = 0;
 
     [[nodiscard]] bool ok() const noexcept { return status == ShopSellStatus::Ok; }
 };
@@ -47,11 +47,11 @@ public:
     ShopSystem();
     explicit ShopSystem(std::uint32_t seed);
 
-    [[nodiscard]] ShopRefreshResult refresh(GameState& state, ShopRefreshMode mode);
-    [[nodiscard]] ShopBuyResult buy(GameState& state, int offerIndex);
-    [[nodiscard]] ShopSellResult sellUnit(GameState& state, UnitId unitId);
-    void setLocked(GameState& state, bool locked) const;
-    bool toggleLocked(GameState& state) const;
+    [[nodiscard]] ShopRefreshResult refresh(GameState &state, ShopRefreshMode mode);
+    [[nodiscard]] ShopBuyResult buy(GameState &state, int offerIndex);
+    [[nodiscard]] ShopSellResult sellUnit(GameState &state, UnitId unitId);
+    void setLocked(GameState &state, bool locked) const;
+    bool toggleLocked(GameState &state) const;
 
 private:
     ShopPool pool_;

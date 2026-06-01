@@ -43,7 +43,7 @@ public:
     }
 
 private:
-    int width_ = 0;
+    int width_  = 0;
     int height_ = 0;
     std::vector<std::optional<UnitId>> cells_;
 

@@ -16,8 +16,8 @@ namespace {
 
 [[nodiscard]] Rectangle spriteRect(Rectangle rect) noexcept {
     const float horizontalPadding = rect.width * 0.10F;
-    const float top = rect.y + rect.height * 0.22F;
-    const float height = std::max(28.0F, rect.height * 0.50F);
+    const float top               = rect.y + rect.height * 0.22F;
+    const float height            = std::max(28.0F, rect.height * 0.50F);
     return Rectangle{rect.x + horizontalPadding, top, rect.width - horizontalPadding * 2.0F, height};
 }
 

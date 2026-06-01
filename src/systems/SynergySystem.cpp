@@ -33,7 +33,7 @@ using TraitCounts = std::array<int, static_cast<std::size_t>(Trait::Assassin) + 
 }
 
 void clampRuntime(Unit& unit) noexcept {
-    unit.runtime.hp = std::clamp(unit.runtime.hp, 0, unit.derivedStats.maxHp);
+    unit.runtime.hp   = std::clamp(unit.runtime.hp, 0, unit.derivedStats.maxHp);
     unit.runtime.mana = std::clamp(unit.runtime.mana, 0, unit.derivedStats.maxMana);
 }
 
@@ -65,15 +65,15 @@ bool traitIsActive(Trait trait, int count) noexcept {
 }
 
 TraitSummary summarizeTrait(const GameState& state, Trait trait) {
-    const int count = countPlayerBoardTrait(state, trait);
+    const int count     = countPlayerBoardTrait(state, trait);
     const int threshold = traitActivationThreshold(trait);
     return TraitSummary{
-        .trait = trait,
-        .count = count,
+        .trait               = trait,
+        .count               = count,
         .activationThreshold = threshold,
-        .active = threshold > 0 && count >= threshold,
-        .name = traitName(trait),
-        .effectDescription = traitEffectDescription(trait),
+        .active              = threshold > 0 && count >= threshold,
+        .name                = traitName(trait),
+        .effectDescription   = traitEffectDescription(trait),
     };
 }
 

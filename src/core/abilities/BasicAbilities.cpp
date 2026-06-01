@@ -12,11 +12,11 @@ namespace synera {
 
 namespace {
 
-constexpr int FireLineLength = 3;
-constexpr int FireLineDamage = 85;
-constexpr int HealingAuraRange = 2;
-constexpr int HealingAuraAmount = 70;
-constexpr int StunStrikeDamage = 55;
+constexpr int FireLineLength       = 3;
+constexpr int FireLineDamage       = 85;
+constexpr int HealingAuraRange     = 2;
+constexpr int HealingAuraAmount    = 70;
+constexpr int StunStrikeDamage     = 55;
 constexpr float StunStrikeDuration = 1.0F;
 
 [[nodiscard]] std::optional<AxialPos> targetPosOf(const Unit& caster, AbilityContext& context) {
@@ -109,7 +109,7 @@ void StunStrikeAbility::cast(Unit& caster, AbilityContext& context) {
     if (target != nullptr && caster.canAttackTarget(*target)) {
         context.dealDamage(*target, StunStrikeDamage);
         if (target->alive()) {
-            target->runtime.state = UnitState::Stunned;
+            target->runtime.state     = UnitState::Stunned;
             target->runtime.stunTimer = StunStrikeDuration;
         }
     }

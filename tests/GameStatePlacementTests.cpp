@@ -13,10 +13,10 @@ namespace {
 
 TEST_CASE("GameState places and swaps player units across bench and board", "[gamestate][placement]") {
     synera::GameState state;
-    const synera::UnitId first = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId first  = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId second = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
-    const auto boardLeft = pos(0, 4);
-    const auto boardRight = pos(1, 4);
+    const auto boardLeft        = pos(0, 4);
+    const auto boardRight       = pos(1, 4);
 
     REQUIRE(state.placeUnitOnBench(first, 0));
     REQUIRE(state.placeUnitOnBench(second, 1));
@@ -54,9 +54,9 @@ TEST_CASE("GameState rejects invalid placement rules", "[gamestate][placement]")
 
 TEST_CASE("GameState enforces player population cap", "[gamestate][placement]") {
     synera::GameState state;
-    const synera::UnitId first = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId first  = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId second = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
-    const synera::UnitId third = state.createUnit("field_medic", synera::Owner::PlayerCtrl);
+    const synera::UnitId third  = state.createUnit("field_medic", synera::Owner::PlayerCtrl);
     const synera::UnitId fourth = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
 
     REQUIRE(state.placeUnitOnBench(first, 0));

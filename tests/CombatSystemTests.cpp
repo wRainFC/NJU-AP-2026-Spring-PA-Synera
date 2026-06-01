@@ -14,14 +14,14 @@ namespace {
 struct CombatFixture {
     synera::GameState state;
     synera::CombatSystem combat;
-    synera::UnitId player = synera::InvalidUnitId;
-    synera::UnitId enemy = synera::InvalidUnitId;
+    synera::UnitId player      = synera::InvalidUnitId;
+    synera::UnitId enemy       = synera::InvalidUnitId;
     synera::AxialPos playerPos = pos(3, 4);
-    synera::AxialPos enemyPos = pos(3, 3);
+    synera::AxialPos enemyPos  = pos(3, 3);
 
     CombatFixture() {
         player = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
-        enemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
+        enemy  = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
         REQUIRE(state.placeUnitOnBoard(player, playerPos));
         REQUIRE(state.placeUnitOnBoard(enemy, enemyPos));
         state.setPhase(synera::Phase::Combat);
@@ -33,7 +33,7 @@ struct CombatFixture {
 TEST_CASE("CombatSystem casts full mana ability and clears mana", "[combat]") {
     CombatFixture fixture;
     auto* player = fixture.state.findUnit(fixture.player);
-    auto* enemy = fixture.state.findUnit(fixture.enemy);
+    auto* enemy  = fixture.state.findUnit(fixture.enemy);
     REQUIRE(player != nullptr);
     REQUIRE(enemy != nullptr);
 
@@ -50,7 +50,7 @@ TEST_CASE("CombatSystem recovers stunned units after the stun timer", "[combat]"
     auto* enemy = fixture.state.findUnit(fixture.enemy);
     REQUIRE(enemy != nullptr);
 
-    enemy->runtime.state = synera::UnitState::Stunned;
+    enemy->runtime.state     = synera::UnitState::Stunned;
     enemy->runtime.stunTimer = 0.1F;
 
     fixture.combat.update(fixture.state, 0.2F);
@@ -77,8 +77,8 @@ TEST_CASE("CombatSystem applies Ranger double basic attack synergy", "[combat][s
     synera::GameState state;
     synera::CombatSystem combat;
     synera::SynergySystem synergies;
-    const synera::UnitId first = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
-    const synera::UnitId second = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
+    const synera::UnitId first   = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
+    const synera::UnitId second  = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
     const synera::UnitId enemyId = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
 
     REQUIRE(state.placeUnitOnBoard(first, pos(3, 4)));
@@ -86,9 +86,9 @@ TEST_CASE("CombatSystem applies Ranger double basic attack synergy", "[combat][s
     REQUIRE(state.placeUnitOnBoard(enemyId, pos(3, 3)));
     synergies.recompute(state);
 
-    auto* firstArcher = state.findUnit(first);
+    auto* firstArcher  = state.findUnit(first);
     auto* secondArcher = state.findUnit(second);
-    auto* enemy = state.findUnit(enemyId);
+    auto* enemy        = state.findUnit(enemyId);
     REQUIRE(firstArcher != nullptr);
     REQUIRE(secondArcher != nullptr);
     REQUIRE(enemy != nullptr);
@@ -105,9 +105,9 @@ TEST_CASE("CombatSystem applies Ranger double basic attack synergy", "[combat][s
 TEST_CASE("CombatSystem targets lowest hp before board-order ties", "[combat][targeting]") {
     synera::GameState state;
     synera::CombatSystem combat;
-    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId playerId    = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId highHpEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
-    const synera::UnitId lowHpEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
+    const synera::UnitId lowHpEnemy  = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
 
     REQUIRE(state.placeUnitOnBoard(playerId, pos(0, 4)));
     REQUIRE(state.placeUnitOnBoard(highHpEnemy, pos(1, 2)));
@@ -128,8 +128,8 @@ TEST_CASE("CombatSystem targets lowest hp before board-order ties", "[combat][ta
 TEST_CASE("CombatSystem targets left-to-right on equal hp", "[combat][targeting]") {
     synera::GameState state;
     synera::CombatSystem combat;
-    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
-    const synera::UnitId leftEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
+    const synera::UnitId playerId   = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId leftEnemy  = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
     const synera::UnitId rightEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
 
     REQUIRE(state.placeUnitOnBoard(playerId, pos(3, 4)));
@@ -148,7 +148,7 @@ TEST_CASE("CombatSystem targets lower board cells before upper cells on equal hp
           "[combat][targeting]") {
     synera::GameState state;
     synera::CombatSystem combat;
-    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    const synera::UnitId playerId   = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId upperEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
     const synera::UnitId lowerEnemy = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
 

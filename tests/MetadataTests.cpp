@@ -37,7 +37,7 @@ TEST_CASE("Metadata exposes display names and equipment stat modifiers", "[metad
 
 TEST_CASE("Unit derived stats applies table-driven equipment effects", "[metadata][unit]") {
     auto equipped = [](synera::EquipmentType equipment) {
-        auto unit = synera::UnitCatalog::createUnit(1, "ember_mage", synera::Owner::PlayerCtrl);
+        auto unit      = synera::UnitCatalog::createUnit(1, "ember_mage", synera::Owner::PlayerCtrl);
         unit.equipment = equipment;
         unit.recomputeDerivedStats();
         return unit;

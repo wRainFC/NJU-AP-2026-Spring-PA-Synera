@@ -77,16 +77,16 @@ Unit UnitCatalog::createUnit(UnitId id, std::string_view templateId, Owner owner
     const UnitTemplate* unitTemplate = findTemplate(templateId);
 
     Unit unit;
-    unit.id = id;
-    unit.templateId = std::string(templateId);
-    unit.name = unitTemplate == nullptr ? "Unknown" : std::string(unitTemplate->displayName);
-    unit.owner = owner;
-    unit.baseStats = unitTemplate == nullptr ? DefaultStats : unitTemplate->stats;
+    unit.id           = id;
+    unit.templateId   = std::string(templateId);
+    unit.name         = unitTemplate == nullptr ? "Unknown" : std::string(unitTemplate->displayName);
+    unit.owner        = owner;
+    unit.baseStats    = unitTemplate == nullptr ? DefaultStats : unitTemplate->stats;
     unit.derivedStats = unit.baseStats;
-    unit.runtime.hp = unit.derivedStats.maxHp;
+    unit.runtime.hp   = unit.derivedStats.maxHp;
     unit.runtime.mana = 0;
-    unit.ability = unitTemplate == nullptr ? makeNoopAbility() : unitTemplate->abilityFactory();
-    unit.traits = traitsFor(unitTemplate);
+    unit.ability      = unitTemplate == nullptr ? makeNoopAbility() : unitTemplate->abilityFactory();
+    unit.traits       = traitsFor(unitTemplate);
     return unit;
 }
 

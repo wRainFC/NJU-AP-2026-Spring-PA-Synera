@@ -9,10 +9,10 @@
 namespace synera {
 
 struct EquipmentStatModifier {
-    int atkBonus = 0;
-    int maxHpBonus = 0;
-    int maxManaDelta = 0;
-    int minMaxMana = 0;
+    int atkBonus                   = 0;
+    int maxHpBonus                 = 0;
+    int maxManaDelta               = 0;
+    int minMaxMana                 = 0;
     float attackIntervalMultiplier = 1.0F;
 };
 

@@ -19,8 +19,8 @@ struct ShopRollContext {
 
 struct ShopPoolEntry {
     std::string_view templateId;
-    int cost = 1;
-    int tier = 1;
+    int cost   = 1;
+    int tier   = 1;
     int weight = 1;
 };
 

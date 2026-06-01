@@ -25,35 +25,35 @@ namespace {
 
 TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     synera::GameState state;
-    state.player().hp = 73;
-    state.player().gold = 11;
-    state.player().level = 2;
+    state.player().hp            = 73;
+    state.player().gold          = 11;
+    state.player().level         = 2;
     state.player().populationCap = 4;
-    state.player().currentRound = 5;
+    state.player().currentRound  = 5;
 
     const synera::UnitId guardId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
-    const synera::UnitId mageId = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
+    const synera::UnitId mageId  = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
     REQUIRE(state.placeUnitOnBoard(guardId, pos(0, 4)));
     REQUIRE(state.placeUnitOnBench(mageId, 1));
 
     auto* guard = state.findUnit(guardId);
     REQUIRE(guard != nullptr);
-    guard->star = 2;
+    guard->star      = 2;
     guard->equipment = synera::EquipmentType::IronSword;
     guard->recomputeDerivedStats();
-    guard->runtime.hp = 333;
-    guard->runtime.mana = 12;
-    guard->runtime.state = synera::UnitState::Attacking;
-    guard->runtime.attackTimer = 0.25F;
+    guard->runtime.hp             = 333;
+    guard->runtime.mana           = 12;
+    guard->runtime.state          = synera::UnitState::Attacking;
+    guard->runtime.attackTimer    = 0.25F;
     guard->runtime.combatStartPos = guard->boardPos;
 
     auto* mage = state.findUnit(mageId);
     REQUIRE(mage != nullptr);
     mage->equipment = synera::EquipmentType::ManaCrystal;
     mage->recomputeDerivedStats();
-    mage->runtime.hp = 101;
-    mage->runtime.mana = 20;
-    mage->runtime.state = synera::UnitState::Stunned;
+    mage->runtime.hp        = 101;
+    mage->runtime.mana      = 20;
+    mage->runtime.state     = synera::UnitState::Stunned;
     mage->runtime.stunTimer = 0.5F;
 
     state.addEquipment(synera::EquipmentType::ChainVest);

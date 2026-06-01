@@ -49,7 +49,7 @@ struct PlaceUnitOnBoard {
 
 struct PlaceUnitOnBench {
     UnitId unitId = InvalidUnitId;
-    int slot = -1;
+    int slot      = -1;
 };
 
 struct SellUnit {
@@ -58,12 +58,12 @@ struct SellUnit {
 
 struct EquipFromPool {
     std::size_t poolIndex = 0;
-    UnitId unitId = InvalidUnitId;
+    UnitId unitId         = InvalidUnitId;
 };
 
-using InputCommand = std::variant<RequestSave, RequestLoad, RequestRestart, StartCombat, RefreshShop,
-                                  ToggleShopLock, UpgradePopulation, BuyOffer, PlaceUnitOnBoard,
-                                  PlaceUnitOnBench, SellUnit, EquipFromPool>;
+using InputCommand =
+    std::variant<RequestSave, RequestLoad, RequestRestart, StartCombat, RefreshShop, ToggleShopLock,
+                 UpgradePopulation, BuyOffer, PlaceUnitOnBoard, PlaceUnitOnBench, SellUnit, EquipFromPool>;
 
 struct InputFrameResult {
     std::vector<InputCommand> commands;
@@ -72,9 +72,9 @@ struct InputFrameResult {
 struct PointerInput {
     Vector2 position{};
     bool insideVirtualCanvas = false;
-    bool leftPressed = false;
-    bool leftReleased = false;
-    bool leftDown = false;
+    bool leftPressed         = false;
+    bool leftReleased        = false;
+    bool leftDown            = false;
 };
 
 }  // namespace synera

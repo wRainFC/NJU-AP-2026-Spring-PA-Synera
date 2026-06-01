@@ -54,8 +54,8 @@ private:
     SaveSystem saveSystem_;
     GameOutcome outcome_ = GameOutcome::Playing;
     std::string statusMessage_;
-    float statusMessageTimer_ = 0.0F;
-    float resolveTimer_ = 0.0F;
+    float statusMessageTimer_   = 0.0F;
+    float resolveTimer_         = 0.0F;
     float animationTimeSeconds_ = 0.0F;
 };
 

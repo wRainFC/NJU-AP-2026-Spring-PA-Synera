@@ -19,9 +19,9 @@ struct ButtonStyle {
 };
 
 struct PanelStyle {
-    int fontSize = 18;
+    int fontSize   = 18;
     int lineHeight = 28;
-    float padding = 14.0F;
+    float padding  = 14.0F;
     float minWidth = 240.0F;
     float maxWidth = 520.0F;
 };

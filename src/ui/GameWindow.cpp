@@ -13,7 +13,7 @@ GameWindow::~GameWindow() {
 }
 
 void GameWindow::init(int virtualWidth, int virtualHeight, std::string_view title) {
-    virtualWidth_ = virtualWidth;
+    virtualWidth_  = virtualWidth;
     virtualHeight_ = virtualHeight;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -67,9 +67,9 @@ void GameWindow::endFrame() {
 
 PointerInput GameWindow::pointerInput() const noexcept {
     const Rectangle view = viewport();
-    const float scaleX = view.width / static_cast<float>(virtualWidth_);
-    const float scaleY = view.height / static_cast<float>(virtualHeight_);
-    const Vector2 mouse = GetMousePosition();
+    const float scaleX   = view.width / static_cast<float>(virtualWidth_);
+    const float scaleY   = view.height / static_cast<float>(virtualHeight_);
+    const Vector2 mouse  = GetMousePosition();
     const Vector2 virtualPosition{
         (mouse.x - view.x) / scaleX,
         (mouse.y - view.y) / scaleY,
@@ -80,17 +80,17 @@ PointerInput GameWindow::pointerInput() const noexcept {
         .insideVirtualCanvas =
             virtualPosition.x >= 0.0F && virtualPosition.x <= static_cast<float>(virtualWidth_) &&
             virtualPosition.y >= 0.0F && virtualPosition.y <= static_cast<float>(virtualHeight_),
-        .leftPressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
+        .leftPressed  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
         .leftReleased = IsMouseButtonReleased(MOUSE_BUTTON_LEFT),
-        .leftDown = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
+        .leftDown     = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
     };
 }
 
 Rectangle GameWindow::viewport() const noexcept {
-    const float scale = viewportScale();
-    const float width = std::max(1.0F, std::round(static_cast<float>(virtualWidth_) * scale));
-    const float height = std::max(1.0F, std::round(static_cast<float>(virtualHeight_) * scale));
-    const float screenWidth = static_cast<float>(std::max(1, GetScreenWidth()));
+    const float scale        = viewportScale();
+    const float width        = std::max(1.0F, std::round(static_cast<float>(virtualWidth_) * scale));
+    const float height       = std::max(1.0F, std::round(static_cast<float>(virtualHeight_) * scale));
+    const float screenWidth  = static_cast<float>(std::max(1, GetScreenWidth()));
     const float screenHeight = static_cast<float>(std::max(1, GetScreenHeight()));
     return Rectangle{
         std::round((screenWidth - width) / 2.0F),

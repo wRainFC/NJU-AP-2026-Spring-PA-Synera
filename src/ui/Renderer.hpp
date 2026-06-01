@@ -21,7 +21,7 @@ struct RenderContext {
     std::string_view statusMessage;
     std::string_view outcomeMessage;
     float animationTimeSeconds = 0.0F;
-    bool interactionsEnabled = true;
+    bool interactionsEnabled   = true;
 };
 
 class Renderer {
@@ -29,7 +29,7 @@ public:
     Renderer();
     ~Renderer();
 
-    Renderer(const Renderer&) = delete;
+    Renderer(const Renderer&)            = delete;
     Renderer& operator=(const Renderer&) = delete;
     Renderer(Renderer&&) noexcept;
     Renderer& operator=(Renderer&&) noexcept;

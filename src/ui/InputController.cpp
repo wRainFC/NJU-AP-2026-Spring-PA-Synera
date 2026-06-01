@@ -27,7 +27,7 @@ struct UnitPressTarget {
 };
 
 struct EquipmentPressTarget {
-    std::size_t poolIndex = 0;
+    std::size_t poolIndex   = 0;
     EquipmentType equipment = EquipmentType::IronSword;
 };
 
@@ -40,7 +40,7 @@ struct UnitDragPayload {
 };
 
 struct EquipmentDragPayload {
-    std::size_t poolIndex = 0;
+    std::size_t poolIndex   = 0;
     EquipmentType equipment = EquipmentType::IronSword;
 };
 
@@ -135,14 +135,15 @@ public:
             return std::nullopt;
         }
 
-        ClickAction action = std::visit(Overloaded{
-                                            [](UnitPressTarget target) -> ClickAction {
-                                                return SelectUnitClick{.unitId = target.unitId};
-                                            },
-                                            [](EquipmentPressTarget) -> ClickAction { return NoClickAction{}; },
-                                            [](EmptyPressTarget) -> ClickAction { return ClearSelectionClick{}; },
-                                        },
-                                        session_->target);
+        ClickAction action =
+            std::visit(Overloaded{
+                           [](UnitPressTarget target) -> ClickAction {
+                               return SelectUnitClick{.unitId = target.unitId};
+                           },
+                           [](EquipmentPressTarget) -> ClickAction { return NoClickAction{}; },
+                           [](EmptyPressTarget) -> ClickAction { return ClearSelectionClick{}; },
+                       },
+                       session_->target);
         session_.reset();
         return action;
     }
@@ -170,15 +171,14 @@ public:
             return model;
         }
 
-        std::visit(Overloaded{
-                       [&](UnitDragPayload payload) {
-                           model.ghost = UnitDragGhost{.unitId = payload.unitId};
-                       },
-                       [&](EquipmentDragPayload payload) {
-                           model.ghost = EquipmentDragGhost{.equipment = payload.equipment};
-                       },
-                   },
-                   *activeDrag_);
+        std::visit(
+            Overloaded{
+                [&](UnitDragPayload payload) { model.ghost = UnitDragGhost{.unitId = payload.unitId}; },
+                [&](EquipmentDragPayload payload) {
+                    model.ghost = EquipmentDragGhost{.equipment = payload.equipment};
+                },
+            },
+            *activeDrag_);
         return model;
     }
 
@@ -188,26 +188,27 @@ public:
             return std::nullopt;
         }
 
-        std::optional<InputCommand> command = std::visit(Overloaded{
-            [&](UnitDragPayload payload) -> std::optional<InputCommand> {
-                if (ui::contains(layout.sellAreaRect(), mouse)) {
-                    return InputCommand{SellUnit{.unitId = payload.unitId}};
-                }
-                if (const auto pos = layout.boardPosAt(mouse)) {
-                    return InputCommand{PlaceUnitOnBoard{.unitId = payload.unitId, .pos = *pos}};
-                }
-                if (const auto slot = layout.benchSlotAt(mouse)) {
-                    return InputCommand{PlaceUnitOnBench{.unitId = payload.unitId, .slot = *slot}};
-                }
-                return std::nullopt;
-            },
-            [&](EquipmentDragPayload payload) -> std::optional<InputCommand> {
-                return playerUnitAt(state, layout, mouse)
-                    .transform([&](UnitId unitId) {
+        std::optional<InputCommand> command = std::visit(
+            Overloaded{
+                [&](UnitDragPayload payload) -> std::optional<InputCommand> {
+                    if (ui::contains(layout.sellAreaRect(), mouse)) {
+                        return InputCommand{SellUnit{.unitId = payload.unitId}};
+                    }
+                    if (const auto pos = layout.boardPosAt(mouse)) {
+                        return InputCommand{PlaceUnitOnBoard{.unitId = payload.unitId, .pos = *pos}};
+                    }
+                    if (const auto slot = layout.benchSlotAt(mouse)) {
+                        return InputCommand{PlaceUnitOnBench{.unitId = payload.unitId, .slot = *slot}};
+                    }
+                    return std::nullopt;
+                },
+                [&](EquipmentDragPayload payload) -> std::optional<InputCommand> {
+                    return playerUnitAt(state, layout, mouse).transform([&](UnitId unitId) {
                         return InputCommand{EquipFromPool{.poolIndex = payload.poolIndex, .unitId = unitId}};
                     });
+                },
             },
-        }, *activeDrag_);
+            *activeDrag_);
         activeDrag_.reset();
         return command;
     }
@@ -290,7 +291,7 @@ public:
     [[nodiscard]] InputReadModel readModel(const GameState& state) const {
         InputReadModel model{
             .selectedUnitId = std::nullopt,
-            .dragDrop = dragDrop_.readModel(),
+            .dragDrop       = dragDrop_.readModel(),
         };
         if (!selectedUnitId_) {
             return model;

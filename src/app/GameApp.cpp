@@ -14,8 +14,8 @@ namespace synera {
 namespace {
 
 constexpr std::string_view ManualSavePath = "saves/manual.json";
-constexpr float StatusMessageSeconds = 3.0F;
-constexpr int FinalRound = 6;
+constexpr float StatusMessageSeconds      = 3.0F;
+constexpr int FinalRound                  = 6;
 
 template <class... Visitors>
 struct Overloaded : Visitors... {
@@ -46,14 +46,14 @@ void GameApp::init() {
 }
 
 void GameApp::startNewRun() {
-    state_ = GameState{};
-    input_ = InputController{};
-    shopSystem_ = ShopSystem{};
+    state_           = GameState{};
+    input_           = InputController{};
+    shopSystem_      = ShopSystem{};
     equipmentSystem_ = EquipmentSystem{};
-    outcome_ = GameOutcome::Playing;
+    outcome_         = GameOutcome::Playing;
     statusMessage_.clear();
-    statusMessageTimer_ = 0.0F;
-    resolveTimer_ = 0.0F;
+    statusMessageTimer_   = 0.0F;
+    resolveTimer_         = 0.0F;
     animationTimeSeconds_ = 0.0F;
 
     const UnitId first = state_.createUnit("iron_guard", Owner::PlayerCtrl);
@@ -75,7 +75,7 @@ void GameApp::update(float dt) {
         }
     }
 
-    const PointerInput pointer = window_.pointerInput();
+    const PointerInput pointer        = window_.pointerInput();
     const InputFrameResult inputFrame = input_.update(state_, layout_, pointer, interactionsEnabled());
     if (applyInputCommands(inputFrame.commands)) {
         return;
@@ -106,14 +106,14 @@ void GameApp::render() {
     window_.beginFrame(ui::theme::Background);
     const PointerInput pointer = window_.pointerInput();
     const RenderContext context{
-        .state = state_,
-        .layout = layout_,
-        .input = input_.readModel(state_),
-        .pointer = pointer,
-        .statusMessage = statusMessage_,
-        .outcomeMessage = outcomeMessage(),
+        .state                = state_,
+        .layout               = layout_,
+        .input                = input_.readModel(state_),
+        .pointer              = pointer,
+        .statusMessage        = statusMessage_,
+        .outcomeMessage       = outcomeMessage(),
         .animationTimeSeconds = animationTimeSeconds_,
-        .interactionsEnabled = interactionsEnabled(),
+        .interactionsEnabled  = interactionsEnabled(),
     };
     renderer_.draw(context);
     window_.endFrame();
@@ -126,82 +126,83 @@ void GameApp::shutdown() {
 
 bool GameApp::applyInputCommands(std::span<const InputCommand> commands) {
     for (const InputCommand& command : commands) {
-        const bool stopFrame = std::visit(Overloaded{
-            [&](RequestSave) {
-                handleSave();
-                return false;
-            },
-            [&](RequestLoad) {
-                return handleLoad();
-            },
-            [&](RequestRestart) {
-                startNewRun();
-                setStatusMessage("Started a new run");
-                return true;
-            },
-            [&](StartCombat) {
-                synergySystem_.recompute(state_);
-                roundSystem_.startCombat(state_);
-                if (state_.phase() != Phase::Prep) {
-                    input_.clearInteraction();
-                    input_.clearSelection();
-                }
-                return false;
-            },
-            [&](RefreshShop) {
-                (void)shopSystem_.refresh(state_, ShopRefreshMode::Manual);
-                return false;
-            },
-            [&](ToggleShopLock) {
-                (void)shopSystem_.toggleLocked(state_);
-                return false;
-            },
-            [&](UpgradePopulation) {
-                if (state_.player().upgradePopulation()) {
+        const bool stopFrame = std::visit(
+            Overloaded{
+                [&](RequestSave) {
+                    handleSave();
+                    return false;
+                },
+                [&](RequestLoad) { return handleLoad(); },
+                [&](RequestRestart) {
+                    startNewRun();
+                    setStatusMessage("Started a new run");
+                    return true;
+                },
+                [&](StartCombat) {
                     synergySystem_.recompute(state_);
-                }
-                return false;
+                    roundSystem_.startCombat(state_);
+                    if (state_.phase() != Phase::Prep) {
+                        input_.clearInteraction();
+                        input_.clearSelection();
+                    }
+                    return false;
+                },
+                [&](RefreshShop) {
+                    (void)shopSystem_.refresh(state_, ShopRefreshMode::Manual);
+                    return false;
+                },
+                [&](ToggleShopLock) {
+                    (void)shopSystem_.toggleLocked(state_);
+                    return false;
+                },
+                [&](UpgradePopulation) {
+                    if (state_.player().upgradePopulation()) {
+                        synergySystem_.recompute(state_);
+                    }
+                    return false;
+                },
+                [&](BuyOffer buy) {
+                    const ShopBuyResult result = shopSystem_.buy(state_, buy.offerIndex);
+                    if (result.ok()) {
+                        (void)upgradeSystem_.tryMergeAfterGain(state_, result.gainedUnitId);
+                        synergySystem_.recompute(state_);
+                    }
+                    return false;
+                },
+                [&](PlaceUnitOnBoard place) {
+                    if (state_.placeUnitOnBoardResult(place.unitId, place.pos) == PlacementResult::Ok) {
+                        synergySystem_.recompute(state_);
+                    }
+                    return false;
+                },
+                [&](PlaceUnitOnBench place) {
+                    if (state_.placeUnitOnBenchResult(place.unitId, place.slot) == PlacementResult::Ok) {
+                        synergySystem_.recompute(state_);
+                    }
+                    return false;
+                },
+                [&](SellUnit sell) {
+                    const Unit* unit            = state_.findUnit(sell.unitId);
+                    const std::string unitName  = unit == nullptr ? "Unit" : unit->name;
+                    const ShopSellResult result = shopSystem_.sellUnit(state_, sell.unitId);
+                    if (result.ok()) {
+                        input_.clearSelection();
+                        synergySystem_.recompute(state_);
+                        setStatusMessage("Sold " + unitName + " for " + std::to_string(result.goldGained) +
+                                         "g");
+                    } else {
+                        setStatusMessage("Sell failed");
+                    }
+                    return false;
+                },
+                [&](EquipFromPool equip) {
+                    if (equipmentSystem_.equipFromPool(state_, equip.poolIndex, equip.unitId)) {
+                        synergySystem_.recompute(state_);
+                    }
+                    return false;
+                },
             },
-            [&](BuyOffer buy) {
-                const ShopBuyResult result = shopSystem_.buy(state_, buy.offerIndex);
-                if (result.ok()) {
-                    (void)upgradeSystem_.tryMergeAfterGain(state_, result.gainedUnitId);
-                    synergySystem_.recompute(state_);
-                }
-                return false;
-            },
-            [&](PlaceUnitOnBoard place) {
-                if (state_.placeUnitOnBoardResult(place.unitId, place.pos) == PlacementResult::Ok) {
-                    synergySystem_.recompute(state_);
-                }
-                return false;
-            },
-            [&](PlaceUnitOnBench place) {
-                if (state_.placeUnitOnBenchResult(place.unitId, place.slot) == PlacementResult::Ok) {
-                    synergySystem_.recompute(state_);
-                }
-                return false;
-            },
-            [&](SellUnit sell) {
-                const Unit* unit = state_.findUnit(sell.unitId);
-                const std::string unitName = unit == nullptr ? "Unit" : unit->name;
-                const ShopSellResult result = shopSystem_.sellUnit(state_, sell.unitId);
-                if (result.ok()) {
-                    input_.clearSelection();
-                    synergySystem_.recompute(state_);
-                    setStatusMessage("Sold " + unitName + " for " + std::to_string(result.goldGained) + "g");
-                } else {
-                    setStatusMessage("Sell failed");
-                }
-                return false;
-            },
-            [&](EquipFromPool equip) {
-                if (equipmentSystem_.equipFromPool(state_, equip.poolIndex, equip.unitId)) {
-                    synergySystem_.recompute(state_);
-                }
-                return false;
-            },
-        }, command);
+            command);
         if (stopFrame) {
             return true;
         }
@@ -235,7 +236,7 @@ bool GameApp::handleLoad() {
 }
 
 void GameApp::setStatusMessage(std::string message) {
-    statusMessage_ = std::move(message);
+    statusMessage_      = std::move(message);
     statusMessageTimer_ = StatusMessageSeconds;
 }
 

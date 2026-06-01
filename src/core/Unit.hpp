@@ -11,22 +11,22 @@
 namespace synera {
 
 struct UnitStats {
-    int maxHp = 300;
-    int atk = 30;
-    int range = 1;
-    int maxMana = 60;
+    int maxHp            = 300;
+    int atk              = 30;
+    int range            = 1;
+    int maxMana          = 60;
     float attackInterval = 1.0F;
-    float moveInterval = 0.25F;
+    float moveInterval   = 0.25F;
 };
 
 struct UnitRuntime {
-    int hp = 300;
-    int mana = 0;
-    UnitState state = UnitState::Idle;
-    UnitId targetId = InvalidUnitId;
+    int hp            = 300;
+    int mana          = 0;
+    UnitState state   = UnitState::Idle;
+    UnitId targetId   = InvalidUnitId;
     float attackTimer = 0.0F;
-    float moveTimer = 0.0F;
-    float stunTimer = 0.0F;
+    float moveTimer   = 0.0F;
+    float stunTimer   = 0.0F;
     std::optional<AxialPos> combatStartPos;
 };
 

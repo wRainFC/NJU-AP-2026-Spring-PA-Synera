@@ -14,7 +14,7 @@ struct AxialPos {
     int q = 0;
     int r = 0;
 
-    friend bool operator==(const AxialPos&, const AxialPos&) = default;
+    friend bool operator==(const AxialPos &, const AxialPos &) = default;
 };
 
 // Odd-r offset coordinate used only when adapting axial positions to storage or screen layout.
@@ -22,7 +22,7 @@ struct OffsetPos {
     int col = 0;
     int row = 0;
 
-    friend bool operator==(const OffsetPos&, const OffsetPos&) = default;
+    friend bool operator==(const OffsetPos &, const OffsetPos &) = default;
 };
 
 enum class Owner { PlayerCtrl, EnemyCtrl };

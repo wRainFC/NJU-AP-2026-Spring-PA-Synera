@@ -15,7 +15,7 @@ namespace {
 
 struct SearchNode {
     AxialPos pos;
-    int cost = 0;
+    int cost     = 0;
     int priority = 0;
 };
 
@@ -64,8 +64,8 @@ std::vector<AxialPos> Pathfinder::findPathToAttackRange(const Board& board, Axia
 
     bestCost[static_cast<std::size_t>(cellIndex(board, start))] = 0;
     frontier.push(SearchNode{
-        .pos = start,
-        .cost = 0,
+        .pos      = start,
+        .cost     = 0,
         .priority = hex::hexDistance(start, target),
     });
 
@@ -87,7 +87,7 @@ std::vector<AxialPos> Pathfinder::findPathToAttackRange(const Board& board, Axia
                 return;
             }
 
-            const int nextCost = current.cost + 1;
+            const int nextCost          = current.cost + 1;
             const std::size_t nextIndex = static_cast<std::size_t>(cellIndex(board, next));
             if (nextCost >= bestCost[nextIndex]) {
                 return;
@@ -96,8 +96,8 @@ std::vector<AxialPos> Pathfinder::findPathToAttackRange(const Board& board, Axia
             bestCost[nextIndex] = nextCost;
             cameFrom[nextIndex] = current.pos;
             frontier.push(SearchNode{
-                .pos = next,
-                .cost = nextCost,
+                .pos      = next,
+                .cost     = nextCost,
                 .priority = nextCost + hex::hexDistance(next, target),
             });
         });

@@ -54,9 +54,9 @@ bool UpgradeSystem::tryMergeAfterGain(GameState& state, UnitId gainedUnitId) {
 
         ++gained->star;
         gained->recomputeDerivedStats();
-        gained->runtime.hp = gained->derivedStats.maxHp;
+        gained->runtime.hp   = gained->derivedStats.maxHp;
         gained->runtime.mana = 0;
-        merged = true;
+        merged               = true;
     }
 }
 

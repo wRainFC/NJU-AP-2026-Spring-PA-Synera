@@ -67,8 +67,8 @@ inline constexpr std::array<ShopTierWeights, config::MaxPlayerLevel> TierOddsByL
 [[nodiscard]] ShopOffer offerFrom(const ShopPoolEntry& entry) {
     return ShopOffer{
         .unitTemplateId = std::string(entry.templateId),
-        .cost = entry.cost,
-        .tier = entry.tier,
+        .cost           = entry.cost,
+        .tier           = entry.tier,
     };
 }
 
@@ -84,8 +84,8 @@ Shop::Offers ShopPool::rollOffers(ShopRollContext context, std::mt19937& rng) co
 
 ShopOffer ShopPool::rollOffer(ShopRollContext context, std::mt19937& rng) const {
     const ShopTierWeights tierWeights = tierWeightsForLevel(context.playerLevel);
-    const int tier = rollTier(tierWeights, rng);
-    auto candidates = candidatesForTier(tier);
+    const int tier                    = rollTier(tierWeights, rng);
+    auto candidates                   = candidatesForTier(tier);
     if (candidates.empty()) {
         candidates = fallbackCandidates(highestAvailableTier(tierWeights));
     }

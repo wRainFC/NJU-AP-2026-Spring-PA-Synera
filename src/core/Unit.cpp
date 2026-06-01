@@ -76,35 +76,35 @@ void Unit::gainMana(int amount) noexcept {
 }
 
 void Unit::recomputeDerivedStats() noexcept {
-    const int previousMaxHp = derivedStats.maxHp;
-    const int previousHp = runtime.hp;
+    const int previousMaxHp     = derivedStats.maxHp;
+    const int previousHp        = runtime.hp;
     const int previousMissingHp = std::max(0, previousMaxHp - previousHp);
 
     derivedStats = baseStats;
-    mechanics = {};
+    mechanics    = {};
 
     const float starMultiplier = 1.0F + 0.7F * static_cast<float>(star - 1);
-    derivedStats.maxHp = scaledInt(derivedStats.maxHp, starMultiplier);
-    derivedStats.atk = scaledInt(derivedStats.atk, starMultiplier);
+    derivedStats.maxHp         = scaledInt(derivedStats.maxHp, starMultiplier);
+    derivedStats.atk           = scaledInt(derivedStats.atk, starMultiplier);
 
     if (const auto modifier = equipment.and_then(equipmentStatModifier)) {
         applyStatModifier(derivedStats, *modifier);
     }
 
-    runtime.hp = runtime.state == UnitState::Dead
-                     ? 0
-                     : std::clamp(derivedStats.maxHp - previousMissingHp, 0, derivedStats.maxHp);
+    runtime.hp   = runtime.state == UnitState::Dead
+                       ? 0
+                       : std::clamp(derivedStats.maxHp - previousMissingHp, 0, derivedStats.maxHp);
     runtime.mana = std::clamp(runtime.mana, 0, derivedStats.maxMana);
 }
 
 void Unit::resetForCombat() noexcept {
-    runtime.hp = derivedStats.maxHp;
-    runtime.mana = 0;
-    runtime.state = UnitState::Idle;
-    runtime.targetId = InvalidUnitId;
+    runtime.hp          = derivedStats.maxHp;
+    runtime.mana        = 0;
+    runtime.state       = UnitState::Idle;
+    runtime.targetId    = InvalidUnitId;
     runtime.attackTimer = 0.0F;
-    runtime.moveTimer = 0.0F;
-    runtime.stunTimer = 0.0F;
+    runtime.moveTimer   = 0.0F;
+    runtime.stunTimer   = 0.0F;
     runtime.combatStartPos.reset();
 }
 

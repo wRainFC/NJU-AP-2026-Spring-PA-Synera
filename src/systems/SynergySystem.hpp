@@ -11,9 +11,9 @@ class GameState;
 // Display-ready trait state derived from the current player board.
 struct TraitSummary {
     Trait trait;
-    int count = 0;
+    int count               = 0;
     int activationThreshold = 0;
-    bool active = false;
+    bool active             = false;
     std::string_view name;
     std::string_view effectDescription;
 };

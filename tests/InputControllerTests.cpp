@@ -20,11 +20,11 @@ namespace {
 [[nodiscard]] synera::PointerInput pointer(Vector2 position, bool pressed = false, bool down = false,
                                            bool released = false) noexcept {
     return synera::PointerInput{
-        .position = position,
+        .position            = position,
         .insideVirtualCanvas = true,
-        .leftPressed = pressed,
-        .leftReleased = released,
-        .leftDown = down,
+        .leftPressed         = pressed,
+        .leftReleased        = released,
+        .leftDown            = down,
     };
 }
 
@@ -70,7 +70,7 @@ TEST_CASE("InputController starts a unit drag only after the configured threshol
     CHECK(holdResult.commands.empty());
 
     const synera::InputReadModel model = input.readModel(state);
-    const auto* ghost = std::get_if<synera::UnitDragGhost>(&model.dragDrop.ghost);
+    const auto* ghost                  = std::get_if<synera::UnitDragGhost>(&model.dragDrop.ghost);
     REQUIRE(ghost != nullptr);
     CHECK(ghost->unitId == unit);
     CHECK(model.selectedUnitId == unit);
@@ -108,7 +108,8 @@ TEST_CASE("InputController emits placement and sell commands for unit drops", "[
     CHECK(sell->unitId == unit);
 }
 
-TEST_CASE("InputController emits equipment drop commands without changing selection on click", "[ui][input]") {
+TEST_CASE("InputController emits equipment drop commands without changing selection on click",
+          "[ui][input]") {
     synera::GameState state;
     synera::Layout layout;
     synera::InputController input;
@@ -138,7 +139,8 @@ TEST_CASE("InputController emits equipment drop commands without changing select
     CHECK(equip->unitId == unit);
 }
 
-TEST_CASE("InputController emits immediate UI commands and clears selection from empty clicks", "[ui][input]") {
+TEST_CASE("InputController emits immediate UI commands and clears selection from empty clicks",
+          "[ui][input]") {
     synera::GameState state;
     synera::Layout layout;
     synera::InputController input;

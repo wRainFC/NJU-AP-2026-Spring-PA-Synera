@@ -105,7 +105,7 @@ TEST_CASE("ShopSystem sells player units and clears placement", "[shop]") {
 
     auto* unit = state.findUnit(unitId);
     REQUIRE(unit != nullptr);
-    unit->star = 2;
+    unit->star           = 2;
     const int goldBefore = state.player().gold;
 
     const synera::ShopSellResult result = shopSystem.sellUnit(state, unitId);

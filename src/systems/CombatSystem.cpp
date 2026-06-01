@@ -30,7 +30,7 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
 
     Unit* target = acquireTarget(state, unit);
     if (target == nullptr) {
-        unit.runtime.state = UnitState::Idle;
+        unit.runtime.state    = UnitState::Idle;
         unit.runtime.targetId = InvalidUnitId;
         return;
     }
@@ -63,11 +63,11 @@ Unit* CombatSystem::acquireTarget(GameState& state, const Unit& unit) {
             return;
         }
 
-        const OffsetPos offset = hex::axialToOddR(*candidate.boardPos);
+        const OffsetPos offset  = hex::axialToOddR(*candidate.boardPos);
         const auto candidateKey = std::tuple{hex::hexDistance(*unit.boardPos, *candidate.boardPos),
                                              candidate.runtime.hp, offset.col, -offset.row, candidate.id};
         if (candidateKey < bestKey) {
-            best = &candidate;
+            best    = &candidate;
             bestKey = candidateKey;
         }
     });
@@ -79,7 +79,7 @@ void CombatSystem::updateStun(Unit& unit, float dt) {
     unit.runtime.stunTimer -= dt;
     if (unit.runtime.stunTimer <= 0.0F) {
         unit.runtime.stunTimer = 0.0F;
-        unit.runtime.state = UnitState::Idle;
+        unit.runtime.state     = UnitState::Idle;
     }
 }
 

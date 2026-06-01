@@ -12,7 +12,7 @@ public:
     GameWindow() = default;
     ~GameWindow();
 
-    GameWindow(const GameWindow&) = delete;
+    GameWindow(const GameWindow&)            = delete;
     GameWindow& operator=(const GameWindow&) = delete;
 
     void init(int virtualWidth, int virtualHeight, std::string_view title);
@@ -27,9 +27,9 @@ public:
 
 private:
     RenderTexture2D target_{};
-    int virtualWidth_ = 0;
+    int virtualWidth_  = 0;
     int virtualHeight_ = 0;
-    bool initialized_ = false;
+    bool initialized_  = false;
 
     [[nodiscard]] float viewportScale() const noexcept;
 };

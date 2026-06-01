@@ -12,7 +12,7 @@ namespace synera::ui {
 namespace {
 
 constexpr float FontSpacing = 0.0F;
-const Font* CurrentFont = nullptr;
+const Font* CurrentFont     = nullptr;
 
 [[nodiscard]] std::string owned(std::string_view text) {
     return std::string{text};
@@ -94,8 +94,8 @@ void drawText(std::string_view text, int x, int y, int fontSize, Color color) {
 void drawTextInRect(std::string_view text, Rectangle rect, int fontSize, Color color,
                     HorizontalAlign horizontal, VerticalAlign vertical, float padding) {
     const float availableWidth = std::max(0.0F, rect.width - padding * 2.0F);
-    const int fittedFontSize = fitFontSize(text, availableWidth, fontSize);
-    const int width = measureText(text, fittedFontSize);
+    const int fittedFontSize   = fitFontSize(text, availableWidth, fontSize);
+    const int width            = measureText(text, fittedFontSize);
 
     float x = rect.x + padding;
     if (horizontal == HorizontalAlign::Center) {
@@ -164,10 +164,10 @@ Rectangle panelNear(Vector2 anchor, float width, float height) noexcept {
 }
 
 Rectangle panelNear(Vector2 anchor, std::span<const std::string> lines, PanelStyle style) {
-    const Rectangle bounds = virtualCanvasRect();
+    const Rectangle bounds     = virtualCanvasRect();
     const float availableWidth = std::max(1.0F, bounds.width - 48.0F);
-    const float maxWidth = std::min(style.maxWidth, availableWidth);
-    int widestLine = 0;
+    const float maxWidth       = std::min(style.maxWidth, availableWidth);
+    int widestLine             = 0;
     for (const std::string& line : lines) {
         widestLine = std::max(widestLine, measureText(line, style.fontSize));
     }
@@ -185,7 +185,7 @@ void drawPanel(Rectangle rect, std::span<const std::string> lines, const Texture
     DrawRectangleLinesEx(rect, 1.0F, theme::PanelBorder);
 
     const float textWidth = std::max(0.0F, rect.width - style.padding * 2.0F);
-    int y = rounded(rect.y + style.padding);
+    int y                 = rounded(rect.y + style.padding);
     for (const std::string& line : lines) {
         drawTextInRect(line,
                        Rectangle{rect.x + style.padding, static_cast<float>(y), textWidth,

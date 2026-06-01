@@ -26,8 +26,8 @@ enum class TextureSlot {
 
 struct SpriteAnimationView {
     const Texture2D* texture = nullptr;
-    int frameCount = 1;
-    float framesPerSecond = 8.0F;
+    int frameCount           = 1;
+    float framesPerSecond    = 8.0F;
 
     [[nodiscard]] bool loaded() const noexcept { return texture != nullptr; }
 };
@@ -38,7 +38,7 @@ public:
     explicit TextureResource(Texture2D texture) noexcept;
     ~TextureResource();
 
-    TextureResource(const TextureResource&) = delete;
+    TextureResource(const TextureResource&)            = delete;
     TextureResource& operator=(const TextureResource&) = delete;
     TextureResource(TextureResource&& other) noexcept;
     TextureResource& operator=(TextureResource&& other) noexcept;
@@ -58,7 +58,7 @@ public:
     explicit FontResource(Font font) noexcept;
     ~FontResource();
 
-    FontResource(const FontResource&) = delete;
+    FontResource(const FontResource&)            = delete;
     FontResource& operator=(const FontResource&) = delete;
     FontResource(FontResource&& other) noexcept;
     FontResource& operator=(FontResource&& other) noexcept;
@@ -75,16 +75,16 @@ class RenderAssets {
 public:
     struct SpriteAnimation {
         TextureResource texture;
-        int frameCount = 1;
+        int frameCount        = 1;
         float framesPerSecond = 8.0F;
     };
 
     RenderAssets() = default;
     ~RenderAssets();
 
-    RenderAssets(const RenderAssets&) = delete;
-    RenderAssets& operator=(const RenderAssets&) = delete;
-    RenderAssets(RenderAssets&&) noexcept = default;
+    RenderAssets(const RenderAssets&)                = delete;
+    RenderAssets& operator=(const RenderAssets&)     = delete;
+    RenderAssets(RenderAssets&&) noexcept            = default;
     RenderAssets& operator=(RenderAssets&&) noexcept = default;
 
     void load(const std::filesystem::path& assetRoot);
