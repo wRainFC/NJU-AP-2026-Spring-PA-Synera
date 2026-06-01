@@ -81,17 +81,17 @@ inline constexpr std::array EquipmentInfos{
                   .statModifier = EquipmentStatModifier{.maxManaDelta = -30, .minMaxMana = 20}},
 };
 
-[[nodiscard]] const TraitInfo* findTraitInfo(Trait trait) noexcept {
+[[nodiscard]] const TraitInfo *findTraitInfo(Trait trait) noexcept {
     const auto iter = std::ranges::find(TraitInfos, trait, &TraitInfo::trait);
     return iter == TraitInfos.end() ? nullptr : &*iter;
 }
 
-[[nodiscard]] const PhaseInfo* findPhaseInfo(Phase phase) noexcept {
+[[nodiscard]] const PhaseInfo *findPhaseInfo(Phase phase) noexcept {
     const auto iter = std::ranges::find(PhaseInfos, phase, &PhaseInfo::phase);
     return iter == PhaseInfos.end() ? nullptr : &*iter;
 }
 
-[[nodiscard]] const EquipmentInfo* findEquipmentInfo(EquipmentType equipment) noexcept {
+[[nodiscard]] const EquipmentInfo *findEquipmentInfo(EquipmentType equipment) noexcept {
     const auto iter = std::ranges::find(EquipmentInfos, equipment, &EquipmentInfo::equipment);
     return iter == EquipmentInfos.end() ? nullptr : &*iter;
 }
@@ -99,7 +99,7 @@ inline constexpr std::array EquipmentInfos{
 }  // namespace
 
 std::string_view phaseName(Phase phase) noexcept {
-    const PhaseInfo* info = findPhaseInfo(phase);
+    const PhaseInfo *info = findPhaseInfo(phase);
     return info == nullptr ? "Unknown" : info->name;
 }
 
@@ -108,27 +108,27 @@ std::span<const Trait> allTraits() noexcept {
 }
 
 std::string_view traitName(Trait trait) noexcept {
-    const TraitInfo* info = findTraitInfo(trait);
+    const TraitInfo *info = findTraitInfo(trait);
     return info == nullptr ? "Trait" : info->name;
 }
 
 int traitActivationThreshold(Trait trait) noexcept {
-    const TraitInfo* info = findTraitInfo(trait);
+    const TraitInfo *info = findTraitInfo(trait);
     return info == nullptr ? 0 : info->activationThreshold;
 }
 
 std::string_view traitEffectDescription(Trait trait) noexcept {
-    const TraitInfo* info = findTraitInfo(trait);
+    const TraitInfo *info = findTraitInfo(trait);
     return info == nullptr ? "Unknown trait." : info->effectDescription;
 }
 
 std::string_view equipmentName(EquipmentType equipment) noexcept {
-    const EquipmentInfo* info = findEquipmentInfo(equipment);
+    const EquipmentInfo *info = findEquipmentInfo(equipment);
     return info == nullptr ? "Equip" : info->name;
 }
 
 std::optional<EquipmentStatModifier> equipmentStatModifier(EquipmentType equipment) noexcept {
-    const EquipmentInfo* info = findEquipmentInfo(equipment);
+    const EquipmentInfo *info = findEquipmentInfo(equipment);
     return info == nullptr ? std::nullopt : std::optional<EquipmentStatModifier>{info->statModifier};
 }
 
