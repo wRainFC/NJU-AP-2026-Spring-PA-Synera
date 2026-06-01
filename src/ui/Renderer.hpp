@@ -16,7 +16,7 @@ class Layout;
 struct RenderContext {
     const GameState& state;
     const Layout& layout;
-    const DragState& dragState;
+    InputReadModel input;
     PointerInput pointer;
     std::string_view statusMessage;
     std::string_view outcomeMessage;

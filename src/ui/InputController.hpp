@@ -2,33 +2,33 @@
 
 #include "ui/UiState.hpp"
 
+#include <memory>
+
 namespace synera {
 
 class GameState;
 class Layout;
-class EquipmentSystem;
-class RoundSystem;
-class ShopSystem;
-class SynergySystem;
-class UpgradeSystem;
 
 class InputController {
 public:
-    [[nodiscard]] InputResult update(GameState& state, const Layout& layout, RoundSystem& roundSystem,
-                                     ShopSystem& shopSystem, UpgradeSystem& upgradeSystem,
-                                     SynergySystem& synergySystem, EquipmentSystem& equipmentSystem,
-                                     const PointerInput& pointer, bool interactionsEnabled);
-    [[nodiscard]] const DragState& dragState() const noexcept;
+    InputController();
+    ~InputController();
+
+    InputController(const InputController&) = delete;
+    InputController& operator=(const InputController&) = delete;
+    InputController(InputController&&) noexcept;
+    InputController& operator=(InputController&&) noexcept;
+
+    [[nodiscard]] InputFrameResult update(const GameState& state, const Layout& layout,
+                                          const PointerInput& pointer, bool interactionsEnabled);
+    [[nodiscard]] InputReadModel readModel(const GameState& state) const;
+    void clearInteraction() noexcept;
+    void clearSelection() noexcept;
+    void selectUnit(UnitId unitId) noexcept;
 
 private:
-    DragState drag_;
-
-    void beginDrag(GameState& state, const Layout& layout, Vector2 mouse);
-    void endDrag(GameState& state, const Layout& layout, ShopSystem& shopSystem, SynergySystem& synergySystem,
-                 EquipmentSystem& equipmentSystem, Vector2 mouse, InputResult& result);
-    [[nodiscard]] bool handlePrepClick(GameState& state, const Layout& layout, ShopSystem& shopSystem,
-                                       UpgradeSystem& upgradeSystem, SynergySystem& synergySystem,
-                                       Vector2 mouse);
+    class Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace synera

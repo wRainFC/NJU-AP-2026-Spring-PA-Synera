@@ -7,6 +7,7 @@ namespace synera::config {
 inline constexpr int WindowWidth = 1600;
 inline constexpr int WindowHeight = 900;
 inline constexpr int TargetFps = 60;
+inline constexpr float DragStartThresholdVirtualPixels = 6.0F;
 
 inline constexpr int BoardWidth = 8;
 inline constexpr int BoardHeight = 8;

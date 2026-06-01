@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace synera {
@@ -43,6 +44,18 @@ namespace {
             .value_or(nullptr);
     }
     return nullptr;
+}
+
+[[nodiscard]] const UnitDragGhost* unitDragGhost(const InputReadModel& input) noexcept {
+    return std::get_if<UnitDragGhost>(&input.dragDrop.ghost);
+}
+
+[[nodiscard]] const EquipmentDragGhost* equipmentDragGhost(const InputReadModel& input) noexcept {
+    return std::get_if<EquipmentDragGhost>(&input.dragDrop.ghost);
+}
+
+[[nodiscard]] bool hasDragGhost(const InputReadModel& input) noexcept {
+    return !std::holds_alternative<std::monostate>(input.dragDrop.ghost);
 }
 
 [[nodiscard]] ui::ButtonStyle regularButtonStyle(bool enabled = true) noexcept {
@@ -202,14 +215,16 @@ private:
     }
 
     void drawUnits(const RenderContext& context) {
+        const UnitDragGhost* dragGhost = unitDragGhost(context.input);
         context.state.forEachUnit([&](const Unit& unit) {
-            if ((context.dragState.kind == DragKind::UnitFromBench ||
-                 context.dragState.kind == DragKind::UnitFromBoard) &&
-                unit.id == context.dragState.unitId) {
+            if (dragGhost != nullptr && unit.id == dragGhost->unitId) {
                 return;
             }
             if (const auto rect = unitRect(unit, context.layout)) {
                 UnitItem::drawUnit(assets_, unit, *rect, context.animationTimeSeconds);
+                if (context.input.selectedUnitId == unit.id) {
+                    DrawRectangleLinesEx(*rect, 3.0F, GOLD);
+                }
             }
         });
     }
@@ -253,9 +268,8 @@ private:
     // Pointer-driven feedback.
     void drawDragPreview(const RenderContext& context) {
         const Vector2 mouse = context.pointer.position;
-        if (context.dragState.kind == DragKind::UnitFromBench ||
-            context.dragState.kind == DragKind::UnitFromBoard) {
-            const Unit* unit = context.state.findUnit(context.dragState.unitId);
+        if (const UnitDragGhost* ghost = unitDragGhost(context.input); ghost != nullptr) {
+            const Unit* unit = context.state.findUnit(ghost->unitId);
             if (unit == nullptr) {
                 return;
             }
@@ -264,19 +278,15 @@ private:
             return;
         }
 
-        if (context.dragState.kind == DragKind::EquipmentFromPool && context.dragState.sourceEquipmentIndex) {
-            const auto pool = context.state.equipmentPool();
-            if (*context.dragState.sourceEquipmentIndex >= pool.size()) {
-                return;
-            }
+        if (const EquipmentDragGhost* ghost = equipmentDragGhost(context.input); ghost != nullptr) {
             const Rectangle rect{mouse.x - 30.0F, mouse.y - 30.0F, 60.0F, 60.0F};
-            UnitItem::drawEquipmentIcon(assets_, pool[*context.dragState.sourceEquipmentIndex], rect);
+            UnitItem::drawEquipmentIcon(assets_, ghost->equipment, rect);
             DrawRectangleLinesEx(rect, 1.0F, GOLD);
         }
     }
 
     void drawHoverPanel(const RenderContext& context) {
-        if (context.dragState.kind != DragKind::None || !context.pointer.insideVirtualCanvas) {
+        if (hasDragGhost(context.input) || !context.pointer.insideVirtualCanvas) {
             return;
         }
 

@@ -13,6 +13,7 @@
 #include "ui/Layout.hpp"
 #include "ui/Renderer.hpp"
 
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -31,6 +32,7 @@ private:
     void render();
     void shutdown();
     void startNewRun();
+    [[nodiscard]] bool applyInputCommands(std::span<const InputCommand> commands);
     void handleSave();
     [[nodiscard]] bool handleLoad();
     void setStatusMessage(std::string message);

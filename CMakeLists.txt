@@ -67,20 +67,26 @@ add_library(synera_logic
 target_include_directories(synera_logic PUBLIC src)
 target_link_libraries(synera_logic PUBLIC ${SYNERA_CEREAL_TARGET})
 
+add_library(synera_ui
+    src/ui/InputController.cpp
+    src/ui/Layout.cpp
+    src/ui/UiDrawing.cpp
+)
+
+target_include_directories(synera_ui PUBLIC src)
+target_link_libraries(synera_ui PUBLIC synera_logic raylib)
+
 add_executable(synera
     src/main.cpp
     src/app/GameApp.cpp
     src/ui/GameWindow.cpp
     src/ui/GridItem.cpp
-    src/ui/InputController.cpp
-    src/ui/Layout.cpp
     src/ui/RenderAssets.cpp
     src/ui/Renderer.cpp
-    src/ui/UiDrawing.cpp
     src/ui/UnitItem.cpp
 )
 
-target_link_libraries(synera PRIVATE synera_logic raylib)
+target_link_libraries(synera PRIVATE synera_ui)
 
 add_custom_target(synera_assets
     COMMAND ${CMAKE_COMMAND} -E rm -rf
@@ -94,9 +100,11 @@ add_dependencies(synera synera_assets)
 
 if (MSVC)
     target_compile_options(synera_logic PRIVATE /W4 /permissive-)
+    target_compile_options(synera_ui PRIVATE /W4 /permissive-)
     target_compile_options(synera PRIVATE /W4 /permissive-)
 else()
     target_compile_options(synera_logic PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(synera_ui PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(synera PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
@@ -121,6 +129,7 @@ if (BUILD_TESTING)
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
         tests/EconomySystemsTests.cpp
+        tests/InputControllerTests.cpp
         tests/MetadataTests.cpp
         tests/RoundSystemTests.cpp
         tests/SaveSystemTests.cpp
@@ -128,7 +137,7 @@ if (BUILD_TESTING)
         tests/UnitCatalogTests.cpp
     )
 
-    target_link_libraries(synera_tests PRIVATE synera_logic Catch2::Catch2WithMain)
+    target_link_libraries(synera_tests PRIVATE synera_logic synera_ui Catch2::Catch2WithMain)
 
     if (MSVC)
         target_compile_options(synera_tests PRIVATE /W4 /permissive-)
