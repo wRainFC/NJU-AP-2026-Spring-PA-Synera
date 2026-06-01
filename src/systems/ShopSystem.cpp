@@ -5,6 +5,7 @@
 #include "core/GameState.hpp"
 
 #include <algorithm>
+#include <random>
 
 namespace synera {
 
@@ -18,9 +19,18 @@ namespace {
     return mode == ShopRefreshMode::RoundStart;
 }
 
+[[nodiscard]] std::uint32_t defaultShopSeed() {
+    if constexpr (!config::EnableRandom) {
+        return config::ShopRandomSeed;
+    }
+
+    std::random_device entropy;
+    return entropy();
+}
+
 }  // namespace
 
-ShopSystem::ShopSystem() : ShopSystem(config::ShopRandomSeed) {}
+ShopSystem::ShopSystem() : ShopSystem(defaultShopSeed()) {}
 
 ShopSystem::ShopSystem(std::uint32_t seed) : rng_(seed) {}
 
