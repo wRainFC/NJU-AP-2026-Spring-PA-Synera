@@ -1,6 +1,6 @@
 #include "ui/Renderer.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 #include "core/Metadata.hpp"

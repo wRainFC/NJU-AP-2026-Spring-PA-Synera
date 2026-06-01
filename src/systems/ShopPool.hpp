@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "core/Shop.hpp"
 
 #include <array>

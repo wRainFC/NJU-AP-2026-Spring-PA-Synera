@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
-
 namespace synera {
 
 using UnitId = std::uint32_t;
@@ -34,13 +32,5 @@ enum class UnitState { Idle, Moving, Attacking, Casting, Stunned, Dead };
 enum class Trait { Warrior, Mage, Ranger, Guardian, Mystic, Assassin };
 
 enum class EquipmentType { IronSword, ChainVest, SwiftGlove, ManaCrystal };
-
-struct ShopOffer {
-    std::string unitTemplateId;
-    int cost = 0;
-    int tier = 1;
-
-    [[nodiscard]] bool empty() const noexcept { return unitTemplateId.empty(); }
-};
 
 }  // namespace synera

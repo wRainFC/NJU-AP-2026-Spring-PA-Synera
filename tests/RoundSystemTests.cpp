@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 #include "systems/RoundSystem.hpp"

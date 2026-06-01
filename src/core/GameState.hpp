@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "board/Bench.hpp"
 #include "board/Board.hpp"
 #include "core/Placement.hpp"

@@ -1,6 +1,6 @@
 #include "ui/InputController.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "core/GameState.hpp"
 #include "ui/Layout.hpp"
 #include "ui/UiDrawing.hpp"

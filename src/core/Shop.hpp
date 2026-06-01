@@ -1,7 +1,7 @@
 #pragma once
 
-#include "app/GameConfig.hpp"
-#include "core/Types.hpp"
+#include "config/GameConfig.hpp"
+#include "core/ShopOffer.hpp"
 
 #include <array>
 #include <functional>

@@ -1,6 +1,6 @@
 #include "ui/UiDrawing.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "ui/UiTheme.hpp"
 
 #include <algorithm>

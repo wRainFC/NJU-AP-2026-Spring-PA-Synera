@@ -1,6 +1,6 @@
 #include "app/GameApp.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "ui/UiTheme.hpp"
 
 #include <span>

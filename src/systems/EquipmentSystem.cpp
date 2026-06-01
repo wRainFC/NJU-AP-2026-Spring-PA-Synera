@@ -1,6 +1,6 @@
 #include "systems/EquipmentSystem.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "core/GameState.hpp"
 
 #include <array>

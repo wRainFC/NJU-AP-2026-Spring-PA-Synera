@@ -1,6 +1,6 @@
 #include "systems/RoundSystem.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 

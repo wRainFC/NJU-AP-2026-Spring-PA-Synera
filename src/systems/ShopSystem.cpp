@@ -1,6 +1,6 @@
 #include "systems/ShopSystem.hpp"
 
-#include "app/GameConfig.hpp"
+#include "config/GameConfig.hpp"
 #include "core/Contract.hpp"
 #include "core/GameState.hpp"
 
