@@ -98,11 +98,13 @@ public:
         drawUnits(context);
         drawDragPreview(context);
         drawHoverPanel(context);
-        drawOutcomeOverlay(context);
 
         // Controls drawn last so they stay readable over the base scene.
         drawStartButton(context);
         drawSaveLoadButtons(context);
+
+        // Modal overlays cover all regular controls.
+        drawModalOverlay(context);
     }
 
 private:
@@ -328,26 +330,35 @@ private:
     }
 
     // Modal overlays.
-    void drawOutcomeOverlay(const RenderContext& context) {
-        if (context.outcomeMessage.empty()) {
+    void drawModalOverlay(const RenderContext& context) {
+        if (!context.modal) {
             return;
         }
 
+        const ModalModel& modal = *context.modal;
         DrawRectangle(0, 0, config::WindowWidth, config::WindowHeight, ui::theme::Overlay);
-        const Rectangle panel{static_cast<float>(config::WindowWidth) / 2.0F - 320.0F,
-                              static_cast<float>(config::WindowHeight) / 2.0F - 120.0F, 640.0F, 240.0F};
+        const Rectangle panel = context.layout.modalPanelRect();
         ui::drawTexturedRect(assets_.texture(TextureSlot::Panel), panel, ui::theme::PanelStrong,
                              Color{255, 255, 255, 245});
-        DrawRectangleLinesEx(panel, 2.0F, GOLD);
-        ui::drawTextInRect(context.outcomeMessage, Rectangle{panel.x, panel.y + 34.0F, panel.width, 58.0F},
-                           44, GOLD, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
-        ui::drawTextInRect("Choose how to continue.",
-                           Rectangle{panel.x, panel.y + 102.0F, panel.width, 32.0F}, 24, RAYWHITE,
-                           ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
-        ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.outcomeRestartButtonRect(),
-                       "New Run", regularButtonStyle(), 24);
-        ui::drawButton(assets_.texture(TextureSlot::Button), context.layout.outcomeLoadButtonRect(),
-                       "Load Save", regularButtonStyle(), 24);
+        DrawRectangleLinesEx(panel, 2.0F, modal.accent);
+
+        ui::drawTextInRect(modal.title, Rectangle{panel.x, panel.y + 28.0F, panel.width, 56.0F}, 40,
+                           modal.accent, ui::HorizontalAlign::Center,
+                           ui::VerticalAlign::Middle);
+
+        const Rectangle linesRect{panel.x + 96.0F, panel.y + 108.0F, panel.width - 192.0F, 170.0F};
+        for (std::size_t index : std::views::iota(std::size_t{0}, modal.lines.size())) {
+            ui::drawTextInRect(modal.lines[index],
+                               Rectangle{linesRect.x, linesRect.y + static_cast<float>(index) * 38.0F,
+                                         linesRect.width, 32.0F},
+                               24, RAYWHITE, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
+        }
+
+        for (std::size_t index : std::views::iota(std::size_t{0}, modal.buttons.size())) {
+            ui::drawButton(assets_.texture(TextureSlot::Button),
+                           context.layout.modalButtonRect(index, modal.buttons.size()),
+                           modal.buttons[index].label, regularButtonStyle(), 24);
+        }
     }
 };
 

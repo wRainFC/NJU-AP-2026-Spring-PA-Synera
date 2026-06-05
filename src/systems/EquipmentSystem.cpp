@@ -1,24 +1,12 @@
 #include "systems/EquipmentSystem.hpp"
 
-#include "config/GameConfig.hpp"
+#include "config/EquipmentConfig.hpp"
 #include "core/GameState.hpp"
 
-#include <array>
 #include <cstddef>
 #include <random>
 
 namespace synera {
-
-namespace {
-
-inline constexpr std::array EquipmentPool{
-    EquipmentType::IronSword,
-    EquipmentType::ChainVest,
-    EquipmentType::SwiftGlove,
-    EquipmentType::ManaCrystal,
-};
-
-}  // namespace
 
 EquipmentSystem::EquipmentSystem() : EquipmentSystem(config::EquipmentRandomSeed) {}
 
@@ -28,19 +16,20 @@ void EquipmentSystem::recomputeStats(GameState& state) {
     state.forEachUnit([](Unit& unit) { unit.recomputeDerivedStats(); });
 }
 
-bool EquipmentSystem::tryGrantRoundDrop(GameState& state, bool playerWon) {
-    if (!playerWon) {
-        return false;
+EquipmentDropResult EquipmentSystem::tryGrantRoundDrop(GameState& state, bool playerWon) {
+    if (config::RoundDropRule.requiresWin && !playerWon) {
+        return {};
     }
 
     std::uniform_int_distribution<int> chance(1, 100);
-    if (chance(rng_) > config::EquipmentDropChancePercent) {
-        return false;
+    if (chance(rng_) > config::RoundDropRule.chancePercent) {
+        return {};
     }
 
-    std::uniform_int_distribution<std::size_t> equipment(0, EquipmentPool.size() - 1);
-    state.addEquipment(EquipmentPool[equipment(rng_)]);
-    return true;
+    std::uniform_int_distribution<std::size_t> equipment(0, config::EquipmentPool.size() - 1);
+    const EquipmentType droppedEquipment = config::EquipmentPool[equipment(rng_)];
+    state.addEquipment(droppedEquipment);
+    return EquipmentDropResult{.dropped = true, .equipment = droppedEquipment};
 }
 
 bool EquipmentSystem::equip(GameState& state, UnitId unitId, EquipmentType equipment) {

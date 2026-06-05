@@ -52,8 +52,17 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
     player->runtime.hp   = 1;
     player->runtime.mana = 25;
 
-    rounds.enterResolve(state, true);
+    const synera::RoundResult result = rounds.enterResolve(state, true);
 
+    CHECK(result.applied);
+    CHECK(result.playerWon);
+    CHECK(result.resolvedRound == 1);
+    CHECK(result.goldBefore == synera::config::InitialGold);
+    CHECK(result.goldAfter == synera::config::InitialGold + synera::config::WinGoldReward);
+    CHECK(result.hpBefore == synera::config::InitialPlayerHp);
+    CHECK(result.hpAfter == synera::config::InitialPlayerHp);
+    CHECK(result.nextRound == 2);
+    CHECK(result.advancedRound);
     CHECK(state.phase() == synera::Phase::Resolve);
     CHECK(state.player().gold == synera::config::InitialGold + synera::config::WinGoldReward);
     CHECK(state.player().currentRound == 2);
@@ -67,6 +76,27 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
         enemiesRemain = enemiesRemain || unit.owner == synera::Owner::EnemyCtrl;
     });
     CHECK_FALSE(enemiesRemain);
+}
+
+TEST_CASE("RoundSystem applies data-driven loss settlement without advancing the round", "[round]") {
+    synera::GameState state;
+    synera::RoundSystem rounds;
+    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    REQUIRE(state.placeUnitOnBoard(playerId, pos(0, 4)));
+
+    rounds.startCombat(state);
+    const synera::RoundResult result = rounds.enterResolve(state, false);
+
+    CHECK(result.applied);
+    CHECK_FALSE(result.playerWon);
+    CHECK(result.resolvedRound == 1);
+    CHECK(result.goldBefore == synera::config::InitialGold);
+    CHECK(result.goldAfter == synera::config::InitialGold + synera::config::LossGoldReward);
+    CHECK(result.hpBefore == synera::config::InitialPlayerHp);
+    CHECK(result.hpAfter == synera::config::InitialPlayerHp - synera::config::LossHpPenalty);
+    CHECK(result.nextRound == 1);
+    CHECK_FALSE(result.advancedRound);
+    CHECK(state.phase() == synera::Phase::Resolve);
 }
 
 TEST_CASE("RoundSystem spawns round-specific enemy waves", "[round]") {

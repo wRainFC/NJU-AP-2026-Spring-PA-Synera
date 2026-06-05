@@ -124,9 +124,15 @@ TEST_CASE("EquipmentSystem grants drops and equips from the pool", "[equipment]"
     synera::EquipmentSystem equipment{123};
     const synera::UnitId unitId = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
 
-    CHECK(equipment.tryGrantRoundDrop(state, true));
+    const synera::EquipmentDropResult drop = equipment.tryGrantRoundDrop(state, true);
+    CHECK(drop.dropped);
+    REQUIRE(drop.equipment);
     CHECK(state.equipmentPool().size() == 1);
-    CHECK_FALSE(equipment.tryGrantRoundDrop(state, false));
+    CHECK(state.equipmentPool().front() == *drop.equipment);
+
+    const synera::EquipmentDropResult noDrop = equipment.tryGrantRoundDrop(state, false);
+    CHECK_FALSE(noDrop.dropped);
+    CHECK_FALSE(noDrop.equipment);
     CHECK(state.equipmentPool().size() == 1);
 
     state.addEquipment(synera::EquipmentType::IronSword);

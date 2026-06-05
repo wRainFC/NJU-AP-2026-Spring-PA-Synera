@@ -20,6 +20,9 @@ public:
     InputController& operator=(InputController&&) noexcept;
 
     [[nodiscard]] InputFrameResult update(const GameState& state, const Layout& layout,
+                                          const PointerInput& pointer, const ModalModel* activeModal,
+                                          bool interactionsEnabled);
+    [[nodiscard]] InputFrameResult update(const GameState& state, const Layout& layout,
                                           const PointerInput& pointer, bool interactionsEnabled);
     [[nodiscard]] InputReadModel readModel(const GameState& state) const;
     void clearInteraction() noexcept;

@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 namespace synera {
@@ -19,7 +20,7 @@ struct RenderContext {
     InputReadModel input;
     PointerInput pointer;
     std::string_view statusMessage;
-    std::string_view outcomeMessage;
+    std::optional<ModalModel> modal;
     float animationTimeSeconds = 0.0F;
     bool interactionsEnabled   = true;
 };

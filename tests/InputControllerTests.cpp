@@ -167,3 +167,66 @@ TEST_CASE("InputController emits immediate UI commands and clears selection from
     REQUIRE(refreshResult.commands.size() == 1);
     CHECK(std::get_if<synera::RefreshShop>(&refreshResult.commands.front()) != nullptr);
 }
+
+TEST_CASE("InputController only emits modal button commands while a modal is active", "[ui][input]") {
+    synera::GameState state;
+    synera::Layout layout;
+    synera::InputController input;
+    const synera::ModalModel modal{
+        .title = "Round 1 Clear",
+        .lines = {"Gold: 8 -> 14 (+6)"},
+        .buttons = {synera::ModalButton{.id = synera::ModalButtonId::ContinueResolve,
+                                         .label = "Continue"}},
+        .accent = GOLD,
+    };
+
+    const synera::InputFrameResult continueResult =
+        input.update(state, layout, pointer(center(layout.modalButtonRect(0, modal.buttons.size())), true,
+                                            true),
+                     &modal, true);
+    REQUIRE(continueResult.commands.size() == 1);
+    const auto* submit = std::get_if<synera::SubmitModalButton>(&continueResult.commands.front());
+    REQUIRE(submit != nullptr);
+    CHECK(submit->id == synera::ModalButtonId::ContinueResolve);
+
+    const synera::InputFrameResult shopResult =
+        input.update(state, layout, pointer(center(layout.shopOfferRect(0)), true, true), &modal, true);
+    CHECK(shopResult.commands.empty());
+
+    const synera::InputFrameResult loadResult =
+        input.update(state, layout, pointer(center(layout.loadButtonRect()), true, true), &modal, true);
+    CHECK(loadResult.commands.empty());
+}
+
+TEST_CASE("InputController routes terminal outcome buttons through modal commands", "[ui][input]") {
+    synera::GameState state;
+    synera::Layout layout;
+    synera::InputController input;
+    const synera::ModalModel modal{
+        .title = "Defeat",
+        .lines = {"Choose how to continue."},
+        .buttons = {
+            synera::ModalButton{.id = synera::ModalButtonId::NewRun, .label = "New Run"},
+            synera::ModalButton{.id = synera::ModalButtonId::LoadSave, .label = "Load Save"},
+        },
+        .accent = RED,
+    };
+
+    const synera::InputFrameResult restartResult =
+        input.update(state, layout, pointer(center(layout.modalButtonRect(0, modal.buttons.size())), true,
+                                            true),
+                     &modal, false);
+    REQUIRE(restartResult.commands.size() == 1);
+    const auto* restart = std::get_if<synera::SubmitModalButton>(&restartResult.commands.front());
+    REQUIRE(restart != nullptr);
+    CHECK(restart->id == synera::ModalButtonId::NewRun);
+
+    const synera::InputFrameResult loadResult =
+        input.update(state, layout, pointer(center(layout.modalButtonRect(1, modal.buttons.size())), true,
+                                            true),
+                     &modal, false);
+    REQUIRE(loadResult.commands.size() == 1);
+    const auto* load = std::get_if<synera::SubmitModalButton>(&loadResult.commands.front());
+    REQUIRE(load != nullptr);
+    CHECK(load->id == synera::ModalButtonId::LoadSave);
+}

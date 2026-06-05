@@ -1,64 +1,10 @@
 #include "systems/RoundSystem.hpp"
 
-#include "config/GameConfig.hpp"
+#include "config/RoundConfig.hpp"
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 
-#include <algorithm>
-#include <array>
-#include <span>
-#include <string_view>
-
 namespace synera {
-
-namespace {
-
-struct EnemySpec {
-    std::string_view templateId;
-    OffsetPos offsetPos;
-};
-
-constexpr std::array RoundOneEnemies{
-    EnemySpec{.templateId = "training_dummy", .offsetPos = OffsetPos{3, 1}},
-};
-
-constexpr std::array RoundTwoEnemies{
-    EnemySpec{.templateId = "training_dummy", .offsetPos = OffsetPos{2, 1}},
-    EnemySpec{.templateId = "training_dummy", .offsetPos = OffsetPos{4, 1}},
-};
-
-constexpr std::array RoundThreeEnemies{
-    EnemySpec{.templateId = "iron_guard", .offsetPos = OffsetPos{2, 1}},
-    EnemySpec{.templateId = "ember_mage", .offsetPos = OffsetPos{5, 1}},
-};
-
-constexpr std::array ScalingEnemies{
-    EnemySpec{.templateId = "iron_guard", .offsetPos = OffsetPos{2, 1}},
-    EnemySpec{.templateId = "storm_archer", .offsetPos = OffsetPos{4, 1}},
-    EnemySpec{.templateId = "field_medic", .offsetPos = OffsetPos{6, 2}},
-};
-
-[[nodiscard]] std::span<const EnemySpec> enemiesForRound(int round) noexcept {
-    if (round <= 1) {
-        return RoundOneEnemies;
-    }
-    if (round == 2) {
-        return RoundTwoEnemies;
-    }
-    if (round == 3) {
-        return RoundThreeEnemies;
-    }
-    return ScalingEnemies;
-}
-
-[[nodiscard]] int enemyStarForRound(int round) noexcept {
-    if (round < 4) {
-        return 1;
-    }
-    return std::clamp(1 + (round - 4) / 3, 1, 3);
-}
-
-}  // namespace
 
 void RoundSystem::startCombat(GameState& state) {
     if (state.phase() != Phase::Prep || state.playerBoardUnitCount() == 0) {
@@ -78,8 +24,8 @@ void RoundSystem::startCombat(GameState& state) {
 
 void RoundSystem::spawnEnemies(GameState& state) {
     state.removeEnemyUnits();
-    const int star = enemyStarForRound(state.player().currentRound);
-    for (const EnemySpec& spec : enemiesForRound(state.player().currentRound)) {
+    const int star = config::enemyStarForRound(state.player().currentRound);
+    for (const config::EnemySpec& spec : config::enemiesForRound(state.player().currentRound)) {
         const UnitId enemy = state.createUnit(spec.templateId, Owner::EnemyCtrl);
         if (Unit* unit = state.findUnit(enemy); unit != nullptr) {
             unit->star = star;
@@ -90,20 +36,40 @@ void RoundSystem::spawnEnemies(GameState& state) {
     }
 }
 
-void RoundSystem::enterResolve(GameState& state, bool playerWon) {
+RoundResult RoundSystem::enterResolve(GameState& state, bool playerWon) {
+    RoundResult result{
+        .applied       = false,
+        .playerWon     = playerWon,
+        .resolvedRound = state.player().currentRound,
+        .goldBefore    = state.player().gold,
+        .goldAfter     = state.player().gold,
+        .hpBefore      = state.player().hp,
+        .hpAfter       = state.player().hp,
+        .nextRound     = state.player().currentRound,
+        .advancedRound = false,
+    };
     if (state.phase() != Phase::Combat) {
-        return;
+        return result;
     }
+
+    const config::RoundRewardRule& rule = config::rewardRuleFor(playerWon);
     state.setPhase(Phase::Resolve);
-    if (playerWon) {
-        state.player().addGold(config::WinGoldReward);
+
+    state.player().addGold(rule.goldReward);
+    state.player().hp += rule.hpDelta;
+    if (rule.advancesRound) {
         ++state.player().currentRound;
-    } else {
-        state.player().hp -= config::LossHpPenalty;
-        state.player().addGold(config::LossGoldReward);
     }
+
     state.removeEnemyUnits();
     state.restorePlayerUnitsAfterCombat();
+
+    result.applied       = true;
+    result.goldAfter     = state.player().gold;
+    result.hpAfter       = state.player().hp;
+    result.nextRound     = state.player().currentRound;
+    result.advancedRound = rule.advancesRound;
+    return result;
 }
 
 void RoundSystem::finishResolve(GameState& state) {

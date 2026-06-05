@@ -226,32 +226,47 @@ void appendIf(InputFrameResult& result, std::optional<InputCommand> command) {
     result.commands.push_back(*command);
 }
 
+[[nodiscard]] std::optional<ModalButtonId> modalButtonAt(const ModalModel& modal, const Layout& layout,
+                                                         Vector2 mouse) {
+    for (std::size_t index = 0; index < modal.buttons.size(); ++index) {
+        if (ui::contains(layout.modalButtonRect(index, modal.buttons.size()), mouse)) {
+            return modal.buttons[index].id;
+        }
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 class InputController::Impl {
 public:
     [[nodiscard]] InputFrameResult update(const GameState& state, const Layout& layout,
-                                          const PointerInput& pointer, bool interactionsEnabled) {
+                                          const PointerInput& pointer, const ModalModel* activeModal,
+                                          bool interactionsEnabled) {
         InputFrameResult result;
         const Vector2 mouse = pointer.position;
 
-        if (pointer.leftPressed && ui::contains(layout.loadButtonRect(), mouse)) {
+        if (activeModal != nullptr) {
             clearInteraction();
-            result.commands.push_back(RequestLoad{});
+            selectedUnitId_.reset();
+            if (pointer.leftPressed) {
+                appendIf(result, modalButtonAt(*activeModal, layout, mouse).transform([](ModalButtonId id) {
+                             return InputCommand{SubmitModalButton{.id = id}};
+                         }));
+                return result;
+            }
             return result;
         }
 
         if (!interactionsEnabled) {
             clearInteraction();
             selectedUnitId_.reset();
-            if (pointer.leftPressed && ui::contains(layout.outcomeRestartButtonRect(), mouse)) {
-                result.commands.push_back(RequestRestart{});
-                return result;
-            }
-            if (pointer.leftPressed && ui::contains(layout.outcomeLoadButtonRect(), mouse)) {
-                result.commands.push_back(RequestLoad{});
-                return result;
-            }
+            return result;
+        }
+
+        if (pointer.leftPressed && ui::contains(layout.loadButtonRect(), mouse)) {
+            clearInteraction();
+            result.commands.push_back(RequestLoad{});
             return result;
         }
 
@@ -379,8 +394,14 @@ InputController::InputController(InputController&&) noexcept = default;
 InputController& InputController::operator=(InputController&&) noexcept = default;
 
 InputFrameResult InputController::update(const GameState& state, const Layout& layout,
+                                         const PointerInput& pointer, const ModalModel* activeModal,
+                                         bool interactionsEnabled) {
+    return impl_->update(state, layout, pointer, activeModal, interactionsEnabled);
+}
+
+InputFrameResult InputController::update(const GameState& state, const Layout& layout,
                                          const PointerInput& pointer, bool interactionsEnabled) {
-    return impl_->update(state, layout, pointer, interactionsEnabled);
+    return update(state, layout, pointer, nullptr, interactionsEnabled);
 }
 
 InputReadModel InputController::readModel(const GameState& state) const {

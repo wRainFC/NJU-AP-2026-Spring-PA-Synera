@@ -4,6 +4,7 @@
 #include "board/HexGrid.hpp"
 #include "ui/UiDrawing.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include <ranges>
@@ -107,14 +108,24 @@ Rectangle Layout::loadButtonRect() const noexcept {
     return Rectangle{1360.0F, ButtonTop, 96.0F, 52.0F};
 }
 
-Rectangle Layout::outcomeRestartButtonRect() const noexcept {
-    return Rectangle{static_cast<float>(config::WindowWidth) / 2.0F - 240.0F,
-                     static_cast<float>(config::WindowHeight) / 2.0F + 54.0F, 220.0F, 52.0F};
+Rectangle Layout::modalPanelRect() const noexcept {
+    return Rectangle{static_cast<float>(config::WindowWidth) / 2.0F - 340.0F,
+                     static_cast<float>(config::WindowHeight) / 2.0F - 190.0F, 680.0F, 380.0F};
 }
 
-Rectangle Layout::outcomeLoadButtonRect() const noexcept {
-    return Rectangle{static_cast<float>(config::WindowWidth) / 2.0F + 20.0F,
-                     static_cast<float>(config::WindowHeight) / 2.0F + 54.0F, 220.0F, 52.0F};
+Rectangle Layout::modalButtonRect(std::size_t index, std::size_t buttonCount) const noexcept {
+    const Rectangle panel = modalPanelRect();
+    const float width     = 220.0F;
+    const float height    = 52.0F;
+    const float gap       = 40.0F;
+    const float count     = static_cast<float>(buttonCount);
+    const float total     = count * width + std::max(0.0F, count - 1.0F) * gap;
+    return Rectangle{
+        panel.x + (panel.width - total) / 2.0F + static_cast<float>(index) * (width + gap),
+        panel.y + panel.height - 76.0F,
+        width,
+        height,
+    };
 }
 
 Rectangle Layout::traitSlotRect(Trait trait) const noexcept {

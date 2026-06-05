@@ -24,8 +24,8 @@ public:
     [[nodiscard]] Rectangle startButtonRect() const noexcept;
     [[nodiscard]] Rectangle saveButtonRect() const noexcept;
     [[nodiscard]] Rectangle loadButtonRect() const noexcept;
-    [[nodiscard]] Rectangle outcomeRestartButtonRect() const noexcept;
-    [[nodiscard]] Rectangle outcomeLoadButtonRect() const noexcept;
+    [[nodiscard]] Rectangle modalPanelRect() const noexcept;
+    [[nodiscard]] Rectangle modalButtonRect(std::size_t index, std::size_t buttonCount) const noexcept;
     [[nodiscard]] Rectangle traitSlotRect(Trait trait) const noexcept;
     [[nodiscard]] Rectangle sellAreaRect() const noexcept;
     // Returns nullopt when the pointer is in the visual gap between hexes or outside the board.

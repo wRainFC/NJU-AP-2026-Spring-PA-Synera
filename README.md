@@ -46,9 +46,10 @@ ctest --test-dir build --output-on-failure
 - Lock：锁定/解锁商店。
 - Level Up：花费金币提升人口上限。
 - Start Combat：开始当前轮战斗。
+- 回合结束后：在结算面板查看金币、生命值和装备奖励，点击 Continue 进入下一准备阶段。
 - Save / Load：保存或读取 `saves/manual.json`。保存仅允许在准备阶段进行。
 - 将己方单位拖到 Sell 区域：出售单位并获得金币。
-- 胜利或失败后：在结算面板中选择 New Run 从头开始，或选择 Load Save 读取存档。
+- 整局胜利或失败后：在终局面板中选择 New Run 从头开始，或选择 Load Save 读取存档。
 
 ## 文件结构
 
@@ -67,8 +68,9 @@ Synera/
     textures/
   src/
     main.cpp
-    app/        应用入口、主循环、全局配置
+    app/        应用入口、主循环和系统调度
     board/      六边形棋盘、备战区、寻路
+    config/     游戏常量、回合规则、装备掉落等配置表
     core/       核心数据模型、单位、玩家、技能、商店、元数据
     systems/    战斗、回合、商店、羁绊、升星、装备、存档系统
     ui/         Raylib 窗口、输入投影、布局、渲染与贴图资源

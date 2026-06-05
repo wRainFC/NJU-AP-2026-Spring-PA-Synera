@@ -70,6 +70,7 @@ target_link_libraries(synera_logic PUBLIC ${SYNERA_CEREAL_TARGET})
 add_library(synera_ui
     src/ui/InputController.cpp
     src/ui/Layout.cpp
+    src/ui/ModalFactory.cpp
     src/ui/UiDrawing.cpp
 )
 

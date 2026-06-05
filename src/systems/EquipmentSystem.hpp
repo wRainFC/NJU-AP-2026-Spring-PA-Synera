@@ -4,11 +4,17 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <random>
 
 namespace synera {
 
 class GameState;
+
+struct EquipmentDropResult {
+    bool dropped = false;
+    std::optional<EquipmentType> equipment;
+};
 
 class EquipmentSystem {
 public:
@@ -16,7 +22,7 @@ public:
     explicit EquipmentSystem(std::uint32_t seed);
 
     void recomputeStats(GameState& state);
-    bool tryGrantRoundDrop(GameState& state, bool playerWon);
+    [[nodiscard]] EquipmentDropResult tryGrantRoundDrop(GameState& state, bool playerWon);
     bool equip(GameState& state, UnitId unitId, EquipmentType equipment);
     bool equipFromPool(GameState& state, std::size_t equipmentIndex, UnitId unitId);
 

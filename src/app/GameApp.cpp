@@ -1,8 +1,10 @@
 #include "app/GameApp.hpp"
 
 #include "config/GameConfig.hpp"
+#include "ui/ModalFactory.hpp"
 #include "ui/UiTheme.hpp"
 
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -24,6 +26,14 @@ struct Overloaded : Visitors... {
 
 template <class... Visitors>
 Overloaded(Visitors...) -> Overloaded<Visitors...>;
+
+[[nodiscard]] std::optional<ModalModel> modalForOutcome(GameOutcome outcome) {
+    if (outcome == GameOutcome::Playing) {
+        return std::nullopt;
+    }
+    return terminalOutcomeModal(outcome == GameOutcome::Victory ? "Victory" : "Defeat",
+                                outcome == GameOutcome::Victory ? GOLD : RED);
+}
 
 }  // namespace
 
@@ -51,9 +61,9 @@ void GameApp::startNewRun() {
     shopSystem_      = ShopSystem{};
     equipmentSystem_ = EquipmentSystem{};
     outcome_         = GameOutcome::Playing;
+    activeModal_.reset();
     statusMessage_.clear();
     statusMessageTimer_   = 0.0F;
-    resolveTimer_         = 0.0F;
     animationTimeSeconds_ = 0.0F;
 
     const UnitId first = state_.createUnit("iron_guard", Owner::PlayerCtrl);
@@ -75,8 +85,10 @@ void GameApp::update(float dt) {
         }
     }
 
-    const PointerInput pointer        = window_.pointerInput();
-    const InputFrameResult inputFrame = input_.update(state_, layout_, pointer, interactionsEnabled());
+    const PointerInput pointer = window_.pointerInput();
+    const InputFrameResult inputFrame =
+        input_.update(state_, layout_, pointer, activeModal_ ? &*activeModal_ : nullptr,
+                      interactionsEnabled());
     if (applyInputCommands(inputFrame.commands)) {
         return;
     }
@@ -87,17 +99,15 @@ void GameApp::update(float dt) {
     if (state_.phase() == Phase::Combat) {
         combatSystem_.update(state_, dt);
         if (state_.isCombatFinished()) {
-            const bool playerWon = state_.playerWonCombat();
-            roundSystem_.enterResolve(state_, playerWon);
-            (void)equipmentSystem_.tryGrantRoundDrop(state_, playerWon);
+            const bool playerWon           = state_.playerWonCombat();
+            const RoundResult result       = roundSystem_.enterResolve(state_, playerWon);
+            const EquipmentDropResult drop = equipmentSystem_.tryGrantRoundDrop(state_, playerWon);
             refreshOutcomeFromState();
-            resolveTimer_ = 0.0F;
-        }
-    } else if (state_.phase() == Phase::Resolve) {
-        resolveTimer_ += dt;
-        if (resolveTimer_ >= 1.0F) {
-            roundSystem_.finishResolve(state_);
-            (void)shopSystem_.refresh(state_, ShopRefreshMode::RoundStart);
+            if (outcome_ == GameOutcome::Playing) {
+                activeModal_ = roundSettlementModal(result, drop);
+            } else {
+                activeModal_ = modalForOutcome(outcome_);
+            }
         }
     }
 }
@@ -111,7 +121,7 @@ void GameApp::render() {
         .input                = input_.readModel(state_),
         .pointer              = pointer,
         .statusMessage        = statusMessage_,
-        .outcomeMessage       = outcomeMessage(),
+        .modal                = activeModal_,
         .animationTimeSeconds = animationTimeSeconds_,
         .interactionsEnabled  = interactionsEnabled(),
     };
@@ -133,12 +143,8 @@ bool GameApp::applyInputCommands(std::span<const InputCommand> commands) {
                     return false;
                 },
                 [&](RequestLoad) { return handleLoad(); },
-                [&](RequestRestart) {
-                    startNewRun();
-                    setStatusMessage("Started a new run");
-                    return true;
-                },
                 [&](StartCombat) {
+                    activeModal_.reset();
                     synergySystem_.recompute(state_);
                     roundSystem_.startCombat(state_);
                     if (state_.phase() != Phase::Prep) {
@@ -161,6 +167,7 @@ bool GameApp::applyInputCommands(std::span<const InputCommand> commands) {
                     }
                     return false;
                 },
+                [&](SubmitModalButton submit) { return handleModalButton(submit.id); },
                 [&](BuyOffer buy) {
                     const ShopBuyResult result = shopSystem_.buy(state_, buy.offerIndex);
                     if (result.ok()) {
@@ -230,7 +237,7 @@ bool GameApp::handleLoad() {
     input_ = InputController{};
     synergySystem_.recompute(state_);
     refreshOutcomeFromState();
-    resolveTimer_ = 0.0F;
+    activeModal_ = modalForOutcome(outcome_);
     setStatusMessage("Loaded from " + std::string{ManualSavePath});
     return true;
 }
@@ -244,18 +251,6 @@ bool GameApp::interactionsEnabled() const noexcept {
     return outcome_ == GameOutcome::Playing;
 }
 
-std::string_view GameApp::outcomeMessage() const noexcept {
-    switch (outcome_) {
-        case GameOutcome::Victory:
-            return "Victory";
-        case GameOutcome::Defeat:
-            return "Defeat";
-        case GameOutcome::Playing:
-            return "";
-    }
-    return "";
-}
-
 void GameApp::refreshOutcomeFromState() noexcept {
     if (state_.player().isDead()) {
         outcome_ = GameOutcome::Defeat;
@@ -264,6 +259,31 @@ void GameApp::refreshOutcomeFromState() noexcept {
     } else {
         outcome_ = GameOutcome::Playing;
     }
+}
+
+void GameApp::finishRoundSettlement() {
+    if (state_.phase() != Phase::Resolve || outcome_ != GameOutcome::Playing) {
+        return;
+    }
+
+    roundSystem_.finishResolve(state_);
+    (void)shopSystem_.refresh(state_, ShopRefreshMode::RoundStart);
+    activeModal_.reset();
+}
+
+bool GameApp::handleModalButton(ModalButtonId id) {
+    switch (id) {
+        case ModalButtonId::ContinueResolve:
+            finishRoundSettlement();
+            return false;
+        case ModalButtonId::NewRun:
+            startNewRun();
+            setStatusMessage("Started a new run");
+            return true;
+        case ModalButtonId::LoadSave:
+            return handleLoad();
+    }
+    return false;
 }
 
 }  // namespace synera

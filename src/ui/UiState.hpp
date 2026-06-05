@@ -30,13 +30,30 @@ struct InputReadModel {
     DragDropReadModel dragDrop;
 };
 
+enum class ModalButtonId { ContinueResolve, NewRun, LoadSave };
+
+struct ModalButton {
+    ModalButtonId id = ModalButtonId::ContinueResolve;
+    std::string label;
+};
+
+struct ModalModel {
+    std::string title;
+    std::vector<std::string> lines;
+    std::vector<ModalButton> buttons;
+    Color accent = GOLD;
+};
+
 struct RequestSave {};
 struct RequestLoad {};
-struct RequestRestart {};
 struct StartCombat {};
 struct RefreshShop {};
 struct ToggleShopLock {};
 struct UpgradePopulation {};
+
+struct SubmitModalButton {
+    ModalButtonId id = ModalButtonId::ContinueResolve;
+};
 
 struct BuyOffer {
     int offerIndex = -1;
@@ -62,8 +79,8 @@ struct EquipFromPool {
 };
 
 using InputCommand =
-    std::variant<RequestSave, RequestLoad, RequestRestart, StartCombat, RefreshShop, ToggleShopLock,
-                 UpgradePopulation, BuyOffer, PlaceUnitOnBoard, PlaceUnitOnBench, SellUnit, EquipFromPool>;
+    std::variant<RequestSave, RequestLoad, StartCombat, RefreshShop, ToggleShopLock, UpgradePopulation,
+                 SubmitModalButton, BuyOffer, PlaceUnitOnBoard, PlaceUnitOnBench, SellUnit, EquipFromPool>;
 
 struct InputFrameResult {
     std::vector<InputCommand> commands;

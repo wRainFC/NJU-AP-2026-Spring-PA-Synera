@@ -13,6 +13,7 @@
 #include "ui/Layout.hpp"
 #include "ui/Renderer.hpp"
 
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -37,8 +38,9 @@ private:
     [[nodiscard]] bool handleLoad();
     void setStatusMessage(std::string message);
     [[nodiscard]] bool interactionsEnabled() const noexcept;
-    [[nodiscard]] std::string_view outcomeMessage() const noexcept;
     void refreshOutcomeFromState() noexcept;
+    void finishRoundSettlement();
+    [[nodiscard]] bool handleModalButton(ModalButtonId id);
 
     GameWindow window_;
     GameState state_;
@@ -53,9 +55,9 @@ private:
     EquipmentSystem equipmentSystem_;
     SaveSystem saveSystem_;
     GameOutcome outcome_ = GameOutcome::Playing;
+    std::optional<ModalModel> activeModal_;
     std::string statusMessage_;
     float statusMessageTimer_   = 0.0F;
-    float resolveTimer_         = 0.0F;
     float animationTimeSeconds_ = 0.0F;
 };
 
