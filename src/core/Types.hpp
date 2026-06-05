@@ -29,6 +29,8 @@ enum class Phase { Prep, Combat, Resolve };
 
 enum class UnitState { Idle, Moving, Attacking, Casting, Stunned, Dead };
 
+enum class AttackVisualKind { Melee, Ranged };
+
 enum class Trait { Warrior, Mage, Ranger, Guardian, Mystic, Assassin };
 
 enum class EquipmentType { IronSword, ChainVest, SwiftGlove, ManaCrystal };

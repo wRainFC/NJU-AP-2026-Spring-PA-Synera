@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/GameState.hpp"
+#include "config/CombatActionCatalog.hpp"
 #include "systems/CombatSystem.hpp"
 #include "systems/EquipmentSystem.hpp"
 #include "systems/RoundSystem.hpp"
@@ -8,6 +9,7 @@
 #include "systems/ShopSystem.hpp"
 #include "systems/SynergySystem.hpp"
 #include "systems/UpgradeSystem.hpp"
+#include "ui/CombatAnimationController.hpp"
 #include "ui/GameWindow.hpp"
 #include "ui/InputController.hpp"
 #include "ui/Layout.hpp"
@@ -45,6 +47,7 @@ private:
     GameWindow window_;
     GameState state_;
     Layout layout_;
+    CombatActionCatalog combatActions_;
     Renderer renderer_;
     InputController input_;
     RoundSystem roundSystem_;
@@ -54,6 +57,7 @@ private:
     UpgradeSystem upgradeSystem_;
     EquipmentSystem equipmentSystem_;
     SaveSystem saveSystem_;
+    CombatAnimationController combatAnimations_;
     GameOutcome outcome_ = GameOutcome::Playing;
     std::optional<ModalModel> activeModal_;
     std::string statusMessage_;

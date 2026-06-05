@@ -43,6 +43,7 @@ else()
 endif()
 
 add_library(synera_logic
+    src/config/CombatActionCatalog.cpp
     src/core/AbilityContext.cpp
     src/core/abilities/BasicAbilities.cpp
     src/core/GameState.cpp
@@ -68,6 +69,7 @@ target_include_directories(synera_logic PUBLIC src)
 target_link_libraries(synera_logic PUBLIC ${SYNERA_CEREAL_TARGET})
 
 add_library(synera_ui
+    src/ui/CombatAnimationController.cpp
     src/ui/InputController.cpp
     src/ui/Layout.cpp
     src/ui/ModalFactory.cpp
@@ -127,8 +129,10 @@ if (BUILD_TESTING)
 
     add_executable(synera_tests
         tests/BoardTests.cpp
+        tests/CombatActionCatalogTests.cpp
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
+        tests/CombatAnimationControllerTests.cpp
         tests/EconomySystemsTests.cpp
         tests/InputControllerTests.cpp
         tests/MetadataTests.cpp

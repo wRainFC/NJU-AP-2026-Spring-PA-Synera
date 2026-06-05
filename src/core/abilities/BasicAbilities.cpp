@@ -55,6 +55,10 @@ std::string_view FireLineAbility::description() const noexcept {
     return "Deals damage in a short hex line toward the current target.";
 }
 
+std::string_view FireLineAbility::combatActionProfileId() const noexcept {
+    return "fire_line.cast";
+}
+
 void FireLineAbility::cast(Unit& caster, AbilityContext& context) {
     const auto origin = caster.boardPos;
     const auto target = targetPosOf(caster, context);
@@ -86,6 +90,10 @@ std::string_view HealingAuraAbility::description() const noexcept {
     return "Heals nearby allies around the caster.";
 }
 
+std::string_view HealingAuraAbility::combatActionProfileId() const noexcept {
+    return "healing_aura.cast";
+}
+
 void HealingAuraAbility::cast(Unit& caster, AbilityContext& context) {
     if (caster.boardPos) {
         context.forEachAllyOf(caster, [&](Unit& ally) {
@@ -102,6 +110,10 @@ std::string_view StunStrikeAbility::name() const noexcept {
 
 std::string_view StunStrikeAbility::description() const noexcept {
     return "Damages and briefly stuns the current target.";
+}
+
+std::string_view StunStrikeAbility::combatActionProfileId() const noexcept {
+    return "stun_strike.cast";
 }
 
 void StunStrikeAbility::cast(Unit& caster, AbilityContext& context) {

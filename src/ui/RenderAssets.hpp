@@ -24,6 +24,13 @@ enum class TextureSlot {
     Count,
 };
 
+enum class CombatTextureSlot {
+    BasicProjectile,
+    HitImpact,
+    DeathImpact,
+    Count,
+};
+
 struct SpriteAnimationView {
     const Texture2D* texture = nullptr;
     int frameCount           = 1;
@@ -91,22 +98,28 @@ public:
     void unload() noexcept;
 
     [[nodiscard]] const Texture2D* texture(TextureSlot slot) const noexcept;
+    [[nodiscard]] const Texture2D* combatTexture(CombatTextureSlot slot) const noexcept;
     [[nodiscard]] const Texture2D* unitTexture(std::string_view templateId, Owner owner) const;
     [[nodiscard]] SpriteAnimationView unitAnimation(std::string_view templateId, Owner owner,
                                                     UnitState state) const;
+    [[nodiscard]] SpriteAnimationView spriteAnimation(std::string_view clipId) const;
     [[nodiscard]] const Texture2D* equipmentTexture(EquipmentType equipment) const noexcept;
     // Returns nullptr when no UI font was loaded, letting drawing helpers use Raylib's default font.
     [[nodiscard]] const Font* font() const noexcept;
 
 private:
     static constexpr std::size_t TextureSlotCount = static_cast<std::size_t>(TextureSlot::Count);
+    static constexpr std::size_t CombatTextureSlotCount =
+        static_cast<std::size_t>(CombatTextureSlot::Count);
     static constexpr std::size_t EquipmentTextureCount =
         static_cast<std::size_t>(EquipmentType::ManaCrystal) + 1;
 
     std::array<std::optional<TextureResource>, TextureSlotCount> textures_;
+    std::array<std::optional<TextureResource>, CombatTextureSlotCount> combatTextures_;
     std::array<std::optional<TextureResource>, EquipmentTextureCount> equipmentTextures_;
     std::unordered_map<std::string, TextureResource> unitTextures_;
     std::unordered_map<std::string, SpriteAnimation> unitAnimations_;
+    std::unordered_map<std::string, SpriteAnimation> spriteAnimations_;
     std::optional<TextureResource> playerDefaultUnitTexture_;
     std::optional<TextureResource> enemyDefaultUnitTexture_;
     std::optional<FontResource> font_;

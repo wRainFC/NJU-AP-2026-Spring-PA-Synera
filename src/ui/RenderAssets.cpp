@@ -1,5 +1,7 @@
 #include "ui/RenderAssets.hpp"
 
+#include "config/CombatActionCatalog.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -19,6 +21,11 @@ struct SlotTexturePath {
 
 struct EquipmentTexturePath {
     EquipmentType equipment;
+    std::string_view path;
+};
+
+struct CombatTexturePath {
+    CombatTextureSlot slot;
     std::string_view path;
 };
 
@@ -45,6 +52,12 @@ inline constexpr std::array EquipmentTexturePaths{
     EquipmentTexturePath{EquipmentType::ManaCrystal, "equipment/mana_crystal.png"},
 };
 
+inline constexpr std::array CombatTexturePaths{
+    CombatTexturePath{CombatTextureSlot::BasicProjectile, "projectiles/basic.png"},
+    CombatTexturePath{CombatTextureSlot::HitImpact, "effects/hit.png"},
+    CombatTexturePath{CombatTextureSlot::DeathImpact, "effects/death.png"},
+};
+
 inline constexpr std::array StateTexturePaths{
     StateTexturePath{UnitState::Idle, "idle"},           StateTexturePath{UnitState::Moving, "moving"},
     StateTexturePath{UnitState::Attacking, "attacking"}, StateTexturePath{UnitState::Casting, "casting"},
@@ -57,6 +70,10 @@ inline constexpr std::array StateTexturePaths{
 
 [[nodiscard]] std::size_t equipmentIndex(EquipmentType equipment) noexcept {
     return static_cast<std::size_t>(equipment);
+}
+
+[[nodiscard]] std::size_t combatTextureIndex(CombatTextureSlot slot) noexcept {
+    return static_cast<std::size_t>(slot);
 }
 
 [[nodiscard]] std::string_view ownerName(Owner owner) noexcept {
@@ -191,7 +208,7 @@ inline constexpr std::array StateTexturePaths{
 }
 
 [[nodiscard]] std::optional<RenderAssets::SpriteAnimation> loadAnimationIfPresent(
-    const std::filesystem::path& path) {
+    const std::filesystem::path& path, int requestedFrameCount = 0, float requestedFps = 8.0F) {
     auto texture = loadTextureIfPresent(path);
     if (!texture) {
         return std::nullopt;
@@ -199,12 +216,26 @@ inline constexpr std::array StateTexturePaths{
 
     const Texture2D* loaded = texture->get();
     const int frameCount =
-        loaded == nullptr || loaded->height <= 0 ? 1 : std::max(1, loaded->width / loaded->height);
+        requestedFrameCount > 0
+            ? requestedFrameCount
+            : (loaded == nullptr || loaded->height <= 0 ? 1 : std::max(1, loaded->width / loaded->height));
     return RenderAssets::SpriteAnimation{
         .texture         = std::move(*texture),
         .frameCount      = frameCount,
-        .framesPerSecond = 8.0F,
+        .framesPerSecond = requestedFps <= 0.0F ? 8.0F : requestedFps,
     };
+}
+
+void loadSpriteClip(std::unordered_map<std::string, RenderAssets::SpriteAnimation>& animations,
+                    const std::filesystem::path& assetRoot, const SpriteClipSpec& clip) {
+    if (clip.id.empty() || clip.texturePath.empty()) {
+        return;
+    }
+    auto animation =
+        loadAnimationIfPresent(assetRoot / clip.texturePath, clip.frameCount, clip.framesPerSecond);
+    if (animation) {
+        animations[clip.id] = std::move(*animation);
+    }
 }
 
 }  // namespace
@@ -329,6 +360,18 @@ void RenderAssets::load(const std::filesystem::path& requestedRoot) {
     for (const EquipmentTexturePath& entry : EquipmentTexturePaths) {
         equipmentTextures_[equipmentIndex(entry.equipment)] = loadTextureIfPresent(textureRoot / entry.path);
     }
+
+    for (const CombatTexturePath& entry : CombatTexturePaths) {
+        combatTextures_[combatTextureIndex(entry.slot)] = loadTextureIfPresent(textureRoot / entry.path);
+    }
+
+    CombatActionCatalog combatActions;
+    (void)combatActions.loadFromFile(assetRoot / "data/combat_actions.json");
+    for (const CombatActionProfile& profile : combatActions.profiles()) {
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.unitClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.projectileClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.impactClip);
+    }
 }
 
 void RenderAssets::unload() noexcept {
@@ -338,8 +381,12 @@ void RenderAssets::unload() noexcept {
     for (auto& texture : equipmentTextures_) {
         texture.reset();
     }
+    for (auto& texture : combatTextures_) {
+        texture.reset();
+    }
     unitTextures_.clear();
     unitAnimations_.clear();
+    spriteAnimations_.clear();
     playerDefaultUnitTexture_.reset();
     enemyDefaultUnitTexture_.reset();
     font_.reset();
@@ -351,6 +398,14 @@ const Texture2D* RenderAssets::texture(TextureSlot slot) const noexcept {
         return nullptr;
     }
     return textures_[index]->get();
+}
+
+const Texture2D* RenderAssets::combatTexture(CombatTextureSlot slot) const noexcept {
+    const std::size_t index = combatTextureIndex(slot);
+    if (index >= combatTextures_.size() || !combatTextures_[index]) {
+        return nullptr;
+    }
+    return combatTextures_[index]->get();
 }
 
 const Texture2D* RenderAssets::unitTexture(std::string_view templateId, Owner owner) const {
@@ -379,6 +434,18 @@ SpriteAnimationView RenderAssets::unitAnimation(std::string_view templateId, Own
         .texture         = animation->texture.get(),
         .frameCount      = animation->frameCount,
         .framesPerSecond = animation->framesPerSecond,
+    };
+}
+
+SpriteAnimationView RenderAssets::spriteAnimation(std::string_view clipId) const {
+    const auto iter = spriteAnimations_.find(std::string{clipId});
+    if (iter == spriteAnimations_.end()) {
+        return {};
+    }
+    return SpriteAnimationView{
+        .texture = iter->second.texture.get(),
+        .frameCount = iter->second.frameCount,
+        .framesPerSecond = iter->second.framesPerSecond,
     };
 }
 

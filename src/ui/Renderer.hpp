@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/CombatAnimationController.hpp"
 #include "ui/UiState.hpp"
 
 #include <filesystem>
@@ -21,6 +22,7 @@ struct RenderContext {
     PointerInput pointer;
     std::string_view statusMessage;
     std::optional<ModalModel> modal;
+    CombatVisualReadModel combatVisual;
     float animationTimeSeconds = 0.0F;
     bool interactionsEnabled   = true;
 };

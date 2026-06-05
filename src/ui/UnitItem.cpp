@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <string_view>
 
 namespace synera {
 
@@ -27,11 +28,13 @@ void drawFallbackBody(const Unit& unit, Rectangle rect) {
                rect.width * 0.32F, body);
 }
 
-void drawUnitSprite(const RenderAssets& assets, const Unit& unit, Rectangle rect,
-                    float animationTimeSeconds) {
+void drawUnitSprite(const RenderAssets& assets, const Unit& unit, Rectangle rect, UnitState visualState,
+                    std::string_view clipId, float animationTimeSeconds) {
     const Rectangle destination = spriteRect(rect);
-    const SpriteAnimationView animation =
-        assets.unitAnimation(unit.templateId, unit.owner, unit.runtime.state);
+    SpriteAnimationView animation = assets.spriteAnimation(clipId);
+    if (!animation.loaded()) {
+        animation = assets.unitAnimation(unit.templateId, unit.owner, visualState);
+    }
     if (animation.loaded()) {
         const int frame =
             animation.frameCount <= 1
@@ -55,7 +58,19 @@ void drawUnitSprite(const RenderAssets& assets, const Unit& unit, Rectangle rect
 
 void UnitItem::drawUnit(const RenderAssets& assets, const Unit& unit, Rectangle rect,
                         float animationTimeSeconds) {
-    drawUnitSprite(assets, unit, rect, animationTimeSeconds);
+    drawUnit(assets, unit, rect, unit.runtime.state, animationTimeSeconds, Vector2{});
+}
+
+void UnitItem::drawUnit(const RenderAssets& assets, const Unit& unit, Rectangle rect, UnitState visualState,
+                        float animationTimeSeconds, Vector2 offset) {
+    drawUnit(assets, unit, rect, visualState, std::string_view{}, animationTimeSeconds, offset);
+}
+
+void UnitItem::drawUnit(const RenderAssets& assets, const Unit& unit, Rectangle rect, UnitState visualState,
+                        std::string_view clipId, float animationTimeSeconds, Vector2 offset) {
+    rect.x += offset.x;
+    rect.y += offset.y;
+    drawUnitSprite(assets, unit, rect, visualState, clipId, animationTimeSeconds);
 
     const float padding = rect.width * 0.10F;
     ui::drawBar(Rectangle{rect.x + padding, rect.y + rect.height * 0.07F, rect.width - padding * 2.0F,

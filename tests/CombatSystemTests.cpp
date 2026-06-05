@@ -41,6 +41,10 @@ TEST_CASE("CombatSystem casts full mana ability and clears mana", "[combat]") {
     fixture.combat.update(fixture.state, 0.0F);
 
     CHECK(player->runtime.mana == 0);
+    CHECK(enemy->runtime.hp == enemy->derivedStats.maxHp);
+
+    fixture.combat.update(fixture.state, 0.24F);
+
     CHECK(enemy->runtime.hp == enemy->derivedStats.maxHp - 55);
     CHECK(enemy->runtime.state == synera::UnitState::Stunned);
 }
@@ -95,11 +99,63 @@ TEST_CASE("CombatSystem applies Ranger double basic attack synergy", "[combat][s
     CHECK(firstArcher->mechanics.doubleBasicAttack);
 
     secondArcher->derivedStats.attackInterval = 999.0F;
+    enemy->derivedStats.attackInterval = 999.0F;
     state.setPhase(synera::Phase::Combat);
     combat.update(state, 1.0F);
+    CHECK(enemy->runtime.hp == enemy->derivedStats.maxHp);
+
+    combat.update(state, 0.30F);
 
     CHECK(enemy->runtime.hp == enemy->derivedStats.maxHp - firstArcher->derivedStats.atk * 2);
     CHECK(firstArcher->runtime.mana == 10);
+}
+
+TEST_CASE("CombatSystem emits combat events for attacks and damage", "[combat][events]") {
+    CombatFixture fixture;
+    auto* player = fixture.state.findUnit(fixture.player);
+    REQUIRE(player != nullptr);
+
+    fixture.combat.update(fixture.state, player->derivedStats.attackInterval);
+
+    auto events = fixture.combat.events();
+    REQUIRE(events.size() == 1);
+    CHECK(events[0].type == synera::CombatEventType::AttackStarted);
+    CHECK(events[0].sourceId == fixture.player);
+    CHECK(events[0].targetId == fixture.enemy);
+    CHECK(events[0].attackKind == synera::AttackVisualKind::Melee);
+    CHECK(events[0].actionProfileId == "iron_guard.basic_slash");
+    CHECK(events[0].hitDelaySeconds > 0.0F);
+
+    fixture.combat.update(fixture.state, events[0].hitDelaySeconds);
+
+    events = fixture.combat.events();
+    REQUIRE(events.size() >= 1);
+    CHECK(events[0].type == synera::CombatEventType::DamageDealt);
+    CHECK(events[0].actionProfileId == "iron_guard.basic_slash");
+    CHECK(events[0].amount == player->derivedStats.atk);
+}
+
+TEST_CASE("CombatSystem emits movement and ranged attack events", "[combat][events]") {
+    synera::GameState state;
+    synera::CombatSystem combat;
+    const synera::UnitId archerId = state.createUnit("storm_archer", synera::Owner::PlayerCtrl);
+    const synera::UnitId enemyId  = state.createUnit("training_dummy", synera::Owner::EnemyCtrl);
+
+    REQUIRE(state.placeUnitOnBoard(archerId, pos(0, 4)));
+    REQUIRE(state.placeUnitOnBoard(enemyId, pos(7, 1)));
+    state.setPhase(synera::Phase::Combat);
+
+    combat.update(state, 1.0F);
+
+    bool sawMove = false;
+    bool sawRangedAttack = false;
+    for (const synera::CombatEvent& event : combat.events()) {
+        sawMove = sawMove || event.type == synera::CombatEventType::UnitMoved;
+        sawRangedAttack = sawRangedAttack ||
+                          (event.type == synera::CombatEventType::AttackStarted &&
+                           event.attackKind == synera::AttackVisualKind::Ranged);
+    }
+    CHECK((sawMove || sawRangedAttack));
 }
 
 TEST_CASE("CombatSystem targets lowest hp before board-order ties", "[combat][targeting]") {

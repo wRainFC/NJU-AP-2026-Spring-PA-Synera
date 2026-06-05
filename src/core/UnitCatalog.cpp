@@ -17,6 +17,7 @@ using AbilityFactory = std::unique_ptr<Ability> (*)();
 struct UnitTemplate {
     std::string_view id;
     std::string_view displayName;
+    std::string_view basicAttackProfileId;
     UnitStats stats;
     std::span<const Trait> traits;
     AbilityFactory abilityFactory;
@@ -47,15 +48,19 @@ constexpr std::array StormArcherTraits{Trait::Ranger, Trait::Assassin};
 constexpr std::array TrainingDummyTraits{Trait::Guardian};
 
 constexpr std::array UnitTemplates{
-    UnitTemplate{"iron_guard", "Iron Guard", DefaultStats, IronGuardTraits, makeStunStrikeAbility},
-    UnitTemplate{"ember_mage", "Ember Mage", UnitStats{220, 42, 3, 60, 1.2F, 0.25F}, EmberMageTraits,
-                 makeFireLineAbility},
-    UnitTemplate{"field_medic", "Field Medic", UnitStats{260, 24, 2, 55, 1.1F, 0.25F}, FieldMedicTraits,
-                 makeHealingAuraAbility},
-    UnitTemplate{"storm_archer", "Storm Archer", UnitStats{240, 48, 4, 70, 0.9F, 0.25F}, StormArcherTraits,
+    UnitTemplate{"iron_guard", "Iron Guard", "iron_guard.basic_slash", DefaultStats, IronGuardTraits,
                  makeStunStrikeAbility},
-    UnitTemplate{"training_dummy", "Training Dummy", UnitStats{180, 18, 1, 80, 1.4F, 0.3F},
-                 TrainingDummyTraits, makeNoopAbility},
+    UnitTemplate{"ember_mage", "Ember Mage", "ember_mage.basic_bolt",
+                 UnitStats{220, 42, 3, 60, 1.2F, 0.25F}, EmberMageTraits,
+                 makeFireLineAbility},
+    UnitTemplate{"field_medic", "Field Medic", "field_medic.basic_pulse",
+                 UnitStats{260, 24, 2, 55, 1.1F, 0.25F}, FieldMedicTraits,
+                 makeHealingAuraAbility},
+    UnitTemplate{"storm_archer", "Storm Archer", "storm_archer.basic_arrow",
+                 UnitStats{240, 48, 4, 70, 0.9F, 0.25F}, StormArcherTraits,
+                 makeStunStrikeAbility},
+    UnitTemplate{"training_dummy", "Training Dummy", "training_dummy.basic_slam",
+                 UnitStats{180, 18, 1, 80, 1.4F, 0.3F}, TrainingDummyTraits, makeNoopAbility},
 };
 
 const UnitTemplate* findTemplate(std::string_view templateId) {
@@ -78,10 +83,12 @@ Unit UnitCatalog::createUnit(UnitId id, std::string_view templateId, Owner owner
 
     Unit unit;
     unit.id           = id;
-    unit.templateId   = std::string(templateId);
-    unit.name         = unitTemplate == nullptr ? "Unknown" : std::string(unitTemplate->displayName);
-    unit.owner        = owner;
-    unit.baseStats    = unitTemplate == nullptr ? DefaultStats : unitTemplate->stats;
+    unit.templateId            = std::string(templateId);
+    unit.basicAttackProfileId  = unitTemplate == nullptr ? "default.basic_melee"
+                                                         : std::string(unitTemplate->basicAttackProfileId);
+    unit.name                  = unitTemplate == nullptr ? "Unknown" : std::string(unitTemplate->displayName);
+    unit.owner                 = owner;
+    unit.baseStats             = unitTemplate == nullptr ? DefaultStats : unitTemplate->stats;
     unit.derivedStats = unit.baseStats;
     unit.runtime.hp   = unit.derivedStats.maxHp;
     unit.runtime.mana = 0;

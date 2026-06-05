@@ -39,6 +39,7 @@ class Unit {
 public:
     UnitId id = InvalidUnitId;
     std::string templateId;
+    std::string basicAttackProfileId;
     std::string name;
     Owner owner = Owner::PlayerCtrl;
 

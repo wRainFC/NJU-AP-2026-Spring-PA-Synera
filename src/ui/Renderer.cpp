@@ -13,6 +13,7 @@
 #include "ui/UnitItem.hpp"
 
 #include <cstddef>
+#include <cmath>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -58,6 +59,53 @@ namespace {
     return !std::holds_alternative<std::monostate>(input.dragDrop.ghost);
 }
 
+[[nodiscard]] UnitVisual visualForUnit(const CombatVisualReadModel& visual, UnitId unitId,
+                                       UnitState fallbackState, float fallbackTime) noexcept {
+    UnitVisual result{
+        .unitId = unitId,
+        .clipId = {},
+        .state = fallbackState,
+        .animationTimeSeconds = fallbackTime,
+        .overridesState = false,
+    };
+    for (const UnitVisual& unitVisual : visual.units) {
+        if (unitVisual.unitId != unitId) {
+            continue;
+        }
+        result.offset.x += unitVisual.offset.x;
+        result.offset.y += unitVisual.offset.y;
+        if (unitVisual.overridesState) {
+            result.clipId = unitVisual.clipId;
+            result.state = unitVisual.state;
+            result.animationTimeSeconds = unitVisual.animationTimeSeconds;
+            result.overridesState = true;
+        }
+    }
+    return result;
+}
+
+[[nodiscard]] int animationFrame(SpriteAnimationView animation, float animationTimeSeconds) noexcept {
+    if (animation.frameCount <= 1) {
+        return 0;
+    }
+    return static_cast<int>(std::floor(animationTimeSeconds * animation.framesPerSecond)) %
+           animation.frameCount;
+}
+
+bool drawSpriteAnimationToRect(SpriteAnimationView animation, Rectangle destination,
+                               float animationTimeSeconds, Color tint = WHITE) {
+    if (!animation.loaded()) {
+        return false;
+    }
+    const int frame = animationFrame(animation, animationTimeSeconds);
+    const float frameWidth =
+        static_cast<float>(animation.texture->width) / static_cast<float>(animation.frameCount);
+    const Rectangle source{frameWidth * static_cast<float>(frame), 0.0F, frameWidth,
+                           static_cast<float>(animation.texture->height)};
+    ui::drawTextureFrameToRect(*animation.texture, source, destination, tint);
+    return true;
+}
+
 [[nodiscard]] ui::ButtonStyle regularButtonStyle(bool enabled = true) noexcept {
     return ui::ButtonStyle{
         .background = enabled ? ui::theme::Button : ui::theme::ButtonDisabled,
@@ -96,6 +144,8 @@ public:
         // Dynamic board content and interaction feedback.
         drawSellArea(context);
         drawUnits(context);
+        drawProjectiles(context);
+        drawImpacts(context);
         drawDragPreview(context);
         drawHoverPanel(context);
 
@@ -223,12 +273,61 @@ private:
                 return;
             }
             if (const auto rect = unitRect(unit, context.layout)) {
-                UnitItem::drawUnit(assets_, unit, *rect, context.animationTimeSeconds);
+                const UnitVisual visual = visualForUnit(context.combatVisual, unit.id, unit.runtime.state,
+                                                        context.animationTimeSeconds);
+                UnitItem::drawUnit(assets_, unit, *rect, visual.state, visual.clipId,
+                                   visual.animationTimeSeconds, visual.offset);
                 if (context.input.selectedUnitId == unit.id) {
                     DrawRectangleLinesEx(*rect, 3.0F, GOLD);
                 }
             }
         });
+    }
+
+    void drawProjectiles(const RenderContext& context) {
+        for (const ProjectileVisual& projectile : context.combatVisual.projectiles) {
+            const Rectangle rect{projectile.position.x - 12.0F, projectile.position.y - 12.0F,
+                                 24.0F, 24.0F};
+            if (drawSpriteAnimationToRect(assets_.spriteAnimation(projectile.clipId), rect,
+                                          context.animationTimeSeconds)) {
+                continue;
+            }
+            if (const Texture2D* texture = assets_.combatTexture(CombatTextureSlot::BasicProjectile);
+                texture != nullptr) {
+                (void)ui::drawTextureToRect(texture, rect);
+                continue;
+            }
+            DrawLineEx(projectile.start, projectile.end, 2.0F, Color{240, 210, 90, 120});
+            DrawCircleV(projectile.position, 5.0F, GOLD);
+            DrawCircleLines(static_cast<int>(projectile.position.x), static_cast<int>(projectile.position.y),
+                            6.0F, BLACK);
+        }
+    }
+
+    void drawImpacts(const RenderContext& context) {
+        for (const ImpactVisual& impact : context.combatVisual.impacts) {
+            const CombatTextureSlot textureSlot = impact.kind == CombatImpactVisualKind::Death
+                                                      ? CombatTextureSlot::DeathImpact
+                                                      : CombatTextureSlot::HitImpact;
+            const float size = impact.kind == CombatImpactVisualKind::Death ? 44.0F : 30.0F;
+            const Rectangle rect{impact.position.x - size / 2.0F, impact.position.y - size / 2.0F, size,
+                                 size};
+            if (drawSpriteAnimationToRect(assets_.spriteAnimation(impact.clipId), rect,
+                                          impact.progress * 0.25F, Color{255, 255, 255, 220})) {
+                continue;
+            }
+            if (const Texture2D* texture = assets_.combatTexture(textureSlot); texture != nullptr) {
+                (void)ui::drawTextureToRect(texture, rect, Color{255, 255, 255, 220});
+                continue;
+            }
+
+            const float radius = (1.0F - impact.progress) * size * 0.45F + 3.0F;
+            const unsigned char alpha = static_cast<unsigned char>(220.0F * (1.0F - impact.progress));
+            const Color color = impact.kind == CombatImpactVisualKind::Death ? Color{180, 180, 180, alpha}
+                                                                             : Color{255, 222, 90, alpha};
+            DrawCircleLines(static_cast<int>(impact.position.x), static_cast<int>(impact.position.y), radius,
+                            color);
+        }
     }
 
     void drawStartButton(const RenderContext& context) {

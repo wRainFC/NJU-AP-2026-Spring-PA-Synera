@@ -10,6 +10,7 @@
 #include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace synera {
 
@@ -51,6 +52,9 @@ void GameApp::run() {
 void GameApp::init() {
     window_.init(config::WindowWidth, config::WindowHeight, "Synera: Synergy Auto-Arena");
     window_.setTargetFps(config::TargetFps);
+    (void)combatActions_.loadFromFile("assets/data/combat_actions.json");
+    combatSystem_.setActionCatalog(combatActions_);
+    combatAnimations_.setActionCatalog(combatActions_);
     renderer_.loadAssets();
     startNewRun();
 }
@@ -60,6 +64,7 @@ void GameApp::startNewRun() {
     input_           = InputController{};
     shopSystem_      = ShopSystem{};
     equipmentSystem_ = EquipmentSystem{};
+    combatAnimations_.reset();
     outcome_         = GameOutcome::Playing;
     activeModal_.reset();
     statusMessage_.clear();
@@ -77,6 +82,7 @@ void GameApp::startNewRun() {
 
 void GameApp::update(float dt) {
     animationTimeSeconds_ += dt;
+    combatAnimations_.update(dt);
 
     if (statusMessageTimer_ > 0.0F) {
         statusMessageTimer_ -= dt;
@@ -98,10 +104,13 @@ void GameApp::update(float dt) {
 
     if (state_.phase() == Phase::Combat) {
         combatSystem_.update(state_, dt);
+        const std::vector<CombatEvent> events = combatSystem_.drainEvents();
+        combatAnimations_.addEvents(events, layout_);
         if (state_.isCombatFinished()) {
             const bool playerWon           = state_.playerWonCombat();
             const RoundResult result       = roundSystem_.enterResolve(state_, playerWon);
             const EquipmentDropResult drop = equipmentSystem_.tryGrantRoundDrop(state_, playerWon);
+            combatAnimations_.reset();
             refreshOutcomeFromState();
             if (outcome_ == GameOutcome::Playing) {
                 activeModal_ = roundSettlementModal(result, drop);
@@ -122,6 +131,7 @@ void GameApp::render() {
         .pointer              = pointer,
         .statusMessage        = statusMessage_,
         .modal                = activeModal_,
+        .combatVisual         = combatAnimations_.readModel(),
         .animationTimeSeconds = animationTimeSeconds_,
         .interactionsEnabled  = interactionsEnabled(),
     };
@@ -145,6 +155,7 @@ bool GameApp::applyInputCommands(std::span<const InputCommand> commands) {
                 [&](RequestLoad) { return handleLoad(); },
                 [&](StartCombat) {
                     activeModal_.reset();
+                    combatAnimations_.reset();
                     synergySystem_.recompute(state_);
                     roundSystem_.startCombat(state_);
                     if (state_.phase() != Phase::Prep) {
@@ -235,6 +246,7 @@ bool GameApp::handleLoad() {
 
     state_ = std::move(*loaded);
     input_ = InputController{};
+    combatAnimations_.reset();
     synergySystem_.recompute(state_);
     refreshOutcomeFromState();
     activeModal_ = modalForOutcome(outcome_);
@@ -268,6 +280,7 @@ void GameApp::finishRoundSettlement() {
 
     roundSystem_.finishResolve(state_);
     (void)shopSystem_.refresh(state_, ShopRefreshMode::RoundStart);
+    combatAnimations_.reset();
     activeModal_.reset();
 }
 
