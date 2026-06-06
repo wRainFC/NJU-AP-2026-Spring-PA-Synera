@@ -7,12 +7,21 @@
 
 namespace synera {
 
-enum class CombatEventType { UnitMoved, AttackStarted, DamageDealt, AbilityCast, UnitDied };
+enum class CombatEventType {
+    UnitMoved,
+    AttackStarted,
+    DamageDealt,
+    HealReceived,
+    StatusApplied,
+    AbilityCast,
+    UnitDied,
+};
 
 struct CombatEvent {
     CombatEventType type = CombatEventType::AttackStarted;
     std::uint64_t actionId = 0;
     std::string actionProfileId;
+    std::string animationProfileId;
     UnitId sourceId      = InvalidUnitId;
     UnitId targetId      = InvalidUnitId;
     AxialPos from{};
@@ -21,6 +30,7 @@ struct CombatEvent {
     AttackVisualKind attackKind = AttackVisualKind::Melee;
     float actionDurationSeconds = 0.0F;
     float hitDelaySeconds = 0.0F;
+    float statusDurationSeconds = 0.0F;
 };
 
 }  // namespace synera

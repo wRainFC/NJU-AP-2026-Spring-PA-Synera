@@ -1,0 +1,366 @@
+{
+    "combatAnimations": {
+        "profiles": [
+            {
+                "id": "iron_guard.basic_slash",
+                "unitState": "attacking",
+                "attackKind": "melee",
+                "unitClip": {
+                    "id": "iron_guard.basic_slash",
+                    "texturePath": "textures/actions/iron_guard_basic_slash.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "lungePixels": 18.0,
+                "projectileEnabled": false,
+                "projectileClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 520.0,
+                "castImpactClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.22
+            },
+            {
+                "id": "training_dummy.basic_slam",
+                "unitState": "attacking",
+                "attackKind": "melee",
+                "unitClip": {
+                    "id": "training_dummy.basic_slam",
+                    "texturePath": "textures/actions/training_dummy_basic_slam.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 8.0
+                },
+                "lungePixels": 10.0,
+                "projectileEnabled": false,
+                "projectileClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 520.0,
+                "castImpactClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.22
+            },
+            {
+                "id": "storm_archer.basic_arrow",
+                "unitState": "attacking",
+                "attackKind": "ranged",
+                "unitClip": {
+                    "id": "storm_archer.basic_arrow",
+                    "texturePath": "textures/actions/storm_archer_basic_arrow.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "lungePixels": 0.0,
+                "projectileEnabled": true,
+                "projectileClip": {
+                    "id": "projectile.arrow",
+                    "texturePath": "textures/projectiles/arrow.png",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 560.0,
+                "castImpactClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.22
+            },
+            {
+                "id": "ember_mage.basic_bolt",
+                "unitState": "attacking",
+                "attackKind": "ranged",
+                "unitClip": {
+                    "id": "ember_mage.basic_bolt",
+                    "texturePath": "textures/actions/ember_mage_basic_bolt.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 9.0
+                },
+                "lungePixels": 0.0,
+                "projectileEnabled": true,
+                "projectileClip": {
+                    "id": "projectile.fire_bolt",
+                    "texturePath": "textures/projectiles/fire_bolt.png",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 500.0,
+                "castImpactClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.24
+            },
+            {
+                "id": "field_medic.basic_pulse",
+                "unitState": "attacking",
+                "attackKind": "ranged",
+                "unitClip": {
+                    "id": "field_medic.basic_pulse",
+                    "texturePath": "textures/actions/field_medic_basic_pulse.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 9.0
+                },
+                "lungePixels": 0.0,
+                "projectileEnabled": true,
+                "projectileClip": {
+                    "id": "projectile.heal_pulse",
+                    "texturePath": "textures/projectiles/heal_pulse.png",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 480.0,
+                "castImpactClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.22
+            },
+            {
+                "id": "stun_strike.cast",
+                "unitState": "casting",
+                "attackKind": "melee",
+                "unitClip": {
+                    "id": "stun_strike.cast",
+                    "texturePath": "textures/actions/stun_strike_cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "lungePixels": 22.0,
+                "projectileEnabled": false,
+                "projectileClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 520.0,
+                "castImpactClip": {
+                    "id": "impact.cast",
+                    "texturePath": "textures/effects/cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.stun",
+                    "texturePath": "textures/effects/stun.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.30
+            },
+            {
+                "id": "fire_line.cast",
+                "unitState": "casting",
+                "attackKind": "ranged",
+                "unitClip": {
+                    "id": "fire_line.cast",
+                    "texturePath": "textures/actions/fire_line_cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 9.0
+                },
+                "lungePixels": 0.0,
+                "projectileEnabled": true,
+                "projectileClip": {
+                    "id": "projectile.fire_line",
+                    "texturePath": "textures/projectiles/fire_line.png",
+                    "frameCount": 2,
+                    "framesPerSecond": 12.0
+                },
+                "projectilePixelsPerSecond": 680.0,
+                "castImpactClip": {
+                    "id": "impact.cast",
+                    "texturePath": "textures/effects/cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.fire",
+                    "texturePath": "textures/effects/fire_hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.28
+            },
+            {
+                "id": "healing_aura.cast",
+                "unitState": "casting",
+                "attackKind": "ranged",
+                "unitClip": {
+                    "id": "healing_aura.cast",
+                    "texturePath": "textures/actions/healing_aura_cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 8.0
+                },
+                "lungePixels": 0.0,
+                "projectileEnabled": false,
+                "projectileClip": {
+                    "id": "",
+                    "texturePath": "",
+                    "frameCount": 1,
+                    "framesPerSecond": 8.0
+                },
+                "projectilePixelsPerSecond": 520.0,
+                "castImpactClip": {
+                    "id": "impact.heal_cast",
+                    "texturePath": "textures/effects/heal_cast.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 10.0
+                },
+                "damageImpactClip": {
+                    "id": "impact.hit",
+                    "texturePath": "textures/effects/hit.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "healImpactClip": {
+                    "id": "impact.heal",
+                    "texturePath": "textures/effects/heal.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "statusImpactClip": {
+                    "id": "impact.status",
+                    "texturePath": "textures/effects/status.png",
+                    "frameCount": 4,
+                    "framesPerSecond": 12.0
+                },
+                "impactDurationSeconds": 0.32
+            }
+        ]
+    }
+}

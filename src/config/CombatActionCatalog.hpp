@@ -13,26 +13,13 @@ namespace synera {
 
 enum class CombatActionKind { BasicAttack, Ability };
 
-struct SpriteClipSpec {
-    std::string id;
-    std::string texturePath;
-    int frameCount = 1;
-    float framesPerSecond = 8.0F;
-};
-
 struct CombatActionProfile {
     std::string id;
     CombatActionKind kind = CombatActionKind::BasicAttack;
     AttackVisualKind attackKind = AttackVisualKind::Melee;
     float durationSeconds = 0.36F;
     std::vector<float> hitTimes;
-    SpriteClipSpec unitClip;
-    float lungePixels = 0.0F;
-    bool projectileEnabled = false;
-    SpriteClipSpec projectileClip;
-    float projectilePixelsPerSecond = 520.0F;
-    SpriteClipSpec impactClip;
-    float impactDurationSeconds = 0.22F;
+    std::string animationProfileId;
 };
 
 class CombatActionCatalog {

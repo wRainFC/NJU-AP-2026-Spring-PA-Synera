@@ -121,8 +121,7 @@ void StunStrikeAbility::cast(Unit& caster, AbilityContext& context) {
     if (target != nullptr && caster.canAttackTarget(*target)) {
         context.dealDamage(*target, StunStrikeDamage);
         if (target->alive()) {
-            target->runtime.state     = UnitState::Stunned;
-            target->runtime.stunTimer = StunStrikeDuration;
+            context.applyStun(*target, StunStrikeDuration);
         }
     }
 }

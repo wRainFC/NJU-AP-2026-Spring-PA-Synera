@@ -1,6 +1,6 @@
 #include "ui/RenderAssets.hpp"
 
-#include "config/CombatActionCatalog.hpp"
+#include "config/CombatAnimationCatalog.hpp"
 
 #include <algorithm>
 #include <array>
@@ -365,12 +365,15 @@ void RenderAssets::load(const std::filesystem::path& requestedRoot) {
         combatTextures_[combatTextureIndex(entry.slot)] = loadTextureIfPresent(textureRoot / entry.path);
     }
 
-    CombatActionCatalog combatActions;
-    (void)combatActions.loadFromFile(assetRoot / "data/combat_actions.json");
-    for (const CombatActionProfile& profile : combatActions.profiles()) {
+    CombatAnimationCatalog combatAnimations;
+    (void)combatAnimations.loadFromFile(assetRoot / "data/combat_animations.json");
+    for (const CombatAnimationProfile& profile : combatAnimations.profiles()) {
         loadSpriteClip(spriteAnimations_, assetRoot, profile.unitClip);
         loadSpriteClip(spriteAnimations_, assetRoot, profile.projectileClip);
-        loadSpriteClip(spriteAnimations_, assetRoot, profile.impactClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.castImpactClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.damageImpactClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.healImpactClip);
+        loadSpriteClip(spriteAnimations_, assetRoot, profile.statusImpactClip);
     }
 }
 

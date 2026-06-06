@@ -53,8 +53,9 @@ void GameApp::init() {
     window_.init(config::WindowWidth, config::WindowHeight, "Synera: Synergy Auto-Arena");
     window_.setTargetFps(config::TargetFps);
     (void)combatActions_.loadFromFile("assets/data/combat_actions.json");
+    (void)combatAnimationsConfig_.loadFromFile("assets/data/combat_animations.json");
     combatSystem_.setActionCatalog(combatActions_);
-    combatAnimations_.setActionCatalog(combatActions_);
+    combatAnimations_.setAnimationCatalog(combatAnimationsConfig_);
     renderer_.loadAssets();
     startNewRun();
 }

@@ -306,25 +306,35 @@ private:
 
     void drawImpacts(const RenderContext& context) {
         for (const ImpactVisual& impact : context.combatVisual.impacts) {
-            const CombatTextureSlot textureSlot = impact.kind == CombatImpactVisualKind::Death
-                                                      ? CombatTextureSlot::DeathImpact
-                                                      : CombatTextureSlot::HitImpact;
-            const float size = impact.kind == CombatImpactVisualKind::Death ? 44.0F : 30.0F;
+            const bool deathImpact = impact.kind == CombatImpactVisualKind::Death;
+            const CombatTextureSlot textureSlot = deathImpact ? CombatTextureSlot::DeathImpact
+                                                              : CombatTextureSlot::HitImpact;
+            const float size = deathImpact ? 44.0F : 30.0F;
             const Rectangle rect{impact.position.x - size / 2.0F, impact.position.y - size / 2.0F, size,
                                  size};
             if (drawSpriteAnimationToRect(assets_.spriteAnimation(impact.clipId), rect,
                                           impact.progress * 0.25F, Color{255, 255, 255, 220})) {
                 continue;
             }
-            if (const Texture2D* texture = assets_.combatTexture(textureSlot); texture != nullptr) {
+            if ((impact.kind == CombatImpactVisualKind::Hit || impact.kind == CombatImpactVisualKind::Death) &&
+                (assets_.combatTexture(textureSlot) != nullptr)) {
+                const Texture2D* texture = assets_.combatTexture(textureSlot);
                 (void)ui::drawTextureToRect(texture, rect, Color{255, 255, 255, 220});
                 continue;
             }
 
             const float radius = (1.0F - impact.progress) * size * 0.45F + 3.0F;
             const unsigned char alpha = static_cast<unsigned char>(220.0F * (1.0F - impact.progress));
-            const Color color = impact.kind == CombatImpactVisualKind::Death ? Color{180, 180, 180, alpha}
-                                                                             : Color{255, 222, 90, alpha};
+            Color color = Color{255, 222, 90, alpha};
+            if (impact.kind == CombatImpactVisualKind::Heal) {
+                color = Color{80, 235, 145, alpha};
+            } else if (impact.kind == CombatImpactVisualKind::Status) {
+                color = Color{130, 185, 255, alpha};
+            } else if (impact.kind == CombatImpactVisualKind::Cast) {
+                color = Color{190, 145, 255, alpha};
+            } else if (deathImpact) {
+                color = Color{180, 180, 180, alpha};
+            }
             DrawCircleLines(static_cast<int>(impact.position.x), static_cast<int>(impact.position.y), radius,
                             color);
         }

@@ -6,12 +6,24 @@
 
 #include <concepts>
 #include <functional>
+#include <span>
 #include <utility>
+#include <vector>
 
 namespace synera {
 
 class GameState;
 class Unit;
+
+enum class AbilityResultType { Damage, Heal, Stun };
+
+struct AbilityResult {
+    AbilityResultType type = AbilityResultType::Damage;
+    UnitId targetId = InvalidUnitId;
+    AxialPos targetPos{};
+    int amount = 0;
+    float durationSeconds = 0.0F;
+};
 
 class AbilityContext {
 public:
@@ -29,7 +41,9 @@ public:
 
     void dealDamage(Unit& target, int amount) const noexcept;
     void heal(Unit& target, int amount) const noexcept;
+    void applyStun(Unit& target, float durationSeconds) const noexcept;
     [[nodiscard]] Unit* findUnit(UnitId id) const;
+    [[nodiscard]] std::span<const AbilityResult> results() const noexcept;
 
 private:
     template <typename OwnerRelation, std::invocable<Unit&> Visitor>
@@ -42,6 +56,7 @@ private:
     }
 
     GameState& state_;
+    mutable std::vector<AbilityResult> results_;
 };
 
 }  // namespace synera

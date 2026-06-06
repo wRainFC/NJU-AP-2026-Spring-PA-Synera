@@ -44,6 +44,7 @@ endif()
 
 add_library(synera_logic
     src/config/CombatActionCatalog.cpp
+    src/config/CombatAnimationCatalog.cpp
     src/core/AbilityContext.cpp
     src/core/abilities/BasicAbilities.cpp
     src/core/GameState.cpp
@@ -130,6 +131,7 @@ if (BUILD_TESTING)
     add_executable(synera_tests
         tests/BoardTests.cpp
         tests/CombatActionCatalogTests.cpp
+        tests/CombatAnimationCatalogTests.cpp
         tests/GameStatePlacementTests.cpp
         tests/CombatSystemTests.cpp
         tests/CombatAnimationControllerTests.cpp

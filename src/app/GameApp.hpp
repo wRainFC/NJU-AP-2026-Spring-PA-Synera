@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/GameState.hpp"
+#include "config/CombatAnimationCatalog.hpp"
 #include "config/CombatActionCatalog.hpp"
 #include "systems/CombatSystem.hpp"
 #include "systems/EquipmentSystem.hpp"
@@ -48,6 +49,7 @@ private:
     GameState state_;
     Layout layout_;
     CombatActionCatalog combatActions_;
+    CombatAnimationCatalog combatAnimationsConfig_;
     Renderer renderer_;
     InputController input_;
     RoundSystem roundSystem_;

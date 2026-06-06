@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config/AnimationConfig.hpp"
-#include "config/CombatActionCatalog.hpp"
+#include "config/CombatAnimationCatalog.hpp"
 #include "core/Types.hpp"
 #include "systems/CombatEvents.hpp"
 #include "raylib.h"
@@ -14,7 +14,7 @@ namespace synera {
 
 class Layout;
 
-enum class CombatImpactVisualKind { Hit, Death };
+enum class CombatImpactVisualKind { Hit, Heal, Status, Cast, Death };
 
 struct UnitVisual {
     UnitId unitId = InvalidUnitId;
@@ -47,7 +47,7 @@ struct CombatVisualReadModel {
 
 class CombatAnimationController {
 public:
-    void setActionCatalog(const CombatActionCatalog& catalog) noexcept;
+    void setAnimationCatalog(const CombatAnimationCatalog& catalog) noexcept;
     void reset();
     void addEvents(std::span<const CombatEvent> events, const Layout& layout);
     void update(float dt);
@@ -95,12 +95,14 @@ private:
     void handleAttackStarted(const CombatEvent& event, const Layout& layout);
     void handleAbilityCast(const CombatEvent& event, const Layout& layout);
     void handleDamageDealt(const CombatEvent& event, const Layout& layout);
+    void handleHealReceived(const CombatEvent& event, const Layout& layout);
+    void handleStatusApplied(const CombatEvent& event, const Layout& layout);
     void handleUnitDied(const CombatEvent& event, const Layout& layout);
-    [[nodiscard]] const CombatActionCatalog& actionCatalog() const noexcept;
-    [[nodiscard]] const CombatActionProfile& profileFor(const CombatEvent& event) const noexcept;
+    [[nodiscard]] const CombatAnimationCatalog& animationCatalog() const noexcept;
+    [[nodiscard]] const CombatAnimationProfile& profileFor(const CombatEvent& event) const noexcept;
 
-    CombatActionCatalog defaultActionCatalog_;
-    const CombatActionCatalog* actionCatalog_ = nullptr;
+    CombatAnimationCatalog defaultAnimationCatalog_;
+    const CombatAnimationCatalog* animationCatalog_ = nullptr;
     std::vector<UnitMotion> motions_;
     std::vector<UnitAction> actions_;
     std::vector<Projectile> projectiles_;

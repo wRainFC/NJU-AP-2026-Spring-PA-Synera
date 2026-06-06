@@ -22,6 +22,12 @@ struct RoundRewardRule {
     bool advancesRound;
 };
 
+struct EnemyWaveTuning {
+    float hpMultiplier;
+    float atkMultiplier;
+    float attackIntervalMultiplier;
+};
+
 inline constexpr std::array RoundRewardRules{
     RoundRewardRule{
         .playerWon     = true,
@@ -75,6 +81,31 @@ inline constexpr std::array ScalingEnemies{
         return 1;
     }
     return std::clamp(1 + (round - 4) / 3, 1, 3);
+}
+
+[[nodiscard]] inline EnemyWaveTuning enemyTuningForRound(int round) noexcept {
+    if (round <= 1) {
+        return EnemyWaveTuning{.hpMultiplier = 1.35F, .atkMultiplier = 1.10F,
+                               .attackIntervalMultiplier = 1.00F};
+    }
+    if (round == 2) {
+        return EnemyWaveTuning{.hpMultiplier = 1.30F, .atkMultiplier = 1.10F,
+                               .attackIntervalMultiplier = 1.00F};
+    }
+    if (round == 3) {
+        return EnemyWaveTuning{.hpMultiplier = 1.20F, .atkMultiplier = 1.15F,
+                               .attackIntervalMultiplier = 0.98F};
+    }
+    if (round == 4) {
+        return EnemyWaveTuning{.hpMultiplier = 1.30F, .atkMultiplier = 1.15F,
+                               .attackIntervalMultiplier = 0.95F};
+    }
+    if (round == 5) {
+        return EnemyWaveTuning{.hpMultiplier = 1.45F, .atkMultiplier = 1.25F,
+                               .attackIntervalMultiplier = 0.92F};
+    }
+    return EnemyWaveTuning{.hpMultiplier = 1.65F, .atkMultiplier = 1.35F,
+                           .attackIntervalMultiplier = 0.90F};
 }
 
 [[nodiscard]] inline const RoundRewardRule& rewardRuleFor(bool playerWon) noexcept {

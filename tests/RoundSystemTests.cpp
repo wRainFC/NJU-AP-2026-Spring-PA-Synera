@@ -118,6 +118,28 @@ TEST_CASE("RoundSystem spawns round-specific enemy waves", "[round]") {
     CHECK(roundThree[1]->templateId == "iron_guard");
 }
 
+TEST_CASE("RoundSystem applies enemy-only wave tuning", "[round]") {
+    synera::GameState state;
+    synera::RoundSystem rounds;
+    const synera::UnitId playerId = state.createUnit("training_dummy", synera::Owner::PlayerCtrl);
+    auto* player = state.findUnit(playerId);
+    REQUIRE(player != nullptr);
+    const int playerMaxHp = player->derivedStats.maxHp;
+    const int playerAtk = player->derivedStats.atk;
+
+    state.player().currentRound = 1;
+    rounds.spawnEnemies(state);
+
+    const auto enemies = enemyUnits(state);
+    REQUIRE(enemies.size() == 1);
+    CHECK(enemies.front()->templateId == "training_dummy");
+    CHECK(enemies.front()->derivedStats.maxHp == 243);
+    CHECK(enemies.front()->derivedStats.atk == 19);
+    CHECK(enemies.front()->runtime.hp == enemies.front()->derivedStats.maxHp);
+    CHECK(player->derivedStats.maxHp == playerMaxHp);
+    CHECK(player->derivedStats.atk == playerAtk);
+}
+
 TEST_CASE("RoundSystem scales later enemy waves by round", "[round]") {
     synera::GameState state;
     synera::RoundSystem rounds;
@@ -129,5 +151,8 @@ TEST_CASE("RoundSystem scales later enemy waves by round", "[round]") {
     REQUIRE(enemies.size() == 3);
     CHECK(std::ranges::all_of(enemies, [](const synera::Unit* unit) {
         return unit->star == 3 && unit->runtime.hp == unit->derivedStats.maxHp;
+    }));
+    CHECK(std::ranges::all_of(enemies, [](const synera::Unit* unit) {
+        return unit->derivedStats.attackInterval < unit->baseStats.attackInterval;
     }));
 }

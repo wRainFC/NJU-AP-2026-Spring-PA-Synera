@@ -2,6 +2,7 @@
 
 #include "board/Pathfinder.hpp"
 #include "config/CombatActionCatalog.hpp"
+#include "core/AbilityContext.hpp"
 #include "core/Types.hpp"
 #include "systems/CombatEvents.hpp"
 
@@ -35,6 +36,7 @@ private:
         std::uint64_t id = 0;
         CombatActionKind kind = CombatActionKind::BasicAttack;
         std::string profileId;
+        std::string animationProfileId;
         UnitId sourceId = InvalidUnitId;
         UnitId targetId = InvalidUnitId;
         AxialPos from{};
@@ -50,12 +52,14 @@ private:
     void updateUnit(GameState& state, Unit& unit, float dt);
     Unit* acquireTarget(GameState& state, const Unit& unit);
     void updateStun(Unit& unit, float dt);
-    bool tryCastAbility(Unit& unit);
+    bool tryCastAbility(GameState& state, Unit& unit);
     void moveTowardTarget(GameState& state, Unit& unit, const Unit& target, float dt);
     void performAttack(Unit& attacker, Unit& target);
     void updatePendingActions(GameState& state, float dt);
     void resolvePendingHit(GameState& state, PendingCombatAction& action, PendingCombatHit& hit);
     void resolvePendingAbility(GameState& state, PendingCombatAction& action);
+    void emitAbilityResult(const Unit& source, const PendingCombatAction& action,
+                           const AbilityResult& result);
     void cleanupDeadBoardUnits(GameState& state);
     void emit(CombatEvent event);
     [[nodiscard]] bool unitHasPendingAction(UnitId unitId) const noexcept;

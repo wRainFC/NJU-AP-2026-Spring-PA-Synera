@@ -67,7 +67,7 @@ void CombatSystem::updateUnit(GameState& state, Unit& unit, float dt) {
         return;
     }
 
-    if (tryCastAbility(unit)) {
+    if (tryCastAbility(state, unit)) {
         return;
     }
 
@@ -109,12 +109,15 @@ void CombatSystem::updateStun(Unit& unit, float dt) {
     }
 }
 
-bool CombatSystem::tryCastAbility(Unit& unit) {
+bool CombatSystem::tryCastAbility(GameState& state, Unit& unit) {
     if (!unit.ability || unit.runtime.mana < unit.derivedStats.maxMana) {
         return false;
     }
 
     const CombatActionProfile& profile = abilityProfileFor(unit);
+    const Unit* target = state.findUnit(unit.runtime.targetId);
+    const AxialPos from = unit.boardPos.value_or(AxialPos{});
+    const AxialPos to = target == nullptr ? from : target->boardPos.value_or(from);
     unit.runtime.state = UnitState::Casting;
     unit.runtime.mana = 0;
 
@@ -124,10 +127,11 @@ bool CombatSystem::tryCastAbility(Unit& unit) {
         .id = actionId,
         .kind = CombatActionKind::Ability,
         .profileId = profile.id,
+        .animationProfileId = profile.animationProfileId,
         .sourceId = unit.id,
         .targetId = unit.runtime.targetId,
-        .from = unit.boardPos.value_or(AxialPos{}),
-        .to = unit.boardPos.value_or(AxialPos{}),
+        .from = from,
+        .to = to,
         .attackKind = profile.attackKind,
         .durationSeconds = profile.durationSeconds,
         .hits = {PendingCombatHit{.targetId = unit.runtime.targetId, .timeSeconds = hitTime}},
@@ -136,10 +140,11 @@ bool CombatSystem::tryCastAbility(Unit& unit) {
         .type                  = CombatEventType::AbilityCast,
         .actionId              = actionId,
         .actionProfileId       = profile.id,
+        .animationProfileId    = profile.animationProfileId,
         .sourceId              = unit.id,
         .targetId              = unit.runtime.targetId,
-        .from                  = unit.boardPos.value_or(AxialPos{}),
-        .to                    = unit.boardPos.value_or(AxialPos{}),
+        .from                  = from,
+        .to                    = to,
         .attackKind            = profile.attackKind,
         .actionDurationSeconds = profile.durationSeconds,
         .hitDelaySeconds       = hitTime,
@@ -171,6 +176,7 @@ void CombatSystem::moveTowardTarget(GameState& state, Unit& unit, const Unit& ta
         .type     = CombatEventType::UnitMoved,
         .actionId = 0,
         .actionProfileId = {},
+        .animationProfileId = {},
         .sourceId = unit.id,
         .from     = from,
         .to       = to,
@@ -205,6 +211,7 @@ void CombatSystem::performAttack(Unit& attacker, Unit& target) {
         .id = actionId,
         .kind = CombatActionKind::BasicAttack,
         .profileId = profile.id,
+        .animationProfileId = profile.animationProfileId,
         .sourceId = attacker.id,
         .targetId = target.id,
         .from = attacker.boardPos.value_or(AxialPos{}),
@@ -217,6 +224,7 @@ void CombatSystem::performAttack(Unit& attacker, Unit& target) {
         .type                  = CombatEventType::AttackStarted,
         .actionId              = actionId,
         .actionProfileId       = profile.id,
+        .animationProfileId    = profile.animationProfileId,
         .sourceId              = attacker.id,
         .targetId              = target.id,
         .from                  = attacker.boardPos.value_or(AxialPos{}),
@@ -271,6 +279,7 @@ void CombatSystem::resolvePendingHit(GameState& state, PendingCombatAction& acti
         .type                  = CombatEventType::DamageDealt,
         .actionId              = action.id,
         .actionProfileId       = action.profileId,
+        .animationProfileId    = action.animationProfileId,
         .sourceId              = action.sourceId,
         .targetId              = hit.targetId,
         .from                  = source->boardPos.value_or(action.from),
@@ -294,7 +303,42 @@ void CombatSystem::resolvePendingAbility(GameState& state, PendingCombatAction& 
 
     AbilityContext context{state};
     source->ability->cast(*source, context);
+    for (const AbilityResult& result : context.results()) {
+        emitAbilityResult(*source, action, result);
+    }
     action.abilityResolved = true;
+}
+
+void CombatSystem::emitAbilityResult(const Unit& source, const PendingCombatAction& action,
+                                     const AbilityResult& result) {
+    CombatEventType eventType = CombatEventType::DamageDealt;
+    switch (result.type) {
+        case AbilityResultType::Damage:
+            eventType = CombatEventType::DamageDealt;
+            break;
+        case AbilityResultType::Heal:
+            eventType = CombatEventType::HealReceived;
+            break;
+        case AbilityResultType::Stun:
+            eventType = CombatEventType::StatusApplied;
+            break;
+    }
+
+    emit(CombatEvent{
+        .type                  = eventType,
+        .actionId              = action.id,
+        .actionProfileId       = action.profileId,
+        .animationProfileId    = action.animationProfileId,
+        .sourceId              = action.sourceId,
+        .targetId              = result.targetId,
+        .from                  = source.boardPos.value_or(action.from),
+        .to                    = result.targetPos,
+        .amount                = result.amount,
+        .attackKind            = action.attackKind,
+        .actionDurationSeconds = action.durationSeconds,
+        .hitDelaySeconds       = action.elapsedSeconds,
+        .statusDurationSeconds = result.durationSeconds,
+    });
 }
 
 void CombatSystem::cleanupDeadBoardUnits(GameState& state) {
@@ -304,6 +348,7 @@ void CombatSystem::cleanupDeadBoardUnits(GameState& state) {
                 .type     = CombatEventType::UnitDied,
                 .actionId = 0,
                 .actionProfileId = {},
+                .animationProfileId = {},
                 .sourceId = unit.id,
                 .from     = *unit.boardPos,
                 .to       = *unit.boardPos,

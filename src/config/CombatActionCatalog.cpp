@@ -32,40 +32,18 @@ constexpr std::string_view DefaultAbilityProfileId = "default.ability_cast";
     return name == "ranged" ? AttackVisualKind::Ranged : AttackVisualKind::Melee;
 }
 
-struct SpriteClipData {
-    std::string id;
-    std::string texturePath;
-    int frameCount = 1;
-    float framesPerSecond = 8.0F;
-
-    template <class Archive>
-    void serialize(Archive& archive) {
-        archive(CEREAL_NVP(id), CEREAL_NVP(texturePath), CEREAL_NVP(frameCount),
-                CEREAL_NVP(framesPerSecond));
-    }
-};
-
 struct CombatActionProfileData {
     std::string id;
     std::string kind = std::string{actionKindName(CombatActionKind::BasicAttack)};
     std::string attackKind = std::string{attackKindName(AttackVisualKind::Melee)};
     float durationSeconds = 0.36F;
     std::vector<float> hitTimes;
-    SpriteClipData unitClip;
-    float lungePixels = 0.0F;
-    bool projectileEnabled = false;
-    SpriteClipData projectileClip;
-    float projectilePixelsPerSecond = 520.0F;
-    SpriteClipData impactClip;
-    float impactDurationSeconds = 0.22F;
+    std::string animationProfileId;
 
     template <class Archive>
     void serialize(Archive& archive) {
         archive(CEREAL_NVP(id), CEREAL_NVP(kind), CEREAL_NVP(attackKind),
-                CEREAL_NVP(durationSeconds), CEREAL_NVP(hitTimes), CEREAL_NVP(unitClip),
-                CEREAL_NVP(lungePixels), CEREAL_NVP(projectileEnabled), CEREAL_NVP(projectileClip),
-                CEREAL_NVP(projectilePixelsPerSecond), CEREAL_NVP(impactClip),
-                CEREAL_NVP(impactDurationSeconds));
+                CEREAL_NVP(durationSeconds), CEREAL_NVP(hitTimes), CEREAL_NVP(animationProfileId));
     }
 };
 
@@ -78,15 +56,6 @@ struct CombatActionManifestData {
     }
 };
 
-[[nodiscard]] SpriteClipSpec clipFromData(SpriteClipData data) {
-    return SpriteClipSpec{
-        .id = std::move(data.id),
-        .texturePath = std::move(data.texturePath),
-        .frameCount = std::max(1, data.frameCount),
-        .framesPerSecond = data.framesPerSecond <= 0.0F ? 8.0F : data.framesPerSecond,
-    };
-}
-
 [[nodiscard]] CombatActionProfile profileFromData(CombatActionProfileData data) {
     CombatActionProfile profile{
         .id = std::move(data.id),
@@ -94,14 +63,11 @@ struct CombatActionManifestData {
         .attackKind = attackKindFromName(data.attackKind),
         .durationSeconds = std::max(0.01F, data.durationSeconds),
         .hitTimes = std::move(data.hitTimes),
-        .unitClip = clipFromData(std::move(data.unitClip)),
-        .lungePixels = data.lungePixels,
-        .projectileEnabled = data.projectileEnabled,
-        .projectileClip = clipFromData(std::move(data.projectileClip)),
-        .projectilePixelsPerSecond = std::max(1.0F, data.projectilePixelsPerSecond),
-        .impactClip = clipFromData(std::move(data.impactClip)),
-        .impactDurationSeconds = std::max(0.01F, data.impactDurationSeconds),
+        .animationProfileId = std::move(data.animationProfileId),
     };
+    if (profile.animationProfileId.empty()) {
+        profile.animationProfileId = profile.id;
+    }
     if (profile.hitTimes.empty()) {
         profile.hitTimes.push_back(std::min(profile.durationSeconds, profile.durationSeconds * 0.5F));
     }
@@ -112,63 +78,20 @@ struct CombatActionManifestData {
     return profile;
 }
 
-[[nodiscard]] CombatActionProfile makeMeleeProfile(std::string id, std::string clipId,
-                                                   std::string texturePath) {
+[[nodiscard]] CombatActionProfile makeProfile(std::string id, CombatActionKind kind,
+                                              AttackVisualKind attackKind, float durationSeconds,
+                                              std::vector<float> hitTimes,
+                                              std::string animationProfileId = {}) {
+    if (animationProfileId.empty()) {
+        animationProfileId = id;
+    }
     return CombatActionProfile{
         .id = std::move(id),
-        .kind = CombatActionKind::BasicAttack,
-        .attackKind = AttackVisualKind::Melee,
-        .durationSeconds = 0.36F,
-        .hitTimes = {0.14F},
-        .unitClip = SpriteClipSpec{.id = std::move(clipId), .texturePath = std::move(texturePath),
-                                   .frameCount = 4, .framesPerSecond = 10.0F},
-        .lungePixels = 16.0F,
-        .projectileEnabled = false,
-        .projectileClip = SpriteClipSpec{},
-        .impactClip = SpriteClipSpec{.id = "impact.hit", .texturePath = "textures/effects/hit.png",
-                                     .frameCount = 4, .framesPerSecond = 12.0F},
-        .impactDurationSeconds = 0.22F,
-    };
-}
-
-[[nodiscard]] CombatActionProfile makeRangedProfile(std::string id, std::string unitClipId,
-                                                    std::string unitTexturePath,
-                                                    std::string projectileClipId,
-                                                    std::string projectileTexturePath) {
-    return CombatActionProfile{
-        .id = std::move(id),
-        .kind = CombatActionKind::BasicAttack,
-        .attackKind = AttackVisualKind::Ranged,
-        .durationSeconds = 0.44F,
-        .hitTimes = {0.22F},
-        .unitClip = SpriteClipSpec{.id = std::move(unitClipId), .texturePath = std::move(unitTexturePath),
-                                   .frameCount = 4, .framesPerSecond = 10.0F},
-        .projectileEnabled = true,
-        .projectileClip = SpriteClipSpec{.id = std::move(projectileClipId),
-                                         .texturePath = std::move(projectileTexturePath),
-                                         .frameCount = 1, .framesPerSecond = 8.0F},
-        .projectilePixelsPerSecond = 520.0F,
-        .impactClip = SpriteClipSpec{.id = "impact.hit", .texturePath = "textures/effects/hit.png",
-                                     .frameCount = 4, .framesPerSecond = 12.0F},
-        .impactDurationSeconds = 0.22F,
-    };
-}
-
-[[nodiscard]] CombatActionProfile makeAbilityProfile(std::string id, std::string clipId,
-                                                     std::string texturePath) {
-    return CombatActionProfile{
-        .id = std::move(id),
-        .kind = CombatActionKind::Ability,
-        .attackKind = AttackVisualKind::Ranged,
-        .durationSeconds = 0.48F,
-        .hitTimes = {0.24F},
-        .unitClip = SpriteClipSpec{.id = std::move(clipId), .texturePath = std::move(texturePath),
-                                   .frameCount = 4, .framesPerSecond = 8.0F},
-        .projectileEnabled = false,
-        .projectileClip = SpriteClipSpec{},
-        .impactClip = SpriteClipSpec{.id = "impact.hit", .texturePath = "textures/effects/hit.png",
-                                     .frameCount = 4, .framesPerSecond = 12.0F},
-        .impactDurationSeconds = 0.22F,
+        .kind = kind,
+        .attackKind = attackKind,
+        .durationSeconds = durationSeconds,
+        .hitTimes = std::move(hitTimes),
+        .animationProfileId = std::move(animationProfileId),
     };
 }
 
@@ -182,33 +105,29 @@ void CombatActionCatalog::resetToDefaults() {
     profiles_.clear();
     indexById_.clear();
 
-    upsert(makeMeleeProfile(std::string{DefaultMeleeProfileId}, "default.melee_slash",
-                            "textures/actions/default_melee_slash.png"));
-    upsert(makeRangedProfile(std::string{DefaultRangedProfileId}, "default.ranged_shot",
-                             "textures/actions/default_ranged_shot.png", "projectile.basic",
-                             "textures/projectiles/basic.png"));
-    upsert(makeAbilityProfile(std::string{DefaultAbilityProfileId}, "default.ability_cast",
-                              "textures/actions/default_ability_cast.png"));
+    upsert(makeProfile(std::string{DefaultMeleeProfileId}, CombatActionKind::BasicAttack,
+                       AttackVisualKind::Melee, 0.36F, {0.14F}));
+    upsert(makeProfile(std::string{DefaultRangedProfileId}, CombatActionKind::BasicAttack,
+                       AttackVisualKind::Ranged, 0.44F, {0.22F}));
+    upsert(makeProfile(std::string{DefaultAbilityProfileId}, CombatActionKind::Ability,
+                       AttackVisualKind::Ranged, 0.48F, {0.24F}));
 
-    upsert(makeMeleeProfile("iron_guard.basic_slash", "iron_guard.basic_slash",
-                            "textures/actions/iron_guard_basic_slash.png"));
-    upsert(makeMeleeProfile("training_dummy.basic_slam", "training_dummy.basic_slam",
-                            "textures/actions/training_dummy_basic_slam.png"));
-    upsert(makeRangedProfile("storm_archer.basic_arrow", "storm_archer.basic_arrow",
-                             "textures/actions/storm_archer_basic_arrow.png", "projectile.arrow",
-                             "textures/projectiles/arrow.png"));
-    upsert(makeRangedProfile("ember_mage.basic_bolt", "ember_mage.basic_bolt",
-                             "textures/actions/ember_mage_basic_bolt.png", "projectile.fire_bolt",
-                             "textures/projectiles/fire_bolt.png"));
-    upsert(makeRangedProfile("field_medic.basic_pulse", "field_medic.basic_pulse",
-                             "textures/actions/field_medic_basic_pulse.png", "projectile.heal_pulse",
-                             "textures/projectiles/heal_pulse.png"));
-
-    upsert(makeAbilityProfile("stun_strike.cast", "stun_strike.cast",
-                              "textures/actions/stun_strike_cast.png"));
-    upsert(makeAbilityProfile("fire_line.cast", "fire_line.cast", "textures/actions/fire_line_cast.png"));
-    upsert(makeAbilityProfile("healing_aura.cast", "healing_aura.cast",
-                              "textures/actions/healing_aura_cast.png"));
+    upsert(makeProfile("iron_guard.basic_slash", CombatActionKind::BasicAttack,
+                       AttackVisualKind::Melee, 0.36F, {0.14F}));
+    upsert(makeProfile("training_dummy.basic_slam", CombatActionKind::BasicAttack,
+                       AttackVisualKind::Melee, 0.44F, {0.20F}));
+    upsert(makeProfile("storm_archer.basic_arrow", CombatActionKind::BasicAttack,
+                       AttackVisualKind::Ranged, 0.44F, {0.22F}));
+    upsert(makeProfile("ember_mage.basic_bolt", CombatActionKind::BasicAttack,
+                       AttackVisualKind::Ranged, 0.48F, {0.26F}));
+    upsert(makeProfile("field_medic.basic_pulse", CombatActionKind::BasicAttack,
+                       AttackVisualKind::Ranged, 0.46F, {0.24F}));
+    upsert(makeProfile("stun_strike.cast", CombatActionKind::Ability,
+                       AttackVisualKind::Melee, 0.46F, {0.18F}));
+    upsert(makeProfile("fire_line.cast", CombatActionKind::Ability,
+                       AttackVisualKind::Ranged, 0.58F, {0.30F}));
+    upsert(makeProfile("healing_aura.cast", CombatActionKind::Ability,
+                       AttackVisualKind::Ranged, 0.60F, {0.32F}));
 }
 
 bool CombatActionCatalog::loadFromFile(const std::filesystem::path& path) {

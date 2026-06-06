@@ -55,8 +55,8 @@ void eraseForUnit(std::vector<Item>& items, UnitId unitId) {
 
 }  // namespace
 
-void CombatAnimationController::setActionCatalog(const CombatActionCatalog& catalog) noexcept {
-    actionCatalog_ = &catalog;
+void CombatAnimationController::setAnimationCatalog(const CombatAnimationCatalog& catalog) noexcept {
+    animationCatalog_ = &catalog;
 }
 
 void CombatAnimationController::reset() {
@@ -167,6 +167,12 @@ void CombatAnimationController::dispatchEvent(const CombatEvent& event, const La
         case CombatEventType::DamageDealt:
             handleDamageDealt(event, layout);
             break;
+        case CombatEventType::HealReceived:
+            handleHealReceived(event, layout);
+            break;
+        case CombatEventType::StatusApplied:
+            handleStatusApplied(event, layout);
+            break;
         case CombatEventType::UnitDied:
             handleUnitDied(event, layout);
             break;
@@ -183,20 +189,23 @@ void CombatAnimationController::handleUnitMoved(const CombatEvent& event, const 
 }
 
 void CombatAnimationController::handleAttackStarted(const CombatEvent& event, const Layout& layout) {
-    const CombatActionProfile& profile = profileFor(event);
+    const CombatAnimationProfile& profile = profileFor(event);
     const Vector2 from = layout.boardHexCenter(event.from);
     const Vector2 to = layout.boardHexCenter(event.to);
+    const float actionDuration = event.actionDurationSeconds > 0.0F
+                                     ? event.actionDurationSeconds
+                                     : config::BasicAttackVisualDurationSeconds;
 
     eraseForUnit(actions_, event.sourceId);
     actions_.push_back(UnitAction{
         .unitId = event.sourceId,
         .clipId = profile.unitClip.id,
-        .state = UnitState::Attacking,
+        .state = profile.unitState,
         .from = from,
         .to = to,
         .attackKind = profile.attackKind,
         .lungePixels = profile.lungePixels,
-        .duration = profile.durationSeconds,
+        .duration = actionDuration,
     });
 
     if (!profile.projectileEnabled) {
@@ -205,9 +214,7 @@ void CombatAnimationController::handleAttackStarted(const CombatEvent& event, co
 
     const float distance = length(subtract(to, from));
     const float speedDuration = distance / profile.projectilePixelsPerSecond;
-    const float hitDelay = event.hitDelaySeconds > 0.0F ? event.hitDelaySeconds
-                                                        : (profile.hitTimes.empty() ? profile.durationSeconds
-                                                                                     : profile.hitTimes.front());
+    const float hitDelay = event.hitDelaySeconds > 0.0F ? event.hitDelaySeconds : actionDuration * 0.5F;
     const float duration = std::max(0.05F, std::min(speedDuration, hitDelay));
     projectiles_.push_back(Projectile{
         .clipId = profile.projectileClip.id,
@@ -219,30 +226,78 @@ void CombatAnimationController::handleAttackStarted(const CombatEvent& event, co
 }
 
 void CombatAnimationController::handleAbilityCast(const CombatEvent& event, const Layout& layout) {
-    const CombatActionProfile& profile = profileFor(event);
+    const CombatAnimationProfile& profile = profileFor(event);
     const Vector2 from = layout.boardHexCenter(event.from);
     const Vector2 to = layout.boardHexCenter(event.to);
+    const float actionDuration = event.actionDurationSeconds > 0.0F
+                                     ? event.actionDurationSeconds
+                                     : config::AbilityCastVisualDurationSeconds;
 
     eraseForUnit(actions_, event.sourceId);
     actions_.push_back(UnitAction{
         .unitId = event.sourceId,
         .clipId = profile.unitClip.id,
-        .state = UnitState::Casting,
+        .state = profile.unitState,
         .from = from,
         .to = to,
         .attackKind = profile.attackKind,
         .lungePixels = profile.lungePixels,
-        .duration = profile.durationSeconds,
+        .duration = actionDuration,
+    });
+
+    if (!profile.castImpactClip.id.empty()) {
+        impacts_.push_back(Impact{
+            .clipId = profile.castImpactClip.id,
+            .position = from,
+            .duration = profile.impactDurationSeconds,
+            .kind = CombatImpactVisualKind::Cast,
+        });
+    }
+
+    if (!profile.projectileEnabled) {
+        return;
+    }
+
+    const float distance = length(subtract(to, from));
+    const float speedDuration = distance / profile.projectilePixelsPerSecond;
+    const float hitDelay = event.hitDelaySeconds > 0.0F ? event.hitDelaySeconds : actionDuration * 0.5F;
+    const float duration = std::max(0.05F, std::min(speedDuration, hitDelay));
+    projectiles_.push_back(Projectile{
+        .clipId = profile.projectileClip.id,
+        .from = from,
+        .to = to,
+        .elapsed = -std::max(0.0F, hitDelay - duration),
+        .duration = duration,
     });
 }
 
 void CombatAnimationController::handleDamageDealt(const CombatEvent& event, const Layout& layout) {
-    const CombatActionProfile& profile = profileFor(event);
+    const CombatAnimationProfile& profile = profileFor(event);
     impacts_.push_back(Impact{
-        .clipId = profile.impactClip.id,
+        .clipId = profile.damageImpactClip.id,
         .position = layout.boardHexCenter(event.to),
         .duration = profile.impactDurationSeconds,
         .kind = CombatImpactVisualKind::Hit,
+    });
+}
+
+void CombatAnimationController::handleHealReceived(const CombatEvent& event, const Layout& layout) {
+    const CombatAnimationProfile& profile = profileFor(event);
+    impacts_.push_back(Impact{
+        .clipId = profile.healImpactClip.id,
+        .position = layout.boardHexCenter(event.to),
+        .duration = profile.impactDurationSeconds,
+        .kind = CombatImpactVisualKind::Heal,
+    });
+}
+
+void CombatAnimationController::handleStatusApplied(const CombatEvent& event, const Layout& layout) {
+    const CombatAnimationProfile& profile = profileFor(event);
+    impacts_.push_back(Impact{
+        .clipId = profile.statusImpactClip.id,
+        .position = layout.boardHexCenter(event.to),
+        .duration = profile.impactDurationSeconds,
+        .kind = CombatImpactVisualKind::Status,
     });
 }
 
@@ -255,18 +310,21 @@ void CombatAnimationController::handleUnitDied(const CombatEvent& event, const L
     });
 }
 
-const CombatActionCatalog& CombatAnimationController::actionCatalog() const noexcept {
-    return actionCatalog_ == nullptr ? defaultActionCatalog_ : *actionCatalog_;
+const CombatAnimationCatalog& CombatAnimationController::animationCatalog() const noexcept {
+    return animationCatalog_ == nullptr ? defaultAnimationCatalog_ : *animationCatalog_;
 }
 
-const CombatActionProfile& CombatAnimationController::profileFor(const CombatEvent& event) const noexcept {
+const CombatAnimationProfile& CombatAnimationController::profileFor(const CombatEvent& event) const noexcept {
+    if (!event.animationProfileId.empty()) {
+        return animationCatalog().profile(event.animationProfileId);
+    }
     if (!event.actionProfileId.empty()) {
-        return actionCatalog().profile(event.actionProfileId);
+        return animationCatalog().profile(event.actionProfileId);
     }
     if (event.type == CombatEventType::AbilityCast) {
-        return actionCatalog().defaultAbility();
+        return animationCatalog().defaultAbility();
     }
-    return actionCatalog().defaultBasicAttack(event.attackKind);
+    return animationCatalog().defaultBasicAttack(event.attackKind);
 }
 
 }  // namespace synera
