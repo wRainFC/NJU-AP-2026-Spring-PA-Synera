@@ -2,6 +2,7 @@
 
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
+#include "systems/EconomySystem.hpp"
 #include "systems/EquipmentSystem.hpp"
 #include "systems/SynergySystem.hpp"
 #include "systems/UpgradeSystem.hpp"
@@ -15,6 +16,51 @@ namespace {
 }
 
 }  // namespace
+
+TEST_CASE("EconomySystem computes interest and streak income", "[economy]") {
+    CHECK(synera::EconomySystem::interestForGold(0) == 0);
+    CHECK(synera::EconomySystem::interestForGold(9) == 0);
+    CHECK(synera::EconomySystem::interestForGold(10) == 1);
+    CHECK(synera::EconomySystem::interestForGold(27) == 2);
+    CHECK(synera::EconomySystem::interestForGold(50) == 5);
+    CHECK(synera::EconomySystem::interestForGold(80) == 5);
+
+    CHECK(synera::EconomySystem::streakBonusFor(0) == 0);
+    CHECK(synera::EconomySystem::streakBonusFor(1) == 0);
+    CHECK(synera::EconomySystem::streakBonusFor(2) == 1);
+    CHECK(synera::EconomySystem::streakBonusFor(4) == 2);
+    CHECK(synera::EconomySystem::streakBonusFor(6) == 3);
+}
+
+TEST_CASE("EconomySystem updates streaks while settling round income", "[economy]") {
+    synera::Player player;
+    synera::EconomySystem economy;
+
+    player.gold = 24;
+
+    const synera::EconomySettlement firstWin = economy.settleRound(player, true, 6);
+    CHECK(firstWin.baseGold == 6);
+    CHECK(firstWin.interestGold == 2);
+    CHECK(firstWin.streakGold == 0);
+    CHECK(firstWin.totalGold == 8);
+    CHECK(player.gold == 32);
+    CHECK(player.winStreak == 1);
+    CHECK(player.lossStreak == 0);
+
+    const synera::EconomySettlement secondWin = economy.settleRound(player, true, 6);
+    CHECK(secondWin.interestGold == 3);
+    CHECK(secondWin.streakGold == 1);
+    CHECK(secondWin.totalGold == 10);
+    CHECK(player.gold == 42);
+    CHECK(player.winStreak == 2);
+
+    const synera::EconomySettlement loss = economy.settleRound(player, false, 3);
+    CHECK(loss.interestGold == 4);
+    CHECK(loss.streakGold == 0);
+    CHECK(player.gold == 49);
+    CHECK(player.winStreak == 0);
+    CHECK(player.lossStreak == 1);
+}
 
 TEST_CASE("Player population upgrade spends gold and increases cap", "[economy]") {
     synera::GameState state;

@@ -48,7 +48,8 @@ TEST_CASE("ShopPool rolls level-gated offers", "[shop]") {
     const auto levelOneOdds = pool.tierWeightsForLevel(1);
     CHECK(levelOneOdds[0] == 100);
     CHECK(levelOneOdds[1] == 0);
-    CHECK(std::ranges::distance(pool.entries() | std::views::filter([](const synera::ShopPoolEntry& entry) {
+    CHECK(std::ranges::distance(pool.entries() |
+                                std::views::filter([](const synera::config::ShopPoolEntry& entry) {
                                     return entry.tier == 1;
                                 })) >= 2);
 

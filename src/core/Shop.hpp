@@ -1,9 +1,7 @@
 #pragma once
 
-#include "config/GameConfig.hpp"
 #include "core/ShopOffer.hpp"
 
-#include <array>
 #include <functional>
 #include <optional>
 #include <span>
@@ -13,7 +11,7 @@ namespace synera {
 // Persistent shop state. Roll rules live in ShopPool/ShopSystem, so saved games only need offers + lock.
 class Shop {
 public:
-    using Offers = std::array<ShopOffer, config::ShopOfferCount>;
+    using Offers = ShopOffers;
 
     // Offers are exposed as spans so UI/save code can scan the fixed 5 slots without owning them.
     [[nodiscard]] std::span<ShopOffer, config::ShopOfferCount> offers() noexcept;

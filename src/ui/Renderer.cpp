@@ -4,6 +4,7 @@
 #include "board/HexGrid.hpp"
 #include "core/GameState.hpp"
 #include "core/Metadata.hpp"
+#include "systems/EconomySystem.hpp"
 #include "systems/SynergySystem.hpp"
 #include "ui/GridItem.hpp"
 #include "ui/Layout.hpp"
@@ -47,6 +48,16 @@ namespace {
     return nullptr;
 }
 
+[[nodiscard]] std::string streakText(const Player& player) {
+    if (player.winStreak > 0) {
+        return "W" + std::to_string(player.winStreak);
+    }
+    if (player.lossStreak > 0) {
+        return "L" + std::to_string(player.lossStreak);
+    }
+    return "-";
+}
+
 [[nodiscard]] const UnitDragGhost* unitDragGhost(const InputReadModel& input) noexcept {
     return std::get_if<UnitDragGhost>(&input.dragDrop.ghost);
 }
@@ -62,11 +73,11 @@ namespace {
 [[nodiscard]] UnitVisual visualForUnit(const CombatVisualReadModel& visual, UnitId unitId,
                                        UnitState fallbackState, float fallbackTime) noexcept {
     UnitVisual result{
-        .unitId = unitId,
-        .clipId = {},
-        .state = fallbackState,
+        .unitId               = unitId,
+        .clipId               = {},
+        .state                = fallbackState,
         .animationTimeSeconds = fallbackTime,
-        .overridesState = false,
+        .overridesState       = false,
     };
     for (const UnitVisual& unitVisual : visual.units) {
         if (unitVisual.unitId != unitId) {
@@ -75,10 +86,10 @@ namespace {
         result.offset.x += unitVisual.offset.x;
         result.offset.y += unitVisual.offset.y;
         if (unitVisual.overridesState) {
-            result.clipId = unitVisual.clipId;
-            result.state = unitVisual.state;
+            result.clipId               = unitVisual.clipId;
+            result.state                = unitVisual.state;
             result.animationTimeSeconds = unitVisual.animationTimeSeconds;
-            result.overridesState = true;
+            result.overridesState       = true;
         }
     }
     return result;
@@ -163,12 +174,13 @@ private:
     // Base scene, economy panels, and inventory panels.
     void drawTopBar(const RenderContext& context) {
         const GameState& state = context.state;
-        const std::string text = "HP: " + std::to_string(state.player().hp) +
-                                 "  Gold: " + std::to_string(state.player().gold) +
-                                 "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
-                                 std::to_string(state.player().populationCap) +
-                                 "  Round: " + std::to_string(state.player().currentRound) +
-                                 "  Phase: " + std::string(phaseName(state.phase()));
+        const std::string text =
+            "HP: " + std::to_string(state.player().hp) + "  Gold: " + std::to_string(state.player().gold) +
+            "  Pop: " + std::to_string(state.playerBoardUnitCount()) + "/" +
+            std::to_string(state.player().populationCap) +
+            "  Round: " + std::to_string(state.player().currentRound) +
+            "  Phase: " + std::string(phaseName(state.phase())) + "  Streak: " + streakText(state.player()) +
+            "  Interest: +" + std::to_string(EconomySystem::interestForGold(state.player().gold));
         ui::drawText(text, 150, 24, 24, RAYWHITE);
         if (!context.statusMessage.empty()) {
             ui::drawText(context.statusMessage, 150, 58, 18, GOLD);
@@ -286,8 +298,7 @@ private:
 
     void drawProjectiles(const RenderContext& context) {
         for (const ProjectileVisual& projectile : context.combatVisual.projectiles) {
-            const Rectangle rect{projectile.position.x - 12.0F, projectile.position.y - 12.0F,
-                                 24.0F, 24.0F};
+            const Rectangle rect{projectile.position.x - 12.0F, projectile.position.y - 12.0F, 24.0F, 24.0F};
             if (drawSpriteAnimationToRect(assets_.spriteAnimation(projectile.clipId), rect,
                                           context.animationTimeSeconds)) {
                 continue;
@@ -307,8 +318,8 @@ private:
     void drawImpacts(const RenderContext& context) {
         for (const ImpactVisual& impact : context.combatVisual.impacts) {
             const bool deathImpact = impact.kind == CombatImpactVisualKind::Death;
-            const CombatTextureSlot textureSlot = deathImpact ? CombatTextureSlot::DeathImpact
-                                                              : CombatTextureSlot::HitImpact;
+            const CombatTextureSlot textureSlot =
+                deathImpact ? CombatTextureSlot::DeathImpact : CombatTextureSlot::HitImpact;
             const float size = deathImpact ? 44.0F : 30.0F;
             const Rectangle rect{impact.position.x - size / 2.0F, impact.position.y - size / 2.0F, size,
                                  size};
@@ -316,16 +327,17 @@ private:
                                           impact.progress * 0.25F, Color{255, 255, 255, 220})) {
                 continue;
             }
-            if ((impact.kind == CombatImpactVisualKind::Hit || impact.kind == CombatImpactVisualKind::Death) &&
+            if ((impact.kind == CombatImpactVisualKind::Hit ||
+                 impact.kind == CombatImpactVisualKind::Death) &&
                 (assets_.combatTexture(textureSlot) != nullptr)) {
                 const Texture2D* texture = assets_.combatTexture(textureSlot);
                 (void)ui::drawTextureToRect(texture, rect, Color{255, 255, 255, 220});
                 continue;
             }
 
-            const float radius = (1.0F - impact.progress) * size * 0.45F + 3.0F;
+            const float radius        = (1.0F - impact.progress) * size * 0.45F + 3.0F;
             const unsigned char alpha = static_cast<unsigned char>(220.0F * (1.0F - impact.progress));
-            Color color = Color{255, 222, 90, alpha};
+            Color color               = Color{255, 222, 90, alpha};
             if (impact.kind == CombatImpactVisualKind::Heal) {
                 color = Color{80, 235, 145, alpha};
             } else if (impact.kind == CombatImpactVisualKind::Status) {
@@ -452,8 +464,7 @@ private:
         DrawRectangleLinesEx(panel, 2.0F, modal.accent);
 
         ui::drawTextInRect(modal.title, Rectangle{panel.x, panel.y + 28.0F, panel.width, 56.0F}, 40,
-                           modal.accent, ui::HorizontalAlign::Center,
-                           ui::VerticalAlign::Middle);
+                           modal.accent, ui::HorizontalAlign::Center, ui::VerticalAlign::Middle);
 
         const Rectangle linesRect{panel.x + 96.0F, panel.y + 108.0F, panel.width - 192.0F, 170.0F};
         for (std::size_t index : std::views::iota(std::size_t{0}, modal.lines.size())) {

@@ -57,6 +57,7 @@ add_library(synera_logic
     src/board/Board.cpp
     src/board/Pathfinder.cpp
     src/systems/CombatSystem.cpp
+    src/systems/EconomySystem.cpp
     src/systems/EquipmentSystem.cpp
     src/systems/RoundSystem.cpp
     src/systems/SaveSystem.cpp

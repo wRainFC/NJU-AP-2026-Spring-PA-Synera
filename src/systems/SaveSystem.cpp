@@ -25,7 +25,7 @@ namespace synera {
 
 namespace {
 
-constexpr int SaveVersion = 1;
+constexpr int SaveVersion = 2;
 
 constexpr auto KnownOwners         = std::array{Owner::PlayerCtrl, Owner::EnemyCtrl};
 constexpr auto KnownPhases         = std::array{Phase::Prep, Phase::Combat, Phase::Resolve};
@@ -99,11 +99,13 @@ struct PlayerData {
     int level         = 1;
     int populationCap = config::InitialPopulationCap;
     int currentRound  = 1;
+    int winStreak     = 0;
+    int lossStreak    = 0;
 
     template <class Archive>
     void serialize(Archive& archive) {
         archive(CEREAL_NVP(hp), CEREAL_NVP(gold), CEREAL_NVP(level), CEREAL_NVP(populationCap),
-                CEREAL_NVP(currentRound));
+                CEREAL_NVP(currentRound), CEREAL_NVP(winStreak), CEREAL_NVP(lossStreak));
     }
 };
 
@@ -128,7 +130,7 @@ struct ShopData {
     }
 };
 
-struct SaveDataV1 {
+struct SaveDataV2 {
     int version = SaveVersion;
     int phase   = enumToInt(Phase::Prep);
     PlayerData player{};
@@ -185,6 +187,8 @@ struct SaveDataV1 {
         .level         = player.level,
         .populationCap = player.populationCap,
         .currentRound  = player.currentRound,
+        .winStreak     = player.winStreak,
+        .lossStreak    = player.lossStreak,
     };
 }
 
@@ -201,8 +205,8 @@ struct SaveDataV1 {
     return data;
 }
 
-[[nodiscard]] SaveDataV1 saveDataFrom(const GameState& state) {
-    SaveDataV1 data{
+[[nodiscard]] SaveDataV2 saveDataFrom(const GameState& state) {
+    SaveDataV2 data{
         .version       = SaveVersion,
         .phase         = enumToInt(state.phase()),
         .player        = playerDataFrom(state.player()),
@@ -235,6 +239,9 @@ struct SaveDataV1 {
     if (player.currentRound < 1) {
         return std::unexpected("Player round must be positive");
     }
+    if (player.winStreak < 0 || player.lossStreak < 0) {
+        return std::unexpected("Player streak cannot be negative");
+    }
     return {};
 }
 
@@ -261,6 +268,8 @@ struct SaveDataV1 {
     player.level         = data.level;
     player.populationCap = data.populationCap;
     player.currentRound  = data.currentRound;
+    player.winStreak     = data.winStreak;
+    player.lossStreak    = data.lossStreak;
     return {};
 }
 
@@ -381,7 +390,7 @@ struct SaveDataV1 {
     return {};
 }
 
-[[nodiscard]] std::expected<GameState, std::string> stateFromSaveData(const SaveDataV1& data) {
+[[nodiscard]] std::expected<GameState, std::string> stateFromSaveData(const SaveDataV2& data) {
     if (data.version != SaveVersion) {
         return std::unexpected("Unsupported save version " + std::to_string(data.version));
     }
@@ -446,7 +455,7 @@ std::expected<GameState, std::string> SaveSystem::load(const std::string& path) 
         }
 
         cereal::JSONInputArchive archive{in};
-        SaveDataV1 data;
+        SaveDataV2 data;
         archive(cereal::make_nvp("save", data));
         return stateFromSaveData(data);
     } catch (const std::exception& exception) {

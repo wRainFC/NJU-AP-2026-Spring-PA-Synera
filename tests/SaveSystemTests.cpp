@@ -30,6 +30,8 @@ TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     state.player().level         = 2;
     state.player().populationCap = 4;
     state.player().currentRound  = 5;
+    state.player().winStreak     = 3;
+    state.player().lossStreak    = 0;
 
     const synera::UnitId guardId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
     const synera::UnitId mageId  = state.createUnit("ember_mage", synera::Owner::PlayerCtrl);
@@ -80,6 +82,8 @@ TEST_CASE("SaveSystem round-trips core game state through JSON", "[save]") {
     CHECK(loaded.player().level == 2);
     CHECK(loaded.player().populationCap == 4);
     CHECK(loaded.player().currentRound == 5);
+    CHECK(loaded.player().winStreak == 3);
+    CHECK(loaded.player().lossStreak == 0);
 
     CHECK(loaded.equipmentPool().size() == 2);
     CHECK(loaded.equipmentPool()[0] == synera::EquipmentType::ChainVest);

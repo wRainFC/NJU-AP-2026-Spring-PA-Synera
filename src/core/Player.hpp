@@ -11,6 +11,8 @@ public:
     int level         = 1;
     int populationCap = config::InitialPopulationCap;
     int currentRound  = 1;
+    int winStreak     = 0;
+    int lossStreak    = 0;
 
     [[nodiscard]] bool isDead() const noexcept;
     [[nodiscard]] bool canAfford(int cost) const noexcept;

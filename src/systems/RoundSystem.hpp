@@ -1,5 +1,7 @@
 #pragma once
 
+#include "systems/EconomySystem.hpp"
+
 namespace synera {
 
 class GameState;
@@ -14,6 +16,7 @@ struct RoundResult {
     int hpAfter        = 0;
     int nextRound      = 1;
     bool advancedRound = false;
+    EconomySettlement economy{};
 };
 
 class RoundSystem {

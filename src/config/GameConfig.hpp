@@ -29,4 +29,13 @@ inline constexpr std::uint32_t ShopRandomSeed      = 0x53594E41U;
 inline constexpr int EquipmentDropChancePercent    = 100;
 inline constexpr std::uint32_t EquipmentRandomSeed = 0x45515550U;
 
+inline constexpr int InterestGoldStep     = 10;
+inline constexpr int MaxInterestGold      = 5;
+inline constexpr int StreakTierOneCount   = 2;
+inline constexpr int StreakTierTwoCount   = 4;
+inline constexpr int StreakTierThreeCount = 6;
+inline constexpr int StreakTierOneGold    = 1;
+inline constexpr int StreakTierTwoGold    = 2;
+inline constexpr int StreakTierThreeGold  = 3;
+
 }  // namespace synera::config

@@ -37,7 +37,7 @@ void RoundSystem::startCombat(GameState& state) {
 
 void RoundSystem::spawnEnemies(GameState& state) {
     state.removeEnemyUnits();
-    const int star = config::enemyStarForRound(state.player().currentRound);
+    const int star                       = config::enemyStarForRound(state.player().currentRound);
     const config::EnemyWaveTuning tuning = config::enemyTuningForRound(state.player().currentRound);
     for (const config::EnemySpec& spec : config::enemiesForRound(state.player().currentRound)) {
         const UnitId enemy = state.createUnit(spec.templateId, Owner::EnemyCtrl);
@@ -68,9 +68,10 @@ RoundResult RoundSystem::enterResolve(GameState& state, bool playerWon) {
     }
 
     const config::RoundRewardRule& rule = config::rewardRuleFor(playerWon);
+    const EconomySystem economy;
     state.setPhase(Phase::Resolve);
 
-    state.player().addGold(rule.goldReward);
+    result.economy = economy.settleRound(state.player(), playerWon, rule.goldReward);
     state.player().hp += rule.hpDelta;
     if (rule.advancesRound) {
         ++state.player().currentRound;

@@ -59,6 +59,9 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
     CHECK(result.resolvedRound == 1);
     CHECK(result.goldBefore == synera::config::InitialGold);
     CHECK(result.goldAfter == synera::config::InitialGold + synera::config::WinGoldReward);
+    CHECK(result.economy.baseGold == synera::config::WinGoldReward);
+    CHECK(result.economy.interestGold == 0);
+    CHECK(result.economy.streakGold == 0);
     CHECK(result.hpBefore == synera::config::InitialPlayerHp);
     CHECK(result.hpAfter == synera::config::InitialPlayerHp);
     CHECK(result.nextRound == 2);
@@ -66,6 +69,8 @@ TEST_CASE("RoundSystem starts combat and later restores player formation", "[rou
     CHECK(state.phase() == synera::Phase::Resolve);
     CHECK(state.player().gold == synera::config::InitialGold + synera::config::WinGoldReward);
     CHECK(state.player().currentRound == 2);
+    CHECK(state.player().winStreak == 1);
+    CHECK(state.player().lossStreak == 0);
     CHECK(state.boardOccupant(startPos) == playerId);
     CHECK(player->boardPos == startPos);
     CHECK(player->runtime.hp == player->derivedStats.maxHp);
@@ -92,11 +97,46 @@ TEST_CASE("RoundSystem applies data-driven loss settlement without advancing the
     CHECK(result.resolvedRound == 1);
     CHECK(result.goldBefore == synera::config::InitialGold);
     CHECK(result.goldAfter == synera::config::InitialGold + synera::config::LossGoldReward);
+    CHECK(result.economy.baseGold == synera::config::LossGoldReward);
+    CHECK(result.economy.interestGold == 0);
+    CHECK(result.economy.streakGold == 0);
     CHECK(result.hpBefore == synera::config::InitialPlayerHp);
     CHECK(result.hpAfter == synera::config::InitialPlayerHp - synera::config::LossHpPenalty);
     CHECK(result.nextRound == 1);
     CHECK_FALSE(result.advancedRound);
     CHECK(state.phase() == synera::Phase::Resolve);
+    CHECK(state.player().winStreak == 0);
+    CHECK(state.player().lossStreak == 1);
+}
+
+TEST_CASE("RoundSystem applies interest and streak economy rewards", "[round][economy]") {
+    synera::GameState state;
+    synera::RoundSystem rounds;
+    const synera::UnitId playerId = state.createUnit("iron_guard", synera::Owner::PlayerCtrl);
+    REQUIRE(state.placeUnitOnBoard(playerId, pos(0, 4)));
+    state.player().gold = 24;
+
+    rounds.startCombat(state);
+    const synera::RoundResult first = rounds.enterResolve(state, true);
+
+    CHECK(first.goldBefore == 24);
+    CHECK(first.economy.baseGold == synera::config::WinGoldReward);
+    CHECK(first.economy.interestGold == 2);
+    CHECK(first.economy.streakGold == 0);
+    CHECK(first.goldAfter == 32);
+    CHECK(state.player().winStreak == 1);
+
+    rounds.finishResolve(state);
+    rounds.startCombat(state);
+    const synera::RoundResult second = rounds.enterResolve(state, true);
+
+    CHECK(second.goldBefore == 32);
+    CHECK(second.economy.baseGold == synera::config::WinGoldReward);
+    CHECK(second.economy.interestGold == 3);
+    CHECK(second.economy.streakGold == 1);
+    CHECK(second.goldAfter == 42);
+    CHECK(state.player().winStreak == 2);
+    CHECK(state.player().lossStreak == 0);
 }
 
 TEST_CASE("RoundSystem spawns round-specific enemy waves", "[round]") {
@@ -122,10 +162,10 @@ TEST_CASE("RoundSystem applies enemy-only wave tuning", "[round]") {
     synera::GameState state;
     synera::RoundSystem rounds;
     const synera::UnitId playerId = state.createUnit("training_dummy", synera::Owner::PlayerCtrl);
-    auto* player = state.findUnit(playerId);
+    auto* player                  = state.findUnit(playerId);
     REQUIRE(player != nullptr);
     const int playerMaxHp = player->derivedStats.maxHp;
-    const int playerAtk = player->derivedStats.atk;
+    const int playerAtk   = player->derivedStats.atk;
 
     state.player().currentRound = 1;
     rounds.spawnEnemies(state);
